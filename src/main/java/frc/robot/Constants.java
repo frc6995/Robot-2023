@@ -164,4 +164,10 @@ public class Constants {
             8.0137
         );
     }
+    public static final class IntakeConstants{
+        public static final int INTAKE_CAN_ID = 30; 
+        public static final double INTAKE_VOLTAGE = 6.995;
+        public static final int INTAKE_EXTEND = 2;
+        public static final int INTAKE_RETRACT= 3;
+    }
 }

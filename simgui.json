@@ -1,6 +1,11 @@
 {
   "HALProvider": {
     "Other Devices": {
+      "SPARK MAX [30]": {
+        "header": {
+          "open": true
+        }
+      },
       "navX-Sensor[0]": {
         "header": {
           "open": true
@@ -256,7 +261,7 @@
               "autoFit": true
             }
           ],
-          "height": 165,
+          "height": 2,
           "series": [
             {
               "color": [
@@ -285,7 +290,7 @@
               "autoFit": true
             }
           ],
-          "height": 165,
+          "height": 2,
           "lockPrevX": true,
           "series": [
             {
@@ -315,7 +320,7 @@
               "autoFit": true
             }
           ],
-          "height": 165,
+          "height": 2,
           "lockPrevX": true,
           "series": [
             {
@@ -334,7 +339,7 @@
     "Plot <1>": {
       "plots": [
         {
-          "height": 323,
+          "height": 30,
           "series": [
             {
               "color": [

@@ -20,12 +20,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.InputDevices;
 import frc.robot.commands.drivetrain.OperatorControlC;
 import frc.robot.subsystems.DrivebaseS;
+import frc.robot.subsystems.IntakeS;
 import io.github.oblarg.oblog.annotations.Log;
 
 public class RobotContainer {
@@ -36,6 +36,8 @@ public class RobotContainer {
 
     private final CommandXboxController m_driverController = new CommandXboxController(InputDevices.GAMEPAD_PORT);
     private final DrivebaseS m_drivebaseS = new DrivebaseS();
+
+    private final IntakeS m_intakeS = new IntakeS();
 
     @Log
     private final Field2d m_field = new Field2d();
@@ -64,30 +66,17 @@ public class RobotContainer {
         );
 
         configureButtonBindings();
-        PathPlannerTrajectory sCurveTrajectory = PathPlanner.loadPath("StraightBack", 2.5, 2.5, false);
-        m_field.getObject("traj").setTrajectory((Trajectory) sCurveTrajectory);
-        m_autoSelector.setDefaultOption("sCurve",
-            m_drivebaseS.pathPlannerCommand(
-                sCurveTrajectory
-            ).beforeStarting(
-                m_drivebaseS.runOnce(
-                    ()->m_drivebaseS.resetPose(sCurveTrajectory.getInitialHolonomicPose())
-                )
-            )
-        );
+        m_autoSelector.setDefaultOption("twoPiece", twoPieceAuto());
         SmartDashboard.putData(m_autoSelector);
     }
 
     public void configureButtonBindings() {
-        new Trigger(RobotController::getUserButton).onTrue(runOnce(()->m_drivebaseS.resetPose(new Pose2d())));
-        m_driverController.povCenter().onFalse(
-            runOnce(
-                ()->m_drivebaseS.setRotationState(
-                    Units.degreesToRadians(m_driverController.getHID().getPOV()))
-            )
-        );
-        m_driverController.a().toggleOnTrue(m_drivebaseS.chasePoseC(m_target::getPose));
+        m_driverController.rightBumper().toggleOnTrue(m_drivebaseS.chasePoseC(m_target::getPose));
+        m_driverController.a().whileTrue(m_intakeS.extendAndIntakeC());
+        m_driverController.y().whileTrue(m_intakeS.extendAndOuttakeC());
     }
+
+
 
     public Command getAutonomousCommand() {
         return m_autoSelector.getSelected();
@@ -109,5 +98,17 @@ public class RobotContainer {
 
     public void onEnabled(){
         m_drivebaseS.resetRelativeRotationEncoders();
+    }
+
+    public Command twoPieceAuto() {
+        return Commands.sequence(
+            m_intakeS.extendAndOuttakeC().withTimeout(1),
+            Commands.deadline(
+                m_drivebaseS.pathPlannerCommand(PathPlanner.loadPath("1Piece.1", 2, 2)),
+                m_intakeS.extendAndIntakeC()
+            ),
+            m_drivebaseS.pathPlannerCommand(PathPlanner.loadPath("1Piece.2", 2, 2)),
+            m_intakeS.extendAndOuttakeC().withTimeout(1)
+        );
     }
 }
