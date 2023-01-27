@@ -14,7 +14,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.commands.drivetrain.IntakeC;
 
 public class IntakeS extends SubsystemBase {
   private final CANSparkMax intakeMotor = new CANSparkMax(Constants.IntakeConstants.INTAKE_CAN_ID, MotorType.kBrushed);
@@ -23,29 +22,58 @@ public class IntakeS extends SubsystemBase {
   /** Creates a new IntakeS. */
   public IntakeS() {}
 
+  /**
+   * Sets voltage of intake motor to the voltage parameter 
+   * @param voltage the voltage supplied to intake motor
+   */
+
   public void intake(double voltage) {
     intakeMotor.setVoltage(voltage);
   }
+
+  /**
+   * Spins intake motor forward at specified voltage
+   */
 
   public void intake() {
     intake(Constants.IntakeConstants.INTAKE_VOLTAGE);
   }
 
+  /**
+   * Spins intake motor in reverse at specified voltage
+   */
+
   public void outtake() {
-    intakeMotor.setVoltage(-Constants.IntakeConstants.INTAKE_VOLTAGE);
+    intake(-Constants.IntakeConstants.INTAKE_VOLTAGE);
   }
+
+  /**
+   * Extends the intake
+   */
 
   public void extend() {
     doubleSolenoid.set(Value.kForward);
   }
 
+  /**
+   * Retracts the intake
+   */
+
   public void retract() {
     doubleSolenoid.set(Value.kReverse);
   }
 
+  /**
+   * Toggles the intake between extend and retract
+   */
+
   public void toggle() {
     doubleSolenoid.toggle();
   }
+
+  /**
+   * Stops the intake motor
+   */
 
   public void stop() {
     intakeMotor.setVoltage(0);
@@ -56,21 +84,46 @@ public class IntakeS extends SubsystemBase {
     // This method will be called once per scheduler run
   }
 
-  public Command intakeC() {
+  /**
+   * Runs the intake motor forward and then stops it
+   * @return returns the runEnd Command
+   */
+
+   public Command intakeC() {
     return runEnd(this::intake, this::stop);
   }
+
+  /**
+   * Runs the intake motor in reverse and then stops it
+   * @return returns the runEnd Command
+   */
 
   public Command outtakeC() {
     return runEnd(this::outtake, this::stop);
   }
 
+  /**
+   * Extends the intake
+   * @return returns the runOnce command
+   */
+
   public Command extendC() {
     return runOnce(this::extend);
   }
 
+  /**
+   * extends the intake and runs the intake motor forward
+   * @return returns the sequence Command
+   */
+
   public Command extendAndIntakeC() {
     return Commands.sequence(extendC(), intakeC()).finallyDo((interrupted)-> retract());
   }
+
+  /**
+   * extends the intake and runs the intake motor in reverse
+   * @return returns the sequence Command
+   */
 
   public Command extendAndOuttakeC() {
     return Commands.sequence(extendC(), outtakeC()).finallyDo((interrupted)-> retract());
