@@ -1,5 +1,16 @@
 package frc.robot.subsystems;
 
+import static frc.robot.Constants.DriveConstants.AZMTH_REVS_PER_ENC_REV;
+import static frc.robot.Constants.DriveConstants.DRIVE_D;
+import static frc.robot.Constants.DriveConstants.DRIVE_FF_CONST;
+import static frc.robot.Constants.DriveConstants.DRIVE_P;
+import static frc.robot.Constants.DriveConstants.STEER_D;
+import static frc.robot.Constants.DriveConstants.STEER_MAX_ACCEL_RAD_PER_SEC_SQ;
+import static frc.robot.Constants.DriveConstants.STEER_MAX_SPEED_RAD_PER_SEC;
+import static frc.robot.Constants.DriveConstants.STEER_P;
+import static frc.robot.Constants.DriveConstants.WHEEL_ENC_COUNTS_PER_WHEEL_REV;
+import static frc.robot.Constants.DriveConstants.WHEEL_RADIUS_M;
+
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -11,27 +22,16 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import static frc.robot.Constants.DriveConstants.*;
-import frc.robot.util.NomadMathUtil;
+import frc.robot.Constants.DriveConstants.ModuleConstants;
 import frc.robot.util.drive.SecondOrderSwerveModuleState;
-import frc.robot.util.sim.DutyCycleEncoderSim;
 import frc.robot.util.sim.SparkMaxAbsoluteEncoderWrapper;
 import frc.robot.util.sim.SparkMaxEncoderWrapper;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
 public class SwerveModule extends SubsystemBase implements Loggable{
-
-    /**
-     * Class to represent and handle a swerve module
-     * A module's state is measured by a CANCoder for the absolute position, integrated CANEncoder for relative position
-     * for both rotation and linear movement
-     */
-
-    private SwerveModuleState m_desiredState = new SwerveModuleState();
 
     private final CANSparkMax m_driveMotor;
     private final CANSparkMax m_steerMotor;
