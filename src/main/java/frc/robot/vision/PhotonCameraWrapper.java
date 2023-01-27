@@ -25,29 +25,24 @@
 
 package frc.robot.vision;
 
-import edu.wpi.first.apriltag.AprilTag;
+import java.util.ArrayList;
+import java.util.Optional;
+
+import org.photonvision.PhotonCamera;
+
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.vision.RobotPoseEstimator.PoseStrategy;
-
-import java.util.ArrayList;
-import java.util.Optional;
-import org.photonvision.PhotonCamera;
 
 public class PhotonCameraWrapper {
     public PhotonCamera photonCamera;
     public RobotPoseEstimator robotPoseEstimator;
 
     public PhotonCameraWrapper(String cameraName, Transform3d robotToCam) {
-        // TODO - once 2023 happens, replace this with just loading the 2023 field arrangement
         AprilTagFieldLayout atfl = VisionConstants.TAG_FIELD_LAYOUT;
 
 

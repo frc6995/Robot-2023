@@ -1,6 +1,19 @@
 package frc.robot.subsystems;
 
-import static frc.robot.Constants.DriveConstants.*;
+import static frc.robot.Constants.DriveConstants.AZMTH_ENC_COUNTS_PER_MODULE_REV;
+import static frc.robot.Constants.DriveConstants.AZMTH_REVS_PER_ENC_REV;
+import static frc.robot.Constants.DriveConstants.BL;
+import static frc.robot.Constants.DriveConstants.BR;
+import static frc.robot.Constants.DriveConstants.FL;
+import static frc.robot.Constants.DriveConstants.FR;
+import static frc.robot.Constants.DriveConstants.NUM_MODULES;
+import static frc.robot.Constants.DriveConstants.ROBOT_MASS_kg;
+import static frc.robot.Constants.DriveConstants.ROBOT_MOI_KGM2;
+import static frc.robot.Constants.DriveConstants.WHEEL_BASE_WIDTH_M;
+import static frc.robot.Constants.DriveConstants.WHEEL_ENC_COUNTS_PER_WHEEL_REV;
+import static frc.robot.Constants.DriveConstants.WHEEL_RADIUS_M;
+import static frc.robot.Constants.DriveConstants.WHEEL_REVS_PER_ENC_REV;
+
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -9,8 +22,8 @@ import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.PathPoint;
-import frc.robot.util.trajectory.PPHolonomicDriveController;
-import frc.robot.vision.PhotonCameraWrapper;
+import com.pathplanner.lib.commands.PPSwerveControllerCommand;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -20,23 +33,18 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.SPI.Port;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.DriveConstants;
-import frc.robot.Constants.VisionConstants;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
+import frc.robot.Constants.VisionConstants;
 import frc.robot.util.NomadMathUtil;
 import frc.robot.util.drive.SecondOrderChassisSpeeds;
 import frc.robot.util.drive.SecondOrderSwerveDriveKinematics;
@@ -45,7 +53,8 @@ import frc.robot.util.sim.SimGyroSensorModel;
 import frc.robot.util.sim.wpiClasses.QuadSwerveSim;
 import frc.robot.util.sim.wpiClasses.SwerveModuleSim;
 import frc.robot.util.trajectory.PPChasePoseCommand;
-import com.pathplanner.lib.commands.PPSwerveControllerCommand;
+import frc.robot.util.trajectory.PPHolonomicDriveController;
+import frc.robot.vision.PhotonCameraWrapper;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 

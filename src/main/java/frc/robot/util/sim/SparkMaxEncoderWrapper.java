@@ -1,17 +1,8 @@
 package frc.robot.util.sim;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.SparkMaxRelativeEncoder;
-import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 
-import edu.wpi.first.hal.CANData;
-import edu.wpi.first.math.filter.LinearFilter;
-import edu.wpi.first.wpilibj.CAN;
-import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotBase;
 
 public class SparkMaxEncoderWrapper {

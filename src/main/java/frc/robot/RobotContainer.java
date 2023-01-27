@@ -1,18 +1,11 @@
 package frc.robot;
 
-import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
-
 import com.pathplanner.lib.PathPlanner;
-import com.pathplanner.lib.PathPlannerTrajectory;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.WPIUtilJNI;
-import edu.wpi.first.wpilibj.RobotController;
-
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.Field3d;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
@@ -21,7 +14,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.InputDevices;
 import frc.robot.commands.drivetrain.OperatorControlC;
 import frc.robot.subsystems.DrivebaseS;

@@ -11,7 +11,7 @@ import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
+import static edu.wpi.first.wpilibj2.command.Commands.*;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -117,7 +117,7 @@ public class IntakeS extends SubsystemBase {
    */
 
   public Command extendAndIntakeC() {
-    return Commands.sequence(extendC(), intakeC()).finallyDo((interrupted)-> retract());
+    return sequence(extendC(), intakeC()).finallyDo((interrupted)-> retract());
   }
 
   /**
@@ -126,7 +126,7 @@ public class IntakeS extends SubsystemBase {
    */
 
   public Command extendAndOuttakeC() {
-    return Commands.sequence(extendC(), outtakeC()).finallyDo((interrupted)-> retract());
+    return sequence(extendC(), outtakeC()).finallyDo((interrupted)-> retract());
   }
 
 }
