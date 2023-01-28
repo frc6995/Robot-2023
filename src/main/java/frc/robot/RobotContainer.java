@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.InputDevices;
 import frc.robot.commands.drivetrain.OperatorControlC;
+import frc.robot.subsystems.ArmS;
 import frc.robot.subsystems.DrivebaseS;
 import frc.robot.subsystems.IntakeS;
 import io.github.oblarg.oblog.annotations.Log;
@@ -28,6 +29,7 @@ public class RobotContainer {
 
     private final CommandXboxController m_driverController = new CommandXboxController(InputDevices.GAMEPAD_PORT);
     private final DrivebaseS m_drivebaseS = new DrivebaseS();
+    private final ArmS m_armS = new ArmS();
 
     private final IntakeS m_intakeS = new IntakeS();
 

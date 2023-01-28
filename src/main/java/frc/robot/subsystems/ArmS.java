@@ -67,6 +67,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         initWrist();
         initSimulation();
         initVisualizer();
+        setDefaultCommand(followTargetC());
     }
 
     public void periodic() {      
@@ -232,8 +233,8 @@ public class ArmS extends SubsystemBase implements Loggable {
      * Sets velocity conversion factor in rotations/second for pivot motor</p>
      * Sets soft limits for minimum and maximum rotation</p>
      * Sets initial position of pivot encoder to armStartAngle</p>
-     * Sets initial position of motor controller to armStartAngle</p>
-     * Defines position and velocity tolerances</p>
+     * Sets initial position of profile PID controller to armStartAngle</p>
+     * Defines position and velocity tolerances of profiled PID controller</p>
      */
     private void initPivot() {
         m_pivotMotor.getEncoder().setPositionConversionFactor(ARM_ROTATIONS_PER_MOTOR_ROTATION);
@@ -267,7 +268,7 @@ public class ArmS extends SubsystemBase implements Loggable {
     }
 
     /**
-     * @return Returns the angle of the pivot joint
+     * @return the angle of the pivot joint
      */
 
     @Log(methodName = "getRadians")
@@ -276,7 +277,7 @@ public class ArmS extends SubsystemBase implements Loggable {
     }
 
     /**
-     * @return Returns the velocity of the pivot joint
+     * @return the velocity of the pivot joint
      */
 
     @Log
@@ -285,13 +286,17 @@ public class ArmS extends SubsystemBase implements Loggable {
     }
 
     /**
-     * @return Returns the MOI of the arm in Joules per kg^2
+     * @return the MOI of the arm in Joules per kg^2
      */
 
     public double getPivotMOI() {
         // TODO get this from held piece status and length
         return 1.0 / 3.0 * ARM_MASS_KG * getLengthMeters() * getLengthMeters();
     }
+
+    /**
+     * updates the pivot plant
+     */
 
     public void updatePivotPlant() {
         m_pivotPlant.getA().set(1, 1, 
@@ -302,9 +307,21 @@ public class ArmS extends SubsystemBase implements Loggable {
           1.0/ARM_ROTATIONS_PER_MOTOR_ROTATION * m_pivotGearbox.KtNMPerAmp / (m_pivotGearbox.rOhms * getPivotMOI()));
     }
 
+    /**
+     * sets pivot motor to desired velocity in radians per second
+     * @param velocityRadPerSec desired velocity in radians per second
+     */
+
     public void setPivotVelocity(double velocityRadPerSec) {
-        setPivotVolts(m_pivotFeedForward.calculate(VecBuilder.fill(0, getPivotVelocity()), VecBuilder.fill(0, velocityRadPerSec)).get(0,0) + (getPivotkG() * getAngle().getCos()));
+        setPivotVolts(m_pivotFeedForward.calculate(
+            VecBuilder.fill(0, getPivotVelocity()), VecBuilder.fill(0, velocityRadPerSec))
+            .get(0,0) + (getPivotkG() * getAngle().getCos()));
     }
+
+    /**
+     * sets pivot joint to desired angle in radians
+     * @param targetAngle desired angle in radians
+     */
 
     public void setPivotAngle(double targetAngle) {
         // We need to convert this to -90 to 270.
@@ -324,6 +341,13 @@ public class ArmS extends SubsystemBase implements Loggable {
         setPivotVelocity(outputVelocity + m_pivotController.getSetpoint().velocity);
     }
 
+    /**
+     * calculates voltage required to counteract the force of gravity on the arm 
+     * by interpolating between minimum and maximum arm lengths
+     * @return returns the required voltage needed
+     * to hold arm horizontal at current extension length
+     */
+
     @Log
     public double getPivotkG() {
         double minkG = ARM_PIVOT_KG_MIN_EXTEND;
@@ -335,14 +359,31 @@ public class ArmS extends SubsystemBase implements Loggable {
         return result;
     }
 
+    /**
+     * holds arm at angle 0
+     * @return the run command
+     */
+
     public Command holdC() {
         return run(()->setPivotAngle(0));
     }
+
+    /**
+     * rotates arm counterclockwise at .5 radians per second
+     * and then drops voltage to 0
+     * @return the run command
+     */
 
     public Command counterClockwiseC() {
         return run(()->setPivotVelocity(0.5))
         .finallyDo((interrupted)->setPivotVolts(0));
     }
+
+    /**
+     * rotates arm clockwise at .5 radians per second
+     * and then drops voltage to 0
+     * @return the run command
+     */
 
     public Command clockwiseC() {
         return run(()->setPivotVelocity(-0.5))
@@ -363,6 +404,17 @@ public class ArmS extends SubsystemBase implements Loggable {
     private final ProfiledPIDController m_wristController = new ProfiledPIDController(
         1, 0, 0, new Constraints(4, 4));
 
+    /**
+     * initializes wrist:
+     * sets position conversion factor for the wrist motor in rotations,</p>
+     * sets velocity conversion factor for the wrist motor in rotations per second,</p>
+     * sets soft limit for the maximum wrist angle, </p>
+     * sets soft limit for the minimum wrist angle, </p>
+     * sets encoder position to 0, </p>
+     * resets the wrist profiled PID controller, </p>
+     * sets the position and velocity tolerances for the profiled PID controller
+     */
+
     public void initWrist() {
         m_wristMotor.getEncoder().setPositionConversionFactor(WRIST_ROTATIONS_PER_MOTOR_ROTATION);
         m_wristMotor.getEncoder().setVelocityConversionFactor(WRIST_ROTATIONS_PER_MOTOR_ROTATION / 60);
@@ -375,16 +427,28 @@ public class ArmS extends SubsystemBase implements Loggable {
         m_wristController.setTolerance(0.05, 0.05);
     }
 
-
+    /**
+     * returns the wrist angle in radians
+     * @return angle of the wrist in radians
+     */
 
     @Log(methodName="getRadians")
     public Rotation2d getWristAngle() {
         return Rotation2d.fromRadians(m_wristEncoderWrapper.getPosition());
     }
 
+    /**
+     * @return the current velocity of the wrist in rotations per minute
+     */
+
     public double getWristVelocity() {
         return m_wristEncoderWrapper.getVelocity();
     }
+
+    /**
+     * sets the wrist velocity in radians per second to velocity parameter
+     * @param velocityRadPerSec desired velocity in radians per second
+     */
 
     public void setWristVelocity(double velocityRadPerSec) {
         m_wristMotor.setVoltage(
@@ -394,15 +458,29 @@ public class ArmS extends SubsystemBase implements Loggable {
         );
     }
 
+    /**
+     * sets voltage of wrist motor to volts parameter
+     * @param volts desired motor voltage
+     */
+
     public void setWristVolts(double volts) {
         m_wristMotor.setVoltage(volts);
     }
+
+    /**
+     * @return voltage required to counteract the force of gravity on the hand
+     */
 
     public double getWristkGVolts() {
         // angle relative to world horizontal
         // = pivot angle + wrist angle
         return WRIST_KG * Math.cos(getAngle().plus(getWristAngle()).getRadians());
     }
+
+    /**
+     * sets wrist angle in radiands to target angle parameter (straight out relative to arm is 0)
+     * @param targetAngle desired angle in radians
+     */
 
     public void setWristAngle(double targetAngle) {
         targetAngle = MathUtil.angleModulus(targetAngle);
@@ -413,12 +491,23 @@ public class ArmS extends SubsystemBase implements Loggable {
         );
     }
 
+    /**
+     * holds wrist at current angle relative to arm
+     * @return run command
+     */
+
     public Command holdWristC() {
         return run(()->setWristVolts(getWristkGVolts()));
     }
     // endregion
 
     // region factories
+
+    /**
+     * follow target position in vertical plane
+     * @return run command
+     */
+
     public Command followTargetC() {
         return run(()->{
             var targetPose = VISUALIZER.getObject("2_target").getPose();
@@ -463,6 +552,14 @@ public class ArmS extends SubsystemBase implements Loggable {
         wristMOI, HAND_LENGTH,
         WRIST_MIN_ANGLE, WRIST_MAX_ANGLE, HAND_MASS_KG, true);
     
+    /**
+     * initializes simulation:
+     * sets velocity of pivot joint in simulation to 0, </p>
+     * sets arm telescoping velocity in simulation to 0, </p>
+     * sets wrist angle in simulation to 0, </p>
+     * sets wrist velocity in simulation to 0, </p>
+     * sets the angle that gravity acts on the arm in simulation to -90 degrees relative to the field
+     */
 
     private void initSimulation() {
         m_pivotSim.setState(VecBuilder.fill(getAngle().getRadians(),0));
@@ -471,6 +568,17 @@ public class ArmS extends SubsystemBase implements Loggable {
         //as the arm raises from 0 to pi/2, the gravity on the wrist goes from -pi/2 to -pi
         m_wristSim.setGravityAngle(-Math.PI/2 - getAngle().getRadians());
     }
+
+    /**
+     * runs every code loop in simulation, called in simulation periodic: </p>
+     * sets distance between pivot joint and the arm's center of gravity
+     *  to half the length of the arm in simulation, </p>
+     * updates the pivot's moment of inertia in simulation, </p>
+     * sets pivot input voltage in simulation to applied output, </p>
+     * updates the pivot simulation by 0.02 seconds, </p>
+     * updates encoder positions in simulations, </p>
+     * updates encoder velocity in simulation
+     */
 
     private void pivotSimulationPeriodic() {
         m_pivotSim.setCGRadius(getLengthMeters() / 2);
@@ -481,6 +589,15 @@ public class ArmS extends SubsystemBase implements Loggable {
         m_pivotEncoderWrapper.setSimVelocity(m_pivotSim.getVelocityRadPerSec());
     }
 
+     /**
+     * runs every code loop in simulation, called in simulation periodic: </p>
+     * updates the gravity angle of arm in simulation, </p>
+     * sets extender input voltage in simulation to applied output, </p>
+     * updates the extender simulation by 0.02 seconds, </p>
+     * updates encoder positions in simulations, </p>
+     * updates encoder velocity in simulation
+     */
+
     public void extendSimulationPeriodic() {
         m_extendSim.setAngleFromHorizontal(getAngle().getRadians());
         m_extendSim.setInputVoltage(m_extendMotor.getAppliedOutput());
@@ -488,6 +605,15 @@ public class ArmS extends SubsystemBase implements Loggable {
         m_extendEncoderWrapper.setSimPosition(m_extendSim.getPositionMeters());
         m_extendEncoderWrapper.setSimVelocity(m_extendSim.getVelocityMetersPerSecond());
     }
+
+     /**
+     * runs every code loop in simulation, called in simulation periodic: </p>
+     * updates the gravity angle of wrist in simulation, </p>
+     * sets wrist input voltage in simulation to applied output, </p>
+     * updates the wrist simulation by 0.02 seconds, </p>
+     * updates encoder positions in simulations, </p>
+     * updates encoder velocity in simulation
+     */
 
     public void wristSimulationPeriodic() {
         m_wristSim.setGravityAngle(-Math.PI/2 - getAngle().getRadians());
@@ -511,6 +637,11 @@ public class ArmS extends SubsystemBase implements Loggable {
     @Log
     public final Field2d VISUALIZER = new Field2d();
 
+    /**
+     * initializes visualizer: </p>
+     * sets up visualization field 2d
+     */
+
     public void initVisualizer() {
         var pivotPose = new Pose2d(ARM_PIVOT_TRANSLATION, getAngle());
         VISUALIZER.getObject("2_target").setPose(new Pose2d(
@@ -518,6 +649,13 @@ public class ArmS extends SubsystemBase implements Loggable {
             pivotPose.getRotation()
         ));
     }
+
+    /**
+     * updates visualizer: </p>
+     * updates position of pivot joint in visualizer, </p>
+     * updates position of arm in visualizer, </p>
+     * updates the position of the hand in visualizer, </p>
+     */
 
     public void updateVisualizer() {
         var pivotPose = new Pose2d(ARM_PIVOT_TRANSLATION, getAngle());

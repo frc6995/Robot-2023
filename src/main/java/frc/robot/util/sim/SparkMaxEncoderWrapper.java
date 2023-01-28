@@ -33,7 +33,7 @@ public class SparkMaxEncoderWrapper {
     }
   
     /**
-     * Returns the current velocity in rotations/minute.
+     * Returns the current velocity in rotations per minute.
      */
     public synchronized double getVelocity() {
         if(RobotBase.isReal()) {

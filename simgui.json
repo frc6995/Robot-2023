@@ -68,7 +68,6 @@
           "width": 0.4000000059604645
         },
         "height": 8.013679504394531,
-        "image": "C:\\Users\\jashu\\PathWeaver\\Games\\2023 Charged Up\\2023-field.png",
         "left": 46,
         "path": {
           "arrows": false,
@@ -132,7 +131,6 @@
           "arrows": false
         },
         "height": 8.013679504394531,
-        "image": "C:\\Users\\jashu\\PathWeaver\\Games\\2023 Charged Up\\2023-field.png",
         "left": 46,
         "modules": {
           "color": [
@@ -218,8 +216,7 @@
           },
           "bl": {
             "open": true
-          },
-          "open": true
+          }
         },
         "RobotContainer": {
           "drivebaseS": {
@@ -339,7 +336,7 @@
     "Plot <1>": {
       "plots": [
         {
-          "height": 30,
+          "height": 0,
           "series": [
             {
               "color": [
