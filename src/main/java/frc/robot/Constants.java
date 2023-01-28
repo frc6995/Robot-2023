@@ -171,7 +171,7 @@ public class Constants {
         public static final double MIN_ARM_LENGTH = Units.inchesToMeters(25);
         public static final double MAX_ARM_LENGTH = Units.inchesToMeters(50);
 
-        public static final Translation2d ARM_PIVOT_TRANSLATION = new Translation2d(0, Units.inchesToMeters(25));
+        public static final Translation2d ARM_PIVOT_TRANSLATION = new Translation2d(0, Units.inchesToMeters(18));
         
         public static final double EXTEND_DRUM_RADIUS = Units.inchesToMeters(1);
         public static final double EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION = 1.0/14.667;

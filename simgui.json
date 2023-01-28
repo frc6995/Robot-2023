@@ -16,6 +16,8 @@
   "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo",
+      "/Shuffleboard/ArmS/MECH_VISUALIZER": "Mechanism2d",
+      "/Shuffleboard/ArmS/VISUALIZER": "Field2d",
       "/Shuffleboard/DrivebaseS/bl": "Subsystem",
       "/Shuffleboard/DrivebaseS/br": "Subsystem",
       "/Shuffleboard/DrivebaseS/fl": "Subsystem",
@@ -33,6 +35,11 @@
       "/SmartDashboard/SendableChooser[0]": "String Chooser"
     },
     "windows": {
+      "/Shuffleboard/ArmS/MECH_VISUALIZER": {
+        "window": {
+          "visible": true
+        }
+      },
       "/Shuffleboard/RobotContainer/field": {
         "BackLeft": {
           "length": 0.4000000059604645,
@@ -336,7 +343,7 @@
     "Plot <1>": {
       "plots": [
         {
-          "height": 0,
+          "height": 30,
           "series": [
             {
               "color": [
