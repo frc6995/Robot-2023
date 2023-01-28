@@ -1,5 +1,31 @@
 package frc.robot.subsystems;
 
+import static frc.robot.Constants.ArmConstants.ARM_EXTEND_KG_VERTICAL;
+import static frc.robot.Constants.ArmConstants.ARM_MASS_KG;
+import static frc.robot.Constants.ArmConstants.ARM_PIVOT_KG_MAX_EXTEND;
+import static frc.robot.Constants.ArmConstants.ARM_PIVOT_KG_MIN_EXTEND;
+import static frc.robot.Constants.ArmConstants.ARM_PIVOT_TRANSLATION;
+import static frc.robot.Constants.ArmConstants.ARM_ROTATIONS_PER_MOTOR_ROTATION;
+import static frc.robot.Constants.ArmConstants.EXTEND_DRUM_RADIUS;
+import static frc.robot.Constants.ArmConstants.EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION;
+import static frc.robot.Constants.ArmConstants.EXTEND_METERS_PER_DRUM_ROTATION;
+import static frc.robot.Constants.ArmConstants.EXTEND_MOTOR_ID;
+import static frc.robot.Constants.ArmConstants.HAND_LENGTH;
+import static frc.robot.Constants.ArmConstants.HAND_MASS_KG;
+import static frc.robot.Constants.ArmConstants.MAX_ARM_ANGLE;
+import static frc.robot.Constants.ArmConstants.MAX_ARM_LENGTH;
+import static frc.robot.Constants.ArmConstants.MIN_ARM_ANGLE;
+import static frc.robot.Constants.ArmConstants.MIN_ARM_LENGTH;
+import static frc.robot.Constants.ArmConstants.PIVOT_MOTOR_ID;
+import static frc.robot.Constants.ArmConstants.WRIST_KG;
+import static frc.robot.Constants.ArmConstants.WRIST_MAX_ANGLE;
+import static frc.robot.Constants.ArmConstants.WRIST_MIN_ANGLE;
+import static frc.robot.Constants.ArmConstants.WRIST_MOTOR_ID;
+import static frc.robot.Constants.ArmConstants.WRIST_ROTATIONS_PER_MOTOR_ROTATION;
+
+import java.util.List;
+import java.util.function.DoubleSupplier;
+
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.SoftLimitDirection;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -23,23 +49,15 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.simulation.TiltedElevatorSim;
 import edu.wpi.first.wpilibj.simulation.VariableLengthArmSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.sim.SparkMaxEncoderWrapper;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
-
-import static frc.robot.Constants.ArmConstants.*;
-
-import java.util.List;
-import java.util.function.DoubleSupplier;
 
 public class ArmS extends SubsystemBase implements Loggable {
 
@@ -271,6 +289,7 @@ public class ArmS extends SubsystemBase implements Loggable {
      */
 
     public double getPivotMOI() {
+        // TODO get this from held piece status and length
         return 1.0 / 3.0 * ARM_MASS_KG * getLengthMeters() * getLengthMeters();
     }
 
