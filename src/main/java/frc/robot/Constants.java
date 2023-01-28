@@ -161,6 +161,52 @@ public class Constants {
             8.0137
         );
     }
+
+    public static final class ArmConstants {
+        /* EXTEND */
+        
+        public static final int EXTEND_MOTOR_ID = 20;
+
+        //Arm length measured from shoulder pivot to wrist pivot
+        public static final double MIN_ARM_LENGTH = Units.inchesToMeters(25);
+        public static final double MAX_ARM_LENGTH = Units.inchesToMeters(50);
+
+        public static final Translation2d ARM_PIVOT_TRANSLATION = new Translation2d(0, Units.inchesToMeters(25));
+        
+        public static final double EXTEND_DRUM_RADIUS = Units.inchesToMeters(1);
+        public static final double EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION = 1.0/14.667;
+        public static final double EXTEND_METERS_PER_DRUM_ROTATION = Math.PI * 2 * EXTEND_DRUM_RADIUS;
+
+        public static final double ARM_EXTEND_KG_VERTICAL = 0.2;
+        /* PIVOT */
+        public static final double MIN_ARM_ANGLE = Units.degreesToRadians(-45);
+        public static final double MAX_ARM_ANGLE = Units.degreesToRadians(225);
+        public static final double ARM_ROTATIONS_PER_MOTOR_ROTATION = 1.0/400.0;
+
+        public static final double ARM_MASS_KG = 20;
+        
+
+        public static final int PIVOT_MOTOR_ID = 21;
+        public static final double ARM_PIVOT_KG_MIN_EXTEND = 1.414 / 2 / Math.cos(Units.degreesToRadians(10.5));
+        public static final double ARM_PIVOT_KG_MAX_EXTEND = 2.872 / 2 / Math.cos(Units.degreesToRadians(10.5));
+
+        /* WRIST/HAND */
+
+        // Wrist angle is relative to the extension of the telescope.
+        // I.e. 0 is straight out from the pivot.
+        // positive angles match pivot (up and over, with 0 being straight out the robot front)
+        public static final int WRIST_MOTOR_ID = 22;
+        public static final double WRIST_ROTATIONS_PER_MOTOR_ROTATION = 0.2;
+        public static final double HAND_LENGTH = Units.inchesToMeters(10);
+        public static final double HAND_MASS_KG = 5;
+        public static final double WRIST_MIN_ANGLE = -3 * Math.PI/4;
+        public static final double WRIST_MAX_ANGLE = 3 * Math.PI/4;
+        public static final double WRIST_KG = 5.744;
+
+        
+    }
+
+
     public static final class IntakeConstants{
         public static final int INTAKE_CAN_ID = 30; 
         public static final double INTAKE_VOLTAGE = 6.995;
