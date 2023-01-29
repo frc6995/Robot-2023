@@ -68,21 +68,14 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     public ArmS() {
         initExtender();
-        System.out.println("init extender");
         initPivot();
-        System.out.println("init pivot");
         initWrist();
-        System.out.println("init wrist");
         initSimulation();
-        System.out.println("init sim");
         initVisualizer();
-        System.out.println("init visualizer");
         setDefaultCommand(followTargetC( ()-> new Pose2d(0, 1.5, new Rotation2d())));
-        System.out.println("init default command");
     }
 
     public void periodic() {    
-        System.out.println("arm periodic");  
         pivotPeriodic();
         updateVisualizer();
     }
@@ -687,6 +680,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         MECH_VISUALIZER_HAND.setAngle(getWristAngle());
     }
 
+    @Log
     private final Mechanism2d MECH_VISUALIZER = new Mechanism2d(Units.feetToMeters(10), Units.feetToMeters(6));
     private final MechanismRoot2d MECH_VISUALIZER_ROOT = MECH_VISUALIZER.getRoot("root", Units.feetToMeters(5), 0);
     private final MechanismLigament2d MECH_VISUALIZER_PIVOT_BASE = new MechanismLigament2d(
