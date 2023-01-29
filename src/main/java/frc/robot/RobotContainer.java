@@ -28,6 +28,7 @@ public class RobotContainer {
      */
 
     private final CommandXboxController m_driverController = new CommandXboxController(InputDevices.GAMEPAD_PORT);
+    private final CommandXboxController m_operatorController = new CommandXboxController(1);
     private final DrivebaseS m_drivebaseS = new DrivebaseS();
     private final ArmS m_armS = new ArmS();
 
@@ -68,6 +69,7 @@ public class RobotContainer {
         m_driverController.rightBumper().toggleOnTrue(m_drivebaseS.chasePoseC(m_target::getPose));
         m_driverController.a().whileTrue(m_intakeS.extendAndIntakeC());
         m_driverController.y().whileTrue(m_intakeS.extendAndOuttakeC());
+        m_operatorController.a().whileTrue(m_armS.scoreHighC());
     }
 
 

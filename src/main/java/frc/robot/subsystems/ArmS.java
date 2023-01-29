@@ -72,7 +72,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         initWrist();
         initSimulation();
         initVisualizer();
-        setDefaultCommand(followTargetC( ()-> new Pose2d(0, 1.5, new Rotation2d())));
+        setDefaultCommand(stowC());
     }
 
     public void periodic() {    
@@ -407,7 +407,7 @@ public class ArmS extends SubsystemBase implements Loggable {
     
     private final SparkMaxEncoderWrapper m_wristEncoderWrapper = new SparkMaxEncoderWrapper(m_wristMotor);
     private final ProfiledPIDController m_wristController = new ProfiledPIDController(
-        1, 0, 0, new Constraints(4, 4));
+        5, 0, 0, new Constraints(8, 8));
 
     /**
      * initializes wrist:
@@ -524,8 +524,15 @@ public class ArmS extends SubsystemBase implements Loggable {
             offset = new Translation2d(offset.getX(), offset.getY() - ARM_PIVOT_TRANSLATION.getY());
             setPivotAngle(offset.getAngle().getRadians());
             setExtendLength(offset.getNorm());
-            setWristAngle(-getAngle().getRadians() + targetPose.getRotation().getRadians());
+            setWristAngle(-getAngle().getRadians());
         });
+    }
+
+    public Command scoreHighC() {
+        return followTargetC(()->new Pose2d(Units.inchesToMeters(48 + 12.5), Units.inchesToMeters(56), new Rotation2d()));
+    }
+    public Command stowC() {
+        return followTargetC(()->new Pose2d(0, Units.inchesToMeters(ARM_PIVOT_TRANSLATION.getY() + 10) + MIN_ARM_LENGTH + HAND_LENGTH, new Rotation2d(Math.PI/2)));
     }
 
     // endregion
@@ -681,8 +688,8 @@ public class ArmS extends SubsystemBase implements Loggable {
     }
 
     @Log
-    private final Mechanism2d MECH_VISUALIZER = new Mechanism2d(Units.feetToMeters(10), Units.feetToMeters(6));
-    private final MechanismRoot2d MECH_VISUALIZER_ROOT = MECH_VISUALIZER.getRoot("root", Units.feetToMeters(5), 0);
+    private final Mechanism2d MECH_VISUALIZER = new Mechanism2d(Units.feetToMeters(12), Units.feetToMeters(8));
+    private final MechanismRoot2d MECH_VISUALIZER_ROOT = MECH_VISUALIZER.getRoot("root", Units.feetToMeters(6), 0);
     private final MechanismLigament2d MECH_VISUALIZER_PIVOT_BASE = new MechanismLigament2d(
         "base", ARM_PIVOT_TRANSLATION.getNorm(), ARM_PIVOT_TRANSLATION.getAngle().getDegrees(),
         4, new Color8Bit(255, 255,255));
