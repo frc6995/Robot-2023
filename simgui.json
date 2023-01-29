@@ -1,0 +1,38 @@
+{
+  "HALProvider": {
+    "Other Devices": {
+      "window": {
+        "visible": false
+      }
+    }
+  },
+  "NTProvider": {
+    "types": {
+      "/FMSInfo": "FMSInfo",
+      "/Shuffleboard/ArmS/MECH_VISUALIZER": "Mechanism2d",
+      "/Shuffleboard/RobotContainer/m_autoSelector": "String Chooser",
+      "/Shuffleboard/RobotContainer/m_field": "Field2d",
+      "/SmartDashboard/SendableChooser[0]": "String Chooser"
+    },
+    "windows": {
+      "/Shuffleboard/ArmS/MECH_VISUALIZER": {
+        "image": "C:\\Users\\jashu\\git\\Robot-2023\\resources\\arm-mech2d-background.png",
+        "window": {
+          "visible": true
+        }
+      }
+    }
+  },
+  "NetworkTables": {
+    "transitory": {
+      "Shuffleboard": {
+        "ArmS": {
+          "open": true
+        }
+      },
+      "SmartDashboard": {
+        "open": true
+      }
+    }
+  }
+}
