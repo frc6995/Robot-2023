@@ -1,0 +1,10 @@
+{
+    "game": "ArmJointSpace",
+    "field-image": "index.png",
+    "field-corners": {
+      "top-left": [80,24],
+      "bottom-right": [ 414,191]
+    },
+    "field-size": [4, 2],
+    "field-unit": "meter"
+  }

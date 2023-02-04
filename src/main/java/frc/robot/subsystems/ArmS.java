@@ -23,10 +23,15 @@ import static frc.robot.Constants.ArmConstants.WRIST_MIN_ANGLE;
 import static frc.robot.Constants.ArmConstants.WRIST_MOTOR_ID;
 import static frc.robot.Constants.ArmConstants.WRIST_ROTATIONS_PER_MOTOR_ROTATION;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import com.pathplanner.lib.PathConstraints;
+import com.pathplanner.lib.PathPlanner;
+import com.pathplanner.lib.PathPlannerTrajectory;
+import com.pathplanner.lib.PathPoint;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.SoftLimitDirection;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -60,11 +65,15 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.util.NomadMathUtil;
 import frc.robot.util.sim.SparkMaxEncoderWrapper;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
 public class ArmS extends SubsystemBase implements Loggable {
+    @Log
+    public final Field2d VISUALIZER = new Field2d();
+    public ArmSetpointManager setpointManager = new ArmSetpointManager(VISUALIZER);
 
     public ArmS() {
         initExtender();
@@ -72,11 +81,18 @@ public class ArmS extends SubsystemBase implements Loggable {
         initWrist();
         initSimulation();
         initVisualizer();
-        setDefaultCommand(stowC());
+        setDefaultCommand(followJointSpaceTargetC());
     }
 
     public void periodic() {    
         pivotPeriodic();
+        Translation2d[] path = setpointManager.calculatePath(new Translation2d(getAngle().getRadians(), getLengthMeters()),
+        VISUALIZER.getObject("pathTarget").getPose().getTranslation());
+        var poseList = new ArrayList<Pose2d> ();
+        for (int i = 0; i < path.length; i++) {
+            poseList.add(new Pose2d(path[i], new Rotation2d()));
+        }
+        VISUALIZER.getObject("path").setPoses(poseList);
         updateVisualizer();
     }
 
@@ -524,16 +540,35 @@ public class ArmS extends SubsystemBase implements Loggable {
             offset = new Translation2d(offset.getX(), offset.getY() - ARM_PIVOT_TRANSLATION.getY());
             setPivotAngle(offset.getAngle().getRadians());
             setExtendLength(offset.getNorm());
-            setWristAngle(-getAngle().getRadians());
+            setWristAngle(-offset.getAngle().getRadians());
         });
     }
 
-    public Command scoreHighC() {
+    public Command scoreHighConeC() {
         return followTargetC(()->new Pose2d(Units.inchesToMeters(48 + 12.5), Units.inchesToMeters(56), new Rotation2d()));
+    }
+    public Command scoreMidConeC() {
+        return followTargetC(()->new Pose2d(Units.inchesToMeters(31 + 12.5), Units.inchesToMeters(44), new Rotation2d()));
+    }
+
+    public Command scoreHighCubeC() {
+        return followTargetC(()->new Pose2d(Units.inchesToMeters(31 + 12.5), Units.inchesToMeters(30), new Rotation2d()));
     }
     public Command stowC() {
         return followTargetC(()->new Pose2d(0, Units.inchesToMeters(ARM_PIVOT_TRANSLATION.getY() + 10) + MIN_ARM_LENGTH + HAND_LENGTH, new Rotation2d(Math.PI/2)));
     }
+    public Command followJointSpaceTargetC() {
+        return run(()->{
+        var target = VISUALIZER.getObject("target").getPose();
+            double armAngle = target.getX();
+            boolean flipArm = armAngle > Math.PI/2;
+            double wristAngle = (flipArm ? Math.PI : 0) - armAngle;
+            setPivotAngle(armAngle);
+            setExtendLength(target.getY());
+            setWristAngle(wristAngle);
+        });
+    }
+
 
     // endregion
 
@@ -646,7 +681,6 @@ public class ArmS extends SubsystemBase implements Loggable {
     // endregion
 
     // region visualizer
-    // public final Field2d VISUALIZER = new Field2d();
 
     /**
      * initializes visualizer: </p>
@@ -654,11 +688,15 @@ public class ArmS extends SubsystemBase implements Loggable {
      */
 
     public void initVisualizer() {
-        var pivotPose = new Pose2d(ARM_PIVOT_TRANSLATION, getAngle());
+        //var pivotPose = new Pose2d(ARM_PIVOT_TRANSLATION, getAngle());
         // VISUALIZER.getObject("2_target").setPose(new Pose2d(
         //     pivotPose.getTranslation().plus(new Translation2d(0, MIN_ARM_LENGTH)),
         //     pivotPose.getRotation()
         // ));
+        VISUALIZER.getObject("pathTarget")
+        .setPose(new Pose2d(getAngle().getRadians(), getLengthMeters(), new Rotation2d()));
+        VISUALIZER.getObject("target")
+        .setPose(new Pose2d(getAngle().getRadians(), getLengthMeters(), new Rotation2d()));
         initMechVisualizer();
     }
 
@@ -678,6 +716,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         var handEndPose = handPose.transformBy(
             new Transform2d(new Translation2d(HAND_LENGTH, 0), new Rotation2d())
         );
+        VISUALIZER.getObject("Current").setPose(new Pose2d(getAngle().getRadians(), getLengthMeters(), new Rotation2d()));
         // VISUALIZER.getObject("0_Pivot").setPose(pivotPose);
         // VISUALIZER.getObject("1_Arm").setPoses(List.of(pivotPose, wristPose));
         // VISUALIZER.getObject("2_Hand").setPoses(List.of(handPose, handEndPose));

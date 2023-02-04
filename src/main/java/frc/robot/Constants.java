@@ -168,8 +168,8 @@ public class Constants {
         public static final int EXTEND_MOTOR_ID = 20;
 
         //Arm length measured from shoulder pivot to wrist pivot
-        public static final double MIN_ARM_LENGTH = Units.inchesToMeters(13);
-        public static final double MAX_ARM_LENGTH = Units.inchesToMeters(61);
+        public static final double MIN_ARM_LENGTH = Units.inchesToMeters(19.75);
+        public static final double MAX_ARM_LENGTH = Units.inchesToMeters(65.75);
 
         public static final Translation2d ARM_PIVOT_TRANSLATION = new Translation2d(0, Units.inchesToMeters(18));
         

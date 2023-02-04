@@ -9,6 +9,9 @@
    id="svg5"
    inkscape:version="1.1 (c68e22c387, 2021-05-23)"
    sodipodi:docname="arm-mech2d-background.svg"
+   inkscape:export-filename="C:\Users\jashu\git\Robot-2023\resources\arm-mech2d-background.png"
+   inkscape:export-xdpi="952.5"
+   inkscape:export-ydpi="952.5"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -23,15 +26,15 @@
      inkscape:pagecheckerboard="0"
      inkscape:document-units="mm"
      showgrid="true"
-     inkscape:zoom="64"
-     inkscape:cx="20.257813"
-     inkscape:cy="27.695313"
+     inkscape:zoom="16"
+     inkscape:cx="27.03125"
+     inkscape:cy="19.96875"
      inkscape:window-width="1920"
      inkscape:window-height="1001"
      inkscape:window-x="-9"
      inkscape:window-y="-9"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer1">
+     inkscape:current-layer="g979">
     <inkscape:grid
        type="xygrid"
        id="grid824"
@@ -66,7 +69,7 @@
        inkscape:label="g979"
        inkscape:path-effect="#path-effect1021">
       <path
-         style="fill:#aa0000;stroke-width:0.264999;stroke-linecap:round;stroke-linejoin:round"
+         style="fill:#e6e6e6;stroke-width:0.02;stroke-linecap:round;stroke-linejoin:round;stroke:#000000;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
          id="rect961"
          width="5.0414648"
          height="6.5005198"

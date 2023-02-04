@@ -10,6 +10,7 @@
     "types": {
       "/FMSInfo": "FMSInfo",
       "/Shuffleboard/ArmS/MECH_VISUALIZER": "Mechanism2d",
+      "/Shuffleboard/ArmS/VISUALIZER": "Field2d",
       "/Shuffleboard/RobotContainer/m_autoSelector": "String Chooser",
       "/Shuffleboard/RobotContainer/m_field": "Field2d",
       "/SmartDashboard/SendableChooser[0]": "String Chooser"
@@ -20,6 +21,63 @@
         "window": {
           "visible": true
         }
+      },
+      "/Shuffleboard/ArmS/VISUALIZER": {
+        "3.5396508512757527E-4": {
+          "style": "Line"
+        },
+        "Current": {
+          "arrowSize": 4,
+          "arrows": false,
+          "length": 0.009999999776482582,
+          "style": "Box/Image",
+          "width": 0.009999999776482582
+        },
+        "Robot": {
+          "arrows": false,
+          "style": "Hidden"
+        },
+        "bottom": 191,
+        "constraints": {
+          "style": "Line (Closed)"
+        },
+        "constraintsBack": {
+          "style": "Line (Closed)"
+        },
+        "height": 2.0,
+        "image": "C:\\Users\\jashu\\git\\Robot-2023\\resources\\index.png",
+        "left": 80,
+        "line": {
+          "arrows": false,
+          "selectable": false,
+          "style": "Line (Closed)"
+        },
+        "path": {
+          "arrowColor": [
+            255.0,
+            103.2911376953125,
+            0.0,
+            255.0
+          ],
+          "selectable": false,
+          "style": "Line"
+        },
+        "pathTarget": {
+          "arrows": false,
+          "length": 0.4000000059604645,
+          "width": 0.4000000059604645
+        },
+        "right": 414,
+        "target": {
+          "arrows": false,
+          "style": "Box/Image",
+          "width": 0.800000011920929
+        },
+        "top": 24,
+        "width": 4.0,
+        "window": {
+          "visible": true
+        }
       }
     }
   },
@@ -27,8 +85,12 @@
     "transitory": {
       "Shuffleboard": {
         "ArmS": {
+          "VISUALIZER": {
+            "open": true
+          },
           "open": true
-        }
+        },
+        "open": true
       },
       "SmartDashboard": {
         "open": true
