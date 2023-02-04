@@ -55,7 +55,6 @@ public class ArmSetpointManager {
             for (var b : graph) {
                 if(InLineOfSight(constraintsPolyBack, a.data, b.data)) {
                     a.addBranch(a.data.getDistance(b.data), b);
-                    VISUALIZER.getObject(a.id + " " + b.id).setPoses(new Pose2d(a.data, new Rotation2d()),new Pose2d(b.data, new Rotation2d()));
                 }
             }
         }
