@@ -108,8 +108,8 @@ public class Constants {
     public static final class VisionConstants{
 
         public static final Transform3d robotToCam = new Transform3d(
-            new Translation3d(Units.inchesToMeters(-5.25), 0, Units.inchesToMeters(32.5)), 
-            new Rotation3d());
+            new Translation3d(Units.inchesToMeters(8.5), Units.inchesToMeters(6.75), Units.inchesToMeters(10.375)), 
+            new Rotation3d(Units.degreesToRadians(0) , Units.degreesToRadians(10),Units.degreesToRadians(-50) ));
         public static AprilTagFieldLayout TAG_FIELD_LAYOUT = new AprilTagFieldLayout(
             List.of(
                 new AprilTag(

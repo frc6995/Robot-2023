@@ -13,6 +13,7 @@
       "/Shuffleboard/ArmS/VISUALIZER": "Field2d",
       "/Shuffleboard/RobotContainer/m_autoSelector": "String Chooser",
       "/Shuffleboard/RobotContainer/m_field": "Field2d",
+      "/SmartDashboard/PPSwerveControllerCommand_field": "Field2d",
       "/SmartDashboard/SendableChooser[0]": "String Chooser"
     },
     "windows": {
@@ -39,6 +40,7 @@
         },
         "bottom": 191,
         "constraints": {
+          "arrows": false,
           "style": "Line (Closed)"
         },
         "constraintsBack": {
@@ -63,11 +65,11 @@
           "style": "Line"
         },
         "pathTarget": {
-          "arrows": false,
+          "arrowSize": 2,
           "length": 0.4000000059604645,
           "width": 0.4000000059604645
         },
-        "right": 414,
+        "right": 412,
         "target": {
           "arrows": false,
           "style": "Box/Image",

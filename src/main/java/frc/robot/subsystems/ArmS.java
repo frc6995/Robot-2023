@@ -73,7 +73,7 @@ import io.github.oblarg.oblog.annotations.Log;
 public class ArmS extends SubsystemBase implements Loggable {
     @Log
     public final Field2d VISUALIZER = new Field2d();
-    public ArmSetpointManager setpointManager = new ArmSetpointManager(VISUALIZER);
+    public ArmConstraintsManager setpointManager = new ArmConstraintsManager(VISUALIZER);
 
     public ArmS() {
         initExtender();
@@ -86,13 +86,13 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     public void periodic() {    
         pivotPeriodic();
-        Translation2d[] path = setpointManager.calculatePath(new Translation2d(getAngle().getRadians(), getLengthMeters()),
-        VISUALIZER.getObject("pathTarget").getPose().getTranslation());
-        var poseList = new ArrayList<Pose2d> ();
-        for (int i = 0; i < path.length; i++) {
-            poseList.add(new Pose2d(path[i], new Rotation2d()));
-        }
-        VISUALIZER.getObject("path").setPoses(poseList);
+        //Translation2d[] path = setpointManager.calculatePath(new Translation2d(getAngle().getRadians(), getLengthMeters()),
+        //VISUALIZER.getObject("pathTarget").getPose().getTranslation();
+        // var poseList = new ArrayList<Pose2d> ();
+        // for (int i = 0; i < path.length; i++) {
+        //     poseList.add(new Pose2d(path[i], new Rotation2d()));
+        // }
+        // VISUALIZER.getObject("path").setPoses(poseList);
         updateVisualizer();
     }
 
