@@ -41,6 +41,7 @@
         "bottom": 191,
         "constraints": {
           "arrows": false,
+          "selectable": false,
           "style": "Line (Closed)"
         },
         "constraintsBack": {
@@ -71,7 +72,7 @@
         },
         "right": 412,
         "target": {
-          "arrows": false,
+          "arrowSize": 6,
           "style": "Box/Image",
           "width": 0.800000011920929
         },

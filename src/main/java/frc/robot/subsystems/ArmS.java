@@ -1,27 +1,6 @@
 package frc.robot.subsystems;
 
-import static frc.robot.Constants.ArmConstants.ARM_EXTEND_KG_VERTICAL;
-import static frc.robot.Constants.ArmConstants.ARM_MASS_KG;
-import static frc.robot.Constants.ArmConstants.ARM_PIVOT_KG_MAX_EXTEND;
-import static frc.robot.Constants.ArmConstants.ARM_PIVOT_KG_MIN_EXTEND;
-import static frc.robot.Constants.ArmConstants.ARM_PIVOT_TRANSLATION;
-import static frc.robot.Constants.ArmConstants.ARM_ROTATIONS_PER_MOTOR_ROTATION;
-import static frc.robot.Constants.ArmConstants.EXTEND_DRUM_RADIUS;
-import static frc.robot.Constants.ArmConstants.EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION;
-import static frc.robot.Constants.ArmConstants.EXTEND_METERS_PER_DRUM_ROTATION;
-import static frc.robot.Constants.ArmConstants.EXTEND_MOTOR_ID;
-import static frc.robot.Constants.ArmConstants.HAND_LENGTH;
-import static frc.robot.Constants.ArmConstants.HAND_MASS_KG;
-import static frc.robot.Constants.ArmConstants.MAX_ARM_ANGLE;
-import static frc.robot.Constants.ArmConstants.MAX_ARM_LENGTH;
-import static frc.robot.Constants.ArmConstants.MIN_ARM_ANGLE;
-import static frc.robot.Constants.ArmConstants.MIN_ARM_LENGTH;
-import static frc.robot.Constants.ArmConstants.PIVOT_MOTOR_ID;
-import static frc.robot.Constants.ArmConstants.WRIST_KG;
-import static frc.robot.Constants.ArmConstants.WRIST_MAX_ANGLE;
-import static frc.robot.Constants.ArmConstants.WRIST_MIN_ANGLE;
-import static frc.robot.Constants.ArmConstants.WRIST_MOTOR_ID;
-import static frc.robot.Constants.ArmConstants.WRIST_ROTATIONS_PER_MOTOR_ROTATION;
+import static frc.robot.Constants.ArmConstants.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,8 +12,11 @@ import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.PathPoint;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.SparkMaxAbsoluteEncoder;
+import com.revrobotics.SparkMaxLimitSwitch;
 import com.revrobotics.CANSparkMax.SoftLimitDirection;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.SparkMaxLimitSwitch.Type;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
@@ -54,6 +36,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.simulation.TiltedElevatorSim;
 import edu.wpi.first.wpilibj.simulation.VariableLengthArmSim;
@@ -64,8 +47,11 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.util.NomadMathUtil;
+import frc.robot.util.sim.SparkMaxAbsoluteEncoderWrapper;
 import frc.robot.util.sim.SparkMaxEncoderWrapper;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
@@ -117,6 +103,7 @@ public class ArmS extends SubsystemBase implements Loggable {
     // region extend
     private final CANSparkMax m_extendMotor = new CANSparkMax(EXTEND_MOTOR_ID, MotorType.kBrushless);
     private final SparkMaxEncoderWrapper m_extendEncoderWrapper = new SparkMaxEncoderWrapper(m_extendMotor);
+    private final SparkMaxLimitSwitch m_extendHomingSwitch = m_extendMotor.getForwardLimitSwitch(Type.kNormallyClosed);
     private final LinearSystem<N2, N1, N1> m_extendPlant =
         LinearSystemId.identifyPositionSystem(
             12 / (Units.inchesToMeters(81.2)), 0.01);
@@ -145,6 +132,14 @@ public class ArmS extends SubsystemBase implements Loggable {
         m_extendMotor.setSoftLimit(SoftLimitDirection.kReverse, (float) MIN_ARM_LENGTH);
         m_extendEncoderWrapper.setPosition(MIN_ARM_LENGTH);
         m_extendController.reset(MIN_ARM_LENGTH);
+        Command homingCommand = new InstantCommand(()->{
+            m_extendEncoderWrapper.setPosition(MIN_ARM_LENGTH);
+            m_extendController.reset(MIN_ARM_LENGTH);
+            // set state to current length (just reset above) and 0 velocity
+            m_extendSim.setState(VecBuilder.fill(getLengthMeters(), 0));
+        }).ignoringDisable(true);
+        new Trigger(m_extendHomingSwitch::isPressed).debounce(0.04).and(new Trigger(DriverStation::isDisabled))
+        .onTrue(homingCommand);
     }
 
     public void extendPeriodic(){}
@@ -163,7 +158,7 @@ public class ArmS extends SubsystemBase implements Loggable {
      */
     @Log
     public double getLengthMeters() {
-        return m_extendEncoderWrapper.getPosition();
+        return Math.max(MIN_ARM_LENGTH, m_extendEncoderWrapper.getPosition());
     }
 
     /**
@@ -232,10 +227,11 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     // region pivot
     private final CANSparkMax m_pivotMotor = new CANSparkMax(PIVOT_MOTOR_ID, MotorType.kBrushless);
-    private final SparkMaxEncoderWrapper m_pivotEncoderWrapper = new SparkMaxEncoderWrapper(m_pivotMotor);
+    private final CANSparkMax m_pivotFollowerMotor = new CANSparkMax(PIVOT_FOLLOWER_MOTOR_ID, MotorType.kBrushless);
+    private final SparkMaxAbsoluteEncoderWrapper m_pivotEncoderWrapper = new SparkMaxAbsoluteEncoderWrapper(m_pivotMotor, PIVOT_ENCODER_OFFSET);
 
     private LinearSystem<N2, N1, N1> m_pivotPlant = LinearSystemId.createSingleJointedArmSystem(
-        DCMotor.getNEO(2),  1.0 / 3.0 * ARM_MASS_KG * MIN_ARM_LENGTH * MIN_ARM_LENGTH
+        DCMotor.getNEO(2),  1.0 / 3.0 * ARM_MASS_KILOS * MIN_ARM_LENGTH * MIN_ARM_LENGTH
         , 1.0/ARM_ROTATIONS_PER_MOTOR_ROTATION);
 
     private DCMotor m_pivotGearbox = DCMotor.getNEO(1);
@@ -258,14 +254,15 @@ public class ArmS extends SubsystemBase implements Loggable {
      * Defines position and velocity tolerances of profiled PID controller</p>
      */
     private void initPivot() {
-        m_pivotMotor.getEncoder().setPositionConversionFactor(ARM_ROTATIONS_PER_MOTOR_ROTATION);
-        m_pivotMotor.getEncoder().setVelocityConversionFactor(ARM_ROTATIONS_PER_MOTOR_ROTATION / 60);
+        m_pivotMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setPositionConversionFactor(ARM_ROTATIONS_PER_MOTOR_ROTATION);
+        m_pivotMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setVelocityConversionFactor(ARM_ROTATIONS_PER_MOTOR_ROTATION / 60);
         m_pivotMotor.setSoftLimit(SoftLimitDirection.kForward, (float) MAX_ARM_ANGLE);
         m_pivotMotor.setSoftLimit(SoftLimitDirection.kReverse, (float) MIN_ARM_ANGLE);
 
-        m_pivotEncoderWrapper.setPosition(armStartAngle);
+        m_pivotFollowerMotor.follow(m_pivotMotor, true);
 
-        m_pivotController.reset(armStartAngle);
+
+        m_pivotController.reset(getAngle().getRadians());
         m_pivotController.setTolerance(0.05, 0.05);
     }
 
@@ -312,7 +309,7 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     public double getPivotMOI() {
         // TODO get this from held piece status and length
-        return 1.0 / 3.0 * ARM_MASS_KG * getLengthMeters() * getLengthMeters();
+        return 1.0 / 3.0 * ARM_MASS_KILOS * getLengthMeters() * getLengthMeters();
     }
 
     /**
@@ -413,7 +410,7 @@ public class ArmS extends SubsystemBase implements Loggable {
     // endregion
 
     // region wrist
-    private final double wristMOI = HAND_MASS_KG * HAND_LENGTH * HAND_LENGTH / 3.0;
+    private final double wristMOI = HAND_MASS_KILOS * HAND_LENGTH * HAND_LENGTH / 3.0;
     private final CANSparkMax m_wristMotor = new CANSparkMax(WRIST_MOTOR_ID,MotorType.kBrushless);
     private final LinearSystem<N2, N1, N1> m_wristPlant = LinearSystemId.createSingleJointedArmSystem(
         DCMotor.getNEO(1), wristMOI, 1.0/WRIST_ROTATIONS_PER_MOTOR_ROTATION);
@@ -421,10 +418,9 @@ public class ArmS extends SubsystemBase implements Loggable {
     private final LinearPlantInversionFeedforward<N2, N1, N1> m_wristFeedforward
         = new LinearPlantInversionFeedforward<>(m_wristPlant, 0.02);
     
-    private final SparkMaxEncoderWrapper m_wristEncoderWrapper = new SparkMaxEncoderWrapper(m_wristMotor);
+    private final SparkMaxAbsoluteEncoderWrapper m_wristEncoderWrapper = new SparkMaxAbsoluteEncoderWrapper(m_wristMotor, WRIST_ENCODER_OFFSET);
     private final ProfiledPIDController m_wristController = new ProfiledPIDController(
         5, 0, 0, new Constraints(8, 8));
-
     /**
      * initializes wrist:
      * sets position conversion factor for the wrist motor in rotations,</p>
@@ -437,14 +433,12 @@ public class ArmS extends SubsystemBase implements Loggable {
      */
 
     public void initWrist() {
-        m_wristMotor.getEncoder().setPositionConversionFactor(WRIST_ROTATIONS_PER_MOTOR_ROTATION);
-        m_wristMotor.getEncoder().setVelocityConversionFactor(WRIST_ROTATIONS_PER_MOTOR_ROTATION / 60);
+        m_wristMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setPositionConversionFactor(WRIST_ROTATIONS_PER_MOTOR_ROTATION);
+        m_wristMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setVelocityConversionFactor(WRIST_ROTATIONS_PER_MOTOR_ROTATION / 60);
         m_wristMotor.setSoftLimit(SoftLimitDirection.kForward, (float) WRIST_MAX_ANGLE);
         m_wristMotor.setSoftLimit(SoftLimitDirection.kReverse, (float) WRIST_MIN_ANGLE);
 
-        m_wristEncoderWrapper.setPosition(0);
-
-        m_wristController.reset(0);
+        m_wristController.reset(getWristAngle().getRadians());
         m_wristController.setTolerance(0.05, 0.05);
     }
 
@@ -562,7 +556,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         var target = VISUALIZER.getObject("target").getPose();
             double armAngle = target.getX();
             boolean flipArm = armAngle > Math.PI/2;
-            double wristAngle = (flipArm ? Math.PI : 0) - armAngle;
+            double wristAngle = (flipArm ? Math.PI : 0) - getAngle().getRadians();
             setPivotAngle(armAngle);
             setExtendLength(target.getY());
             setWristAngle(wristAngle);
@@ -578,11 +572,11 @@ public class ArmS extends SubsystemBase implements Loggable {
         m_pivotPlant,
         DCMotor.getNEO(1),
         1.0/ARM_ROTATIONS_PER_MOTOR_ROTATION,
-        1.0 / 3.0 * ARM_MASS_KG * MIN_ARM_LENGTH * MIN_ARM_LENGTH,
+        1.0 / 3.0 * ARM_MASS_KILOS * MIN_ARM_LENGTH * MIN_ARM_LENGTH,
         MIN_ARM_LENGTH,
         MIN_ARM_ANGLE,
         MAX_ARM_ANGLE,
-        ARM_MASS_KG,
+        ARM_MASS_KILOS,
         true
     );
 
@@ -598,7 +592,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         DCMotor.getNEO(1),
         1.0 / WRIST_ROTATIONS_PER_MOTOR_ROTATION,
         wristMOI, HAND_LENGTH,
-        WRIST_MIN_ANGLE, WRIST_MAX_ANGLE, HAND_MASS_KG, true);
+        WRIST_MIN_ANGLE, WRIST_MAX_ANGLE, HAND_MASS_KILOS, true);
     
     /**
      * initializes simulation:

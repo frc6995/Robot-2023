@@ -13,9 +13,8 @@ public class ArmConstraintsManager {
     Field2d VISUALIZER;
     Translation2d[] constraintsHalf = 
     {
-        new Translation2d(3.919000,0.503000),//0
-        new Translation2d(3.921000,0.642000),//1
-        new Translation2d(3.691000,0.820000),//2
+        new Translation2d(3.659000,0.503000),//0
+        new Translation2d(3.659000,0.887000),//2
         new Translation2d(3.519000,1.198000),//3
         new Translation2d(3.213000,1.118000),//4
         new Translation2d(2.905000,1.154000),//5
@@ -35,6 +34,9 @@ public class ArmConstraintsManager {
         for (int i = constraintsHalf.length - 1; i >= 0; i--) {
             constraints[(constraints.length - i) - 1] = new Translation2d( Math.PI -constraintsHalf[i].getX(), constraintsHalf[i].getY());
         }
+        // Override for the hand motor stack minimum height limit
+        constraints[1] = new Translation2d(3.438, 0.808);
+        constraints[2] = new Translation2d(3.361, 1.155);
         setTranslationList(constraints, "constraints");
     }
 
