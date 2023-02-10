@@ -202,9 +202,9 @@ public class Constants {
         public static final double WRIST_ENCODER_OFFSET = 0;
         public static final double HAND_LENGTH = Units.inchesToMeters(16);
         public static final double HAND_MASS_KILOS = 5;
-        // 3/8 of a circle, 135°
-        public static final double WRIST_MIN_ANGLE = -3 * Math.PI/4;
-        public static final double WRIST_MAX_ANGLE = 3 * Math.PI/4;
+      
+        public static final double WRIST_MIN_ANGLE = Units.degreesToRadians(-135);
+        public static final double WRIST_MAX_ANGLE = Units.degreesToRadians(80);
         public static final double WRIST_KG = 5.744 * 1.6;
 
         
