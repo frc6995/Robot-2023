@@ -39,7 +39,7 @@ public class NomadMathUtil {
         return voltage;
     }
  
-      public static SwerveModuleState optimize(
+    public static SwerveModuleState optimize(
       SwerveModuleState desiredState, Rotation2d currentAngle, double flipThreshold) {
         var delta = desiredState.angle.minus(currentAngle);
         if (Math.abs(delta.getDegrees()) > flipThreshold) {
