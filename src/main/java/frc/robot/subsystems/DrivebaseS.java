@@ -39,12 +39,14 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
 import frc.robot.Constants.VisionConstants;
+import frc.robot.util.AllianceWrapper;
 import frc.robot.util.NomadMathUtil;
 import frc.robot.util.drive.SecondOrderChassisSpeeds;
 import frc.robot.util.drive.SecondOrderSwerveDriveKinematics;
@@ -163,6 +165,15 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
 
     public void driveFieldRelative(ChassisSpeeds fieldRelativeSpeeds) {
         drive(ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds, getPoseHeading()));
+    }
+
+    public void driveAllianceRelative(ChassisSpeeds fieldRelativeSpeeds) {
+        if (AllianceWrapper.getAlliance() == Alliance.Red) {
+            drive(ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds, getPoseHeading().plus(Rotation2d.fromRadians(Math.PI))));
+        }
+        else {
+            drive(ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds, getPoseHeading()));
+        }
     }
 
     public void driveFieldRelativeHeading(ChassisSpeeds speeds) {

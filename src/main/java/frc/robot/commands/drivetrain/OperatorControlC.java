@@ -6,8 +6,10 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.DrivebaseS;
+import frc.robot.util.AllianceWrapper;
 import frc.robot.util.drive.SecondOrderChassisSpeeds;
 
 public class OperatorControlC extends CommandBase {
@@ -85,12 +87,16 @@ public class OperatorControlC extends CommandBase {
         rot = m_thetaRateLimiter.calculate(rot);
         rot *= MAX_TURN_SPEED;
 
+        var correctedHeading = m_drive.getPoseHeading().plus(Rotation2d.fromRadians(rot * 0.09));
+        if (AllianceWrapper.getAlliance() == Alliance.Red) {
+            correctedHeading = correctedHeading.plus(Rotation2d.fromRadians(Math.PI));
+        }
         m_drive.drive(SecondOrderChassisSpeeds.fromFieldRelativeSpeeds(
             new SecondOrderChassisSpeeds(
                 new ChassisSpeeds(fwdX, fwdY, rot)
             ),
             //Fudge factor here
-            m_drive.getPoseHeading().plus(Rotation2d.fromRadians(rot * 0.09))
+            correctedHeading
         ));
     }
 

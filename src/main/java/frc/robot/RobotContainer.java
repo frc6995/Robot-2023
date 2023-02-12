@@ -5,6 +5,8 @@ import com.pathplanner.lib.PathPlanner;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.Field3d;
@@ -13,6 +15,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.InputDevices;
 import frc.robot.commands.drivetrain.OperatorControlC;
@@ -67,8 +70,22 @@ public class RobotContainer {
 
     public void configureButtonBindings() {
         m_driverController.rightBumper().toggleOnTrue(m_drivebaseS.chasePoseC(m_target::getPose));
-        m_driverController.a().whileTrue(m_intakeS.extendAndIntakeC());
+        //m_driverController.a().whileTrue(m_intakeS.extendAndIntakeC());
         m_driverController.y().whileTrue(m_intakeS.extendAndOuttakeC());
+        m_driverController.a().whileTrue(m_armS.followJointSpaceTargetC());
+
+        m_driverController.povCenter().negate().whileTrue(m_drivebaseS.run(()->{
+                double pov = Units.degreesToRadians(-m_driverController.getHID().getPOV());
+                double adjustSpeed = 0.25; // m/s
+                m_drivebaseS.driveAllianceRelative(
+                    new ChassisSpeeds(
+                        Math.cos(pov) * adjustSpeed,
+                        Math.sin(pov) * adjustSpeed,
+                        0
+                    )
+                );
+            }
+        ));
         m_operatorController.a().whileTrue(m_armS.scoreHighConeC());
         m_operatorController.b().whileTrue(m_armS.scoreMidConeC());
         m_operatorController.x().whileTrue(m_armS.scoreHighCubeC());
