@@ -198,14 +198,14 @@ public class Constants {
         // I.e. 0 is straight out from the pivot.
         // positive angles match pivot (up and over, with 0 being straight out the robot front)
         public static final int WRIST_MOTOR_ID = 25;
-        public static final double WRIST_ROTATIONS_PER_MOTOR_ROTATION = 0.2;
+        public static final double WRIST_ROTATIONS_PER_MOTOR_ROTATION = 1.0/300.0;
         public static final double WRIST_ENCODER_OFFSET = 0;
         public static final double HAND_LENGTH = Units.inchesToMeters(16);
         public static final double HAND_MASS_KILOS = 5;
       
         public static final double WRIST_MIN_ANGLE = Units.degreesToRadians(-135);
         public static final double WRIST_MAX_ANGLE = Units.degreesToRadians(80);
-        public static final double WRIST_KG = 5.744 * 1.6;
+        public static final double WRIST_KG = 5.744 * 1.6 * (1 / 300.0 / 0.2);
 
         
     }
