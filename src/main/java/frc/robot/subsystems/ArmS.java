@@ -429,7 +429,7 @@ public class ArmS extends SubsystemBase implements Loggable {
     
     private final SparkMaxAbsoluteEncoderWrapper m_wristEncoderWrapper = new SparkMaxAbsoluteEncoderWrapper(m_wristMotor, WRIST_ENCODER_OFFSET);
     private final ProfiledPIDController m_wristController = new ProfiledPIDController(
-        5, 0, 0, new Constraints(8, 8));
+        20, 0, 0, new Constraints(8, 8));
     /**
      * initializes wrist:
      * sets position conversion factor for the wrist motor in rotations,</p>
@@ -442,8 +442,8 @@ public class ArmS extends SubsystemBase implements Loggable {
      */
 
     public void initWrist() {
-        m_wristMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setPositionConversionFactor(WRIST_ROTATIONS_PER_MOTOR_ROTATION);
-        m_wristMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setVelocityConversionFactor(WRIST_ROTATIONS_PER_MOTOR_ROTATION / 60);
+        m_wristMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setPositionConversionFactor(2 * Math.PI);
+        m_wristMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setVelocityConversionFactor(2 * Math.PI/ 60);
         m_wristMotor.setSoftLimit(SoftLimitDirection.kForward, (float) WRIST_MAX_ANGLE);
         m_wristMotor.setSoftLimit(SoftLimitDirection.kReverse, (float) WRIST_MIN_ANGLE);
 
