@@ -34,6 +34,10 @@
           "style": "Box/Image",
           "width": 0.009999999776482582
         },
+        "LOS": {
+          "arrowSize": 15,
+          "style": "Line"
+        },
         "Robot": {
           "arrows": false,
           "style": "Hidden"
@@ -62,7 +66,18 @@
             0.0,
             255.0
           ],
+          "arrows": false,
           "selectable": false,
+          "style": "Hidden"
+        },
+        "pathCandidates": {
+          "arrows": false,
+          "color": [
+            116.2025375366211,
+            255.0,
+            0.0,
+            255.0
+          ],
           "style": "Line"
         },
         "pathTarget": {
@@ -78,6 +93,29 @@
         },
         "top": 24,
         "width": 4.0,
+        "window": {
+          "visible": true
+        }
+      },
+      "/Shuffleboard/RobotContainer/m_field": {
+        "Robot": {
+          "length": 0.7799999713897705,
+          "width": 0.7799999713897705
+        },
+        "bottom": 544,
+        "height": 8.013679504394531,
+        "image": "C:\\Users\\jashu\\PathWeaver\\Games\\2023 Charged Up\\2023-field.png",
+        "left": 46,
+        "modules": {
+          "length": 0.4000000059604645,
+          "width": 0.4000000059604645
+        },
+        "right": 1088,
+        "target": {
+          "style": "Hidden"
+        },
+        "top": 36,
+        "width": 16.541748046875,
         "window": {
           "visible": true
         }
