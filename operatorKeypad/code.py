@@ -11,39 +11,34 @@ import digitalio
 import analogio
 import usb_hid
 
-from hid_gamepad import Gamepad
+from adafruit_hid.hid_gamepad import Gamepad
 
 gp = Gamepad(usb_hid.devices)
 
-Col_0 = 0
-Col_1 = 1
-Col_2 = 2
-Row_0 = 18
-Row_1 = 19
-Row_2 = 20
-Row_3 = 21
-Row_4 = 22
+# microcontroller GPIO pins
+Col_0 = board.GP0
+Col_1 = board.GP1
+Col_2 = board.GP2
+Row_0 = board.GP18
+Row_1 = board.GP19
+Row_2 = board.GP20
+Row_3 = board.GP21
+Row_4 = board.GP22
 # Create some buttons. The physical buttons are connected
-# to ground on one side and these and these pins on the other.
-button_pins = (board.D2, board.D3, board.D4, board.D5)
+# to ground on one side and these pins on the other.
 column_pins = (Col_0, Col_1, Col_2)
 row_pins = (Row_0, Row_1, Row_2, Row_3, Row_4)
-#   // Set the column pins as inputs and pull them high
-#   for ( int j = 0; j < 18; ++j ) {
-#     pinMode(Col_0 + j, INPUT_PULLUP);
-#   }
-#   // Set the row pins as inputs and set them high
-#   pinMode (Row_0, OUTPUT);
-#   for ( int i = 0; i < 5; ++i ) {
-#     pinMode (rowIndices[ i ], OUTPUT);
-#     digitalWrite( rowIndices[ i ], HIGH);
-#   }
 
 # Map the buttons to button numbers on the Gamepad.
-# gamepad_buttons[i] will send that button number when buttons[i]
-# is pushed.
-gamepad_buttons = (1, 2, 8, 15)
+# We use 15 for the missing middle button to maintain continuity on the ones we do use
+gamepad_buttons = (
+    ( 1,  2,  3),
+    ( 4,  5,  6),
+    ( 7,  8,  9),
+    (10, 11, 12),
+    (13, 15, 14))
 
+# configure the columns as input pins and rows as outputs
 columns = [digitalio.DigitalInOut(pin) for pin in column_pins]
 for column in columns:
     column.direction = digitalio.Direction.INPUT
@@ -51,17 +46,31 @@ for column in columns:
 
 rows = [digitalio.DigitalInOut(pin) for pin in row_pins]
 for row in rows:
-    row.direction = digitalio.Direction.OUTPU
-
+    row.direction = digitalio.Direction.OUTPUT
+# fill 16-value array with Trues
+button_state = [True for i in range(16)]
+print('start')
 while True:
-
-    # Buttons are grounded when pressed (.value = False).
-    for i, button in range(14):
-        gamepad_button_num = gamepad_buttons[i]
-        if button.value:
-            gp.release_buttons(gamepad_button_num)
-            print(" release", gamepad_button_num, end="")
+    
+    for i, row in enumerate(rows):
+        # send power to this row (idk why that's False)
+        row.value = False
+        # check each column and set the button state for those receiving power
+        # column.value is false if button pressed
+        for j, column in enumerate(columns):
+            if column.value:
+                button_state[gamepad_buttons[i][j]] = False
+            else:
+                button_state[gamepad_buttons[i][j]] = True
+        # cut power to this row
+        row.value = True
+    # send the current state
+    for i, state in enumerate(button_state):
+        # 0 is invalid button id
+        if i == 0:
+            continue
+        if state:
+            gp.press_buttons(i)
         else:
-            gp.press_buttons(gamepad_button_num)
-            print(" press", gamepad_button_num, end="")
+            gp.release_buttons(i)
 
