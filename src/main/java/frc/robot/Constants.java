@@ -183,7 +183,7 @@ public class Constants {
         public static final double MAX_ARM_ANGLE = Units.degreesToRadians(210);
         public static final double ARM_ROTATIONS_PER_MOTOR_ROTATION = (1.0/25.0) * (16.0/60.0);
 
-        public static final double PIVOT_ENCODER_OFFSET = 0;
+        public static final double PIVOT_ENCODER_OFFSET = 0.266 * Math.PI * 2.0;
 
         public static final double ARM_MASS_KILOS = 20;
         

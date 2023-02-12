@@ -67,7 +67,8 @@ public class ArmS extends SubsystemBase implements Loggable {
         initWrist();
         initSimulation();
         initVisualizer();
-        setDefaultCommand(followJointSpaceTargetC());
+        setDefaultCommand(run(()->{setPivotVolts(0); setExtendVolts(0); setWristVolts(0);}));
+        //setDefaultCommand(followJointSpaceTargetC());
     }
 
     public void periodic() {    
@@ -123,7 +124,6 @@ public class ArmS extends SubsystemBase implements Loggable {
      * sets initial position of encoder to minimum extension length,
      * sets profiled PID controller to minimum position
      */
-    // TODO: add homing limitswitches
 
     public void initExtender() {
         m_extendMotor.getEncoder().setPositionConversionFactor(EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION * EXTEND_METERS_PER_DRUM_ROTATION);
@@ -228,6 +228,7 @@ public class ArmS extends SubsystemBase implements Loggable {
     // region pivot
     private final CANSparkMax m_pivotMotor = new CANSparkMax(PIVOT_MOTOR_ID, MotorType.kBrushless);
     private final CANSparkMax m_pivotFollowerMotor = new CANSparkMax(PIVOT_FOLLOWER_MOTOR_ID, MotorType.kBrushless);
+    @Log(methodName="getPosition")
     private final SparkMaxAbsoluteEncoderWrapper m_pivotEncoderWrapper = new SparkMaxAbsoluteEncoderWrapper(m_pivotMotor, PIVOT_ENCODER_OFFSET);
 
     private LinearSystem<N2, N1, N1> m_pivotPlant = LinearSystemId.createSingleJointedArmSystem(
@@ -254,11 +255,13 @@ public class ArmS extends SubsystemBase implements Loggable {
      * Defines position and velocity tolerances of profiled PID controller</p>
      */
     private void initPivot() {
-        m_pivotMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setPositionConversionFactor(ARM_ROTATIONS_PER_MOTOR_ROTATION);
-        m_pivotMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setVelocityConversionFactor(ARM_ROTATIONS_PER_MOTOR_ROTATION / 60);
+        m_pivotMotor.restoreFactoryDefaults();
+        m_pivotFollowerMotor.restoreFactoryDefaults();
+        m_pivotMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setPositionConversionFactor(Math.PI * 2);
+        m_pivotMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setVelocityConversionFactor(Math.PI * 2.0 / 60);
         m_pivotMotor.setSoftLimit(SoftLimitDirection.kForward, (float) MAX_ARM_ANGLE);
         m_pivotMotor.setSoftLimit(SoftLimitDirection.kReverse, (float) MIN_ARM_ANGLE);
-
+        m_pivotMotor.setInverted(true);
         m_pivotFollowerMotor.follow(m_pivotMotor, true);
 
 
@@ -271,6 +274,7 @@ public class ArmS extends SubsystemBase implements Loggable {
      */
 
     private void pivotPeriodic() {
+        SmartDashboard.putNumber("Encoder",m_pivotMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).getPosition());
         updatePivotPlant();
         m_pivotFeedForward = new LinearPlantInversionFeedforward<>(m_pivotPlant, 0.02);
     }
@@ -291,7 +295,12 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     @Log(methodName = "getRadians")
     public Rotation2d getAngle() {
-        return Rotation2d.fromRadians(m_pivotEncoderWrapper.getPosition());
+        double position = MathUtil.angleModulus(m_pivotEncoderWrapper.getPosition());
+        // now in range -180 to 180
+        if (position <= -Math.PI/2) {
+            position += 2 * Math.PI;
+        }
+        return Rotation2d.fromRadians(position);
     }
 
     /**
@@ -691,6 +700,8 @@ public class ArmS extends SubsystemBase implements Loggable {
         .setPose(new Pose2d(getAngle().getRadians(), getLengthMeters(), new Rotation2d()));
         VISUALIZER.getObject("target")
         .setPose(new Pose2d(getAngle().getRadians(), getLengthMeters(), new Rotation2d()));
+        VISUALIZER.getObject("LOS")
+        .setPoses(new Pose2d(), new Pose2d(0, 1, new Rotation2d()));
         initMechVisualizer();
     }
 
@@ -711,6 +722,22 @@ public class ArmS extends SubsystemBase implements Loggable {
             new Transform2d(new Translation2d(HAND_LENGTH, 0), new Rotation2d())
         );
         VISUALIZER.getObject("Current").setPose(new Pose2d(getAngle().getRadians(), getLengthMeters(), new Rotation2d()));
+        Pose2d[] losTester = new Pose2d[2];
+        losTester = VISUALIZER.getObject("LOS").getPoses().toArray(losTester);
+        if (losTester.length >= 2) {
+            SmartDashboard.putBoolean("lineofSight", ArmConstraintsManager.belowConstraints(
+                losTester[0].getTranslation(),
+                losTester[1].getTranslation()));
+            List<Translation2d> pathTranslations = ArmConstraintsManager.solvePath(
+                losTester[0].getTranslation(),
+                losTester[1].getTranslation()
+                );
+            List<Pose2d> pathPoses = new ArrayList();
+            pathTranslations.forEach((Translation2d translation) -> {
+                pathPoses.add(new Pose2d(translation, new Rotation2d()));
+            });
+            VISUALIZER.getObject("pathCandidates").setPoses(pathPoses);
+        }
         // VISUALIZER.getObject("0_Pivot").setPose(pivotPose);
         // VISUALIZER.getObject("1_Arm").setPoses(List.of(pivotPose, wristPose));
         // VISUALIZER.getObject("2_Hand").setPoses(List.of(handPose, handEndPose));
