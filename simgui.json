@@ -1,7 +1,7 @@
 {
   "HALProvider": {
     "Other Devices": {
-      "SPARK MAX [25]": {
+      "SPARK MAX [22]": {
         "header": {
           "open": true
         }
@@ -72,6 +72,17 @@
           "selectable": false,
           "style": "Hidden"
         },
+        "pathArm": {
+          "arrows": false,
+          "color": [
+            0.0,
+            255.0,
+            109.7468032836914,
+            255.0
+          ],
+          "selectable": false,
+          "style": "Line"
+        },
         "pathCandidates": {
           "arrows": false,
           "color": [
@@ -84,7 +95,10 @@
         },
         "pathTarget": {
           "arrowSize": 2,
+          "arrows": false,
           "length": 0.4000000059604645,
+          "selectable": false,
+          "style": "Hidden",
           "width": 0.4000000059604645
         },
         "right": 412,

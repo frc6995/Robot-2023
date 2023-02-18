@@ -4,15 +4,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Function;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.util.InterpolatingTreeMap;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import frc.robot.Constants;
 
 public class ArmConstraintsManager {
     Field2d VISUALIZER;
+    //double halfChassisWidth = Constants.DriveConstants.
     static Translation2d[] constraintsHalf = 
 
     // TODO put points in Constants folder and reference here
@@ -29,6 +32,12 @@ public class ArmConstraintsManager {
         new Translation2d(1.636026,1.083639)//10
         // FLIP
     };
+
+    // private List<Constraint> functionConstraints = List.of(
+    //     new Constraint(
+    //         (angle)->Math.min(Constants.ArmConstants.MAX_ARM_LENGTH,
+    //         () Math.acos(0)))
+    // );
     
     private static Translation2d[] constraints = new Translation2d[constraintsHalf.length * 2];
     public ArmConstraintsManager(Field2d VISUALIZER){
@@ -144,7 +153,7 @@ public class ArmConstraintsManager {
         }
         List<Translation2d> candidates = new LinkedList<Translation2d>(Arrays.asList(constraints));
         path.add(start);
-        for (int segment = 0; segment < 3; segment++ ){
+        for (int segment = 0;  (segment < 5 && !currentPathTip.equals(end)); segment++  ){
             final Translation2d betweenTestEndpoint = currentPathTip;
             candidates.removeIf(
                 (Translation2d testPoint)->
@@ -173,38 +182,8 @@ public class ArmConstraintsManager {
         
 
         return path;
-    }    /**
-     * 
-     * @param startPoint Translation2d of the start point
-     * @param endPoint Translation2d of the desired end point
-     * @return true if the end point is to the right of the start point, 
-     * false if the end point is to the left of the start point
-     */
-
-    /*
-    private boolean endPointSide(Translation2d startPoint, Translation2d endPoint) {
-        return startPoint.getX() < endPoint.getX();
-    }
-    */
-
-
-    /**
-     * If the start point is to the right of the desired end point, 
-     * switch the values of the start and end points
-     * @param startPoint Traslation2d of the start point
-     * @param endPoint Translation2d of the end point
-     */
-   
-    /* 
-    private void startPointOrient(Translation2d startPoint, Translation2d endPoint) {
-        if(endPointSide(startPoint, endPoint)) {
-            Translation2d startPointTemp = startPoint;
-            startPoint = endPoint;
-            endPoint = startPointTemp;
-        }
     }
 
-    */
     public static void main(String[] args) {
         System.out.println("Left (1): ");
         System.out.println(leftRightOn(new Translation2d(), new Translation2d(1,0), new Translation2d(1,1)));
@@ -240,6 +219,17 @@ public class ArmConstraintsManager {
 
 
 
+    }
+
+    public class Constraint {
+        Function<Double, Double> constraint;
+        public Constraint(Function<Double, Double> constraint) {
+            this.constraint = constraint;
+        }
+
+        public double get(double x) {
+            return constraint.apply(x);
+        }
     }
 
 

@@ -71,8 +71,10 @@ public class RobotContainer {
     public void configureButtonBindings() {
         m_driverController.rightBumper().toggleOnTrue(m_drivebaseS.chasePoseC(m_target::getPose));
         //m_driverController.a().whileTrue(m_intakeS.extendAndIntakeC());
-        m_driverController.y().whileTrue(m_intakeS.extendAndOuttakeC());
-        m_driverController.a().whileTrue(m_armS.followJointSpaceTargetC());
+        m_driverController.y().whileTrue(m_armS.run(()->m_armS.setExtendVolts(1)));
+        m_driverController.x().whileTrue(m_armS.run(()->m_armS.setExtendVolts(-1)));
+        m_driverController.a().whileTrue(m_armS.run(()->m_armS.setPivotAngle(Math.PI/2)));
+        m_driverController.b().whileTrue(m_armS.run(()->m_armS.setPivotAngle(0)));
 
         m_driverController.povCenter().negate().whileTrue(m_drivebaseS.run(()->{
                 double pov = Units.degreesToRadians(-m_driverController.getHID().getPOV());

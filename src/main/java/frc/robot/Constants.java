@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import frc.robot.subsystems.ArmS.ArmPosition;
 
 public class Constants {
 
@@ -21,7 +22,6 @@ public class Constants {
     }
 
     public static final class DriveConstants {
-
         static public final double WHEEL_BASE_WIDTH_M = Units.inchesToMeters(18.25);
         static public final double WHEEL_RADIUS_M = 0.0508; //Units.inchesToMeters(4.0/2.0); //four inch (diameter) wheels
         static public final double ROBOT_MASS_kg = Units.lbsToKilograms(35);
@@ -163,34 +163,41 @@ public class Constants {
     }
 
     public static final class ArmConstants {
+
+
         /* EXTEND */
         
         public static final int EXTEND_MOTOR_ID = 20;
 
         //Arm length measured from shoulder pivot to wrist pivot
         public static final double MIN_ARM_LENGTH = Units.inchesToMeters(19.75);
-        public static final double MAX_ARM_LENGTH = Units.inchesToMeters(65.75);
+        public static final double MAX_ARM_LENGTH = 1.397;
 
-        public static final Translation2d ARM_PIVOT_TRANSLATION = new Translation2d(0, Units.inchesToMeters(18));
+        public static final Translation2d ARM_PIVOT_TRANSLATION = new Translation2d(0, Units.inchesToMeters(18.69));
         
         public static final double EXTEND_DRUM_RADIUS = Units.inchesToMeters(1.751/2);
         public static final double EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION = 1.0/16.0;
-        public static final double EXTEND_METERS_PER_DRUM_ROTATION = Math.PI * 2 * EXTEND_DRUM_RADIUS;
+        public static final double EXTEND_METERS_PER_DRUM_ROTATION = Math.PI * 2 * EXTEND_DRUM_RADIUS * 2; // 2x distance
 
         public static final double ARM_EXTEND_KG_VERTICAL = 0.2;
         /* PIVOT */
-        public static final double MIN_ARM_ANGLE = Units.degreesToRadians(-30);
-        public static final double MAX_ARM_ANGLE = Units.degreesToRadians(210);
+        public static final double MIN_ARM_ANGLE = 5.86 - 2*Math.PI;
+        public static final double MAX_ARM_ANGLE = 3.25;
         public static final double ARM_ROTATIONS_PER_MOTOR_ROTATION = (1.0/25.0) * (16.0/60.0);
 
-        public static final double PIVOT_ENCODER_OFFSET = 0.266 * Math.PI * 2.0;
+        public static final double PIVOT_ENCODER_OFFSET = 0.423 * Math.PI * 2.0;
 
-        public static final double ARM_MASS_KILOS = 20;
+        public static final double ARM_MASS_KILOS = Units.lbsToKilograms(21.1);
         
         public static final int PIVOT_MOTOR_ID = 22;
         public static final int PIVOT_FOLLOWER_MOTOR_ID = 23;
-        public static final double ARM_PIVOT_KG_MIN_EXTEND = 1.414 * (ARM_ROTATIONS_PER_MOTOR_ROTATION * 400) / 2 / Math.cos(Units.degreesToRadians(10.5));
-        public static final double ARM_PIVOT_KG_MAX_EXTEND = 2.872 * (ARM_ROTATIONS_PER_MOTOR_ROTATION * 400) / 2 / Math.cos(Units.degreesToRadians(10.5));
+        public static final double PIVOT_KS = 0.11;
+        public static final double ARM_PIVOT_KG_MIN_EXTEND = 0;//1.414 * (ARM_ROTATIONS_PER_MOTOR_ROTATION * 400) / 2 / Math.cos(Units.degreesToRadians(10.5));
+        public static final double ARM_PIVOT_KG_MAX_EXTEND = 0.13 / Math.cos(0.707);//2.872 * (ARM_ROTATIONS_PER_MOTOR_ROTATION * 400) / 2 / Math.cos(Units.degreesToRadians(10.5));
+
+        public static final double PIVOT_MAX_VELOCITY = 2; // rad/s
+        public static final double PIVOT_MAX_ACCEL_RETRACTED = 4;
+        public static final double PIVOT_MAX_ACCEL_EXTENDED = 1;
 
         /* WRIST/HAND */
 
@@ -207,7 +214,11 @@ public class Constants {
         public static final double WRIST_MAX_ANGLE = Units.degreesToRadians(80);
         public static final double WRIST_KG = 5.744 * 1.6 * (1 / 300.0 / 0.2);
 
-        
+        public static final ArmPosition SCORE_HIGH_POSITION = new ArmPosition(
+            Units.degreesToRadians(38.0),
+            Units.inchesToMeters(54.0),
+            Units.degreesToRadians(-38.0),
+            Units.inchesToMeters(9.4));
     }
 
 
