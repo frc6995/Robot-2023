@@ -32,11 +32,11 @@ row_pins = (Row_0, Row_1, Row_2, Row_3, Row_4)
 # Map the buttons to button numbers on the Gamepad.
 # We use 15 for the missing middle button to maintain continuity on the ones we do use
 gamepad_buttons = (
-    ( 1,  2,  3),
-    ( 4,  5,  6),
-    ( 7,  8,  9),
-    (10, 11, 12),
-    (13, 15, 14))
+    ( 3,  2,  1),
+    ( 6,  5,  4),
+    ( 9,  8,  7),
+    (12, 11, 10),
+    (14, 15, 13))
 
 # configure the columns as input pins and rows as outputs
 columns = [digitalio.DigitalInOut(pin) for pin in column_pins]
