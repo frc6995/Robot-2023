@@ -118,6 +118,16 @@
           "length": 0.7799999713897705,
           "width": 0.7799999713897705
         },
+        "bluePoses": {
+          "color": [
+            0.1821289211511612,
+            0.2081579715013504,
+            0.6962025165557861,
+            255.0
+          ],
+          "length": 0.7799999713897705,
+          "width": 0.7799999713897705
+        },
         "bottom": 544,
         "height": 8.013679504394531,
         "image": "C:\\Users\\jashu\\PathWeaver\\Games\\2023 Charged Up\\2023-field.png",
@@ -126,11 +136,31 @@
           "length": 0.4000000059604645,
           "width": 0.4000000059604645
         },
+        "poi": {
+          "length": 0.7799999713897705,
+          "width": 0.7799999713897705
+        },
+        "redPoses": {
+          "color": [
+            0.8227847814559937,
+            0.1492816060781479,
+            0.1492816060781479,
+            255.0
+          ],
+          "length": 0.7799999713897705,
+          "width": 0.7799999713897705
+        },
         "right": 1088,
         "target": {
+          "arrows": false,
+          "selectable": false,
           "style": "Hidden"
         },
         "top": 36,
+        "trajTarget": {
+          "arrows": false,
+          "style": "Hidden"
+        },
         "width": 16.541748046875,
         "window": {
           "visible": true
@@ -143,6 +173,12 @@
       "Shuffleboard": {
         "ArmS": {
           "VISUALIZER": {
+            "open": true
+          },
+          "open": true
+        },
+        "RobotContainer": {
+          "m_field": {
             "open": true
           },
           "open": true

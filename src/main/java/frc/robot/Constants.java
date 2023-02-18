@@ -219,6 +219,12 @@ public class Constants {
             Units.inchesToMeters(54.0),
             Units.degreesToRadians(-38.0),
             Units.inchesToMeters(9.4));
+        public static final ArmPosition STOW_POSITION = new ArmPosition(
+            Units.degreesToRadians(21.0),
+            Units.inchesToMeters(66.0),
+            Units.degreesToRadians(24.0),
+            Units.inchesToMeters(9.4));
+        
     }
 
 

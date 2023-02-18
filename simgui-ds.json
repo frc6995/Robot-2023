@@ -4,11 +4,6 @@
       "visible": true
     }
   },
-  "Keyboard 1 Settings": {
-    "window": {
-      "visible": true
-    }
-  },
   "keyboardJoysticks": [
     {
       "axisConfig": [
@@ -95,6 +90,9 @@
     },
     {
       "guid": "Keyboard1"
+    },
+    {
+      "guid": "030000009a230000f480000000000000"
     }
   ]
 }

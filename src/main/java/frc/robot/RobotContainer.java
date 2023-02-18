@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.InputDevices;
 import frc.robot.commands.drivetrain.OperatorControlC;
+import frc.robot.driver.CommandOperatorKeypad;
 import frc.robot.subsystems.ArmS;
 import frc.robot.subsystems.DrivebaseS;
 import frc.robot.subsystems.IntakeS;
@@ -32,6 +33,7 @@ public class RobotContainer {
 
     private final CommandXboxController m_driverController = new CommandXboxController(InputDevices.GAMEPAD_PORT);
     private final CommandXboxController m_operatorController = new CommandXboxController(1);
+    private final CommandOperatorKeypad m_keypad;
     private final DrivebaseS m_drivebaseS = new DrivebaseS();
     private final ArmS m_armS = new ArmS();
 
@@ -51,6 +53,7 @@ public class RobotContainer {
     private double m_lastLoopTimestampSeconds;
 
     public RobotContainer() {
+        m_keypad = new CommandOperatorKeypad(2, (pose)->m_field.getObject("Selection").setPose(pose), (position)->{});
         m_target.setPose(new Pose2d(1.909, 1.072, Rotation2d.fromRadians(Math.PI)));
         
         
@@ -65,6 +68,8 @@ public class RobotContainer {
 
         configureButtonBindings();
         m_autoSelector.setDefaultOption("twoPiece", twoPieceAuto());
+        m_field.getObject("bluePoses").setPoses(POIManager.BLUE_COMMUNITY);
+        m_field.getObject("redPoses").setPoses(POIManager.RED_COMMUNITY);
         SmartDashboard.putData(m_autoSelector);
     }
 
