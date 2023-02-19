@@ -278,6 +278,7 @@ public class ArmS extends SubsystemBase implements Loggable {
 
         m_pivotController.reset(getContinuousRangeAngle());
         m_pivotController.setTolerance(0.05, 0.05);
+        m_pivotMotor.burnFlash();
     }
 
     /**
@@ -496,6 +497,7 @@ public class ArmS extends SubsystemBase implements Loggable {
 
         m_wristController.reset(getWristAngle().getRadians());
         m_wristController.setTolerance(0.05, 0.05);
+        m_wristMotor.burnFlash();
     }
 
     /**
