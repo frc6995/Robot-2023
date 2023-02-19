@@ -2,6 +2,7 @@ package frc.robot;
 
 import com.pathplanner.lib.PathPlanner;
 
+import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -71,6 +72,7 @@ public class RobotContainer {
         m_field.getObject("bluePoses").setPoses(POIManager.BLUE_COMMUNITY);
         m_field.getObject("redPoses").setPoses(POIManager.RED_COMMUNITY);
         SmartDashboard.putData(m_autoSelector);
+        CameraServer.startAutomaticCapture().setResolution(320, 240);
     }
 
     public void configureButtonBindings() {
