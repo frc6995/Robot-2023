@@ -33,7 +33,7 @@ public class OperatorControlC extends CommandBase {
     private final DoubleSupplier m_rotation;
     private final SlewRateLimiter m_thetaRateLimiter = new SlewRateLimiter(2);
 
-    private final double MAX_LINEAR_SPEED = Units.feetToMeters(8);
+    private final double MAX_LINEAR_SPEED = Units.feetToMeters(6);
 
     public static final double MAX_TURN_SPEED = Units.degreesToRadians(360);
 
@@ -69,12 +69,14 @@ public class OperatorControlC extends CommandBase {
          */
 
         double fwdX = -m_forwardX.getAsDouble();
-        fwdX = Math.copySign(fwdX, fwdX);
         fwdX = deadbandInputs(fwdX);
+        fwdX = Math.copySign(fwdX*fwdX, fwdX);
+        
 
         double fwdY = -m_forwardY.getAsDouble();
-        fwdY = Math.copySign(fwdY, fwdY);
         fwdY = deadbandInputs(fwdY);
+        fwdY = Math.copySign(fwdY*fwdY, fwdY);
+        
 
         double driveDirectionRadians = Math.atan2(fwdY, fwdX);
         double driveMagnitude = Math.hypot(fwdX, fwdY) * MAX_LINEAR_SPEED;
