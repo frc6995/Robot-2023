@@ -126,12 +126,12 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
 
     @Override
     public void periodic() {
-        var cam1Pose = m_cameraWrapper.getEstimatedGlobalPose(getPose());
-        if (cam1Pose.getFirst() != null) {
-            var pose = cam1Pose.getFirst();
-            var timestamp = cam1Pose.getSecond();
-            m_poseEstimator.addVisionMeasurement(pose, timestamp);
-        }
+        // var cam1Pose = m_cameraWrapper.getEstimatedGlobalPose(getPose());
+        // if (cam1Pose.getFirst() != null) {
+        //     var pose = cam1Pose.getFirst();
+        //     var timestamp = cam1Pose.getSecond();
+        //     m_poseEstimator.addVisionMeasurement(pose, timestamp);
+        // }
 
         // update the odometry every 20ms
         m_poseEstimator.update(getHeading(), getModulePositions());

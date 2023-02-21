@@ -34,7 +34,7 @@ import frc.robot.util.sim.SparkMaxEncoderWrapper;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
-public class SwerveModule extends SubsystemBase implements Loggable{
+public class SwerveModule extends SubsystemBase{
 
     private final CANSparkMax m_driveMotor;
     private final CANSparkMax m_steerMotor;
@@ -178,7 +178,6 @@ public class SwerveModule extends SubsystemBase implements Loggable{
      * Returns the current angle of the module in radians, from the mag encoder.
      * @return a Rotation2d, where 0 is forward and pi/-pi is backward.
      */
-    @Log(methodName = "getRadians")
     public Rotation2d getMagEncoderAngle() {
         //double unsignedAngle = m_magEncoder.getAbsolutePosition() * 2*Math.PI - m_magEncoderOffset;
         double unsignedAngle = m_magEncoder.getPosition();
@@ -191,7 +190,6 @@ public class SwerveModule extends SubsystemBase implements Loggable{
      * current angle is always desired angle.
      * @return a Rotation2d, where 0 is forward and pi/-pi is backward.
      */
-    @Log(methodName = "getRadians")
     public Rotation2d getCanEncoderAngle() {
         return new Rotation2d(m_steerEncoderWrapper.getPosition());
     }
@@ -294,12 +292,9 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         m_magEncoder.setSimPosition(angle_rad);
     }
 
-    @Log
     public double getSteerSetpoint() {
         return m_steerPIDController.getSetpoint().position;
     }   
-
-    @Log
     public double getVelocitySetpoint() {
         return m_drivePIDController.getSetpoint();
     }

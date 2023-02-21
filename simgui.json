@@ -47,7 +47,6 @@
         "bottom": 191,
         "constraints": {
           "arrows": false,
-          "selectable": false,
           "style": "Line (Closed)"
         },
         "constraintsBack": {

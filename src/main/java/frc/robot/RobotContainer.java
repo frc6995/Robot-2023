@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.InputDevices;
 import frc.robot.commands.drivetrain.OperatorControlC;
 import frc.robot.driver.CommandOperatorKeypad;
@@ -42,11 +43,9 @@ public class RobotContainer {
 
     @Log
     private final Field2d m_field = new Field2d();
-    @Log
     private final Field3d m_field3d = new Field3d();
     private final FieldObject2d m_target = m_field.getObject("target");
     
-    @Log
     SendableChooser<Command> m_autoSelector = new SendableChooser<Command>();
 
     @Log
@@ -76,10 +75,16 @@ public class RobotContainer {
     }
 
     public void configureButtonBindings() {
-        m_driverController.rightBumper().toggleOnTrue(m_drivebaseS.chasePoseC(m_target::getPose));
+        //m_driverController.rightBumper().toggleOnTrue(m_drivebaseS.chasePoseC(m_target::getPose));
         //m_driverController.a().whileTrue(m_intakeS.extendAndIntakeC());
-        m_driverController.y().whileTrue(m_armS.run(()->m_armS.setExtendVolts(1)));
-        m_driverController.x().whileTrue(m_armS.run(()->m_armS.setExtendVolts(-1)));
+        m_driverController.y().whileTrue(
+            Commands.sequence(
+            m_armS.runOnce(m_armS::resetExtender),
+            m_armS.run(()->m_armS.setExtendLength(ArmConstants.MIN_ARM_LENGTH + Units.feetToMeters(1))))
+        );
+        //m_driverController.y().whileTrue(m_armS.run(()->m_armS.setExtendVelocity(0.1)));
+        m_driverController.start().whileTrue(m_armS.run(()->m_armS.setExtendVelocity(0.5)));
+        m_driverController.x().whileTrue(m_armS.run(()->m_armS.setExtendVelocity(-0.1)));
         m_driverController.a().whileTrue(m_armS.run(()->m_armS.setPivotAngle(Math.PI/2)));
         m_driverController.b().whileTrue(m_armS.run(()->m_armS.setPivotAngle(0)));
 
@@ -95,7 +100,7 @@ public class RobotContainer {
                 );
             }
         ));
-        m_operatorController.a().whileTrue(m_armS.scoreHighConeC());
+        m_operatorController.a().whileTrue(m_armS.followJointSpaceTargetC());
         m_operatorController.b().whileTrue(m_armS.scoreMidConeC());
         m_operatorController.x().whileTrue(m_armS.scoreHighCubeC());
     }
