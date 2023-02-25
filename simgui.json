@@ -101,6 +101,10 @@
           "width": 0.4000000059604645
         },
         "right": 412,
+        "setpoint": {
+          "length": 0.20000000298023224,
+          "width": 0.20000000298023224
+        },
         "target": {
           "arrowSize": 6,
           "style": "Box/Image",

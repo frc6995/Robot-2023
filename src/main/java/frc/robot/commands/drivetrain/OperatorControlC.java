@@ -94,9 +94,7 @@ public class OperatorControlC extends CommandBase {
             correctedHeading = correctedHeading.plus(Rotation2d.fromRadians(Math.PI));
         }
         m_drive.drive(SecondOrderChassisSpeeds.fromFieldRelativeSpeeds(
-            new SecondOrderChassisSpeeds(
-                new ChassisSpeeds(fwdX, fwdY, rot)
-            ),
+            fwdX, fwdY, rot, 0, 0, 0,
             //Fudge factor here
             correctedHeading
         ));

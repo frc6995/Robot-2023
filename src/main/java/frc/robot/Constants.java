@@ -171,7 +171,7 @@ public class Constants {
 
         //Arm length measured from shoulder pivot to wrist pivot
         public static final double MIN_ARM_LENGTH = Units.inchesToMeters(20);
-        public static final double MAX_ARM_LENGTH = 1.397;
+        public static final double MAX_ARM_LENGTH = 1.497;
 
         public static final Translation2d ARM_PIVOT_TRANSLATION = new Translation2d(0, Units.inchesToMeters(18.69));
         
@@ -179,8 +179,8 @@ public class Constants {
         public static final double EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION = 1.0/16.0;
         public static final double EXTEND_METERS_PER_DRUM_ROTATION = Math.PI * 2 * EXTEND_DRUM_RADIUS * 2; // 2x distance
 
-        public static final double ARM_EXTEND_KG_VERTICAL = 0.2;
-        public static final double ARM_EXTEND_KS = 0.303;
+        public static final double ARM_EXTEND_KG_VERTICAL = 0.4;
+        public static final double ARM_EXTEND_KS = 0.1;
         public static final double ARM_EXTEND_KV = 1.31/0.15;//12 /*v*//(5676 /*rpm */ * EXTEND_METERS_PER_DRUM_ROTATION * EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION / 60);
         /* PIVOT */
         public static final double MIN_ARM_ANGLE = 5.86 - 2*Math.PI;
@@ -210,23 +210,28 @@ public class Constants {
         // positive angles match pivot (up and over, with 0 being straight out the robot front)
         public static final int WRIST_MOTOR_ID = 25;
         public static final double WRIST_ROTATIONS_PER_MOTOR_ROTATION = 1.0/300.0;
-        public static final double WRIST_ENCODER_OFFSET = 0;
+        public static final double WRIST_ENCODER_OFFSET = 5.382308;//0.995;
         public static final double HAND_LENGTH = Units.inchesToMeters(16);
         public static final double HAND_MASS_KILOS = Units.lbsToKilograms(7);
       
-        public static final double WRIST_MIN_ANGLE = Units.degreesToRadians(-135);
+        public static final double WRIST_MIN_ANGLE = Units.degreesToRadians(-60);
         public static final double WRIST_MAX_ANGLE = Units.degreesToRadians(80);
         public static final double WRIST_KG = 5.744 * 1.6 * (1 / 300.0 / 0.2);
 
-        public static final ArmPosition SCORE_HIGH_POSITION = new ArmPosition(
-            Units.degreesToRadians(38.0),
-            Units.inchesToMeters(54.0),
-            Units.degreesToRadians(-38.0),
+        public static final ArmPosition SCORE_HIGH_CONE_POSITION = new ArmPosition(
+            0.615,
+            1.479,
+            -0.184,
+            Units.inchesToMeters(9.4));
+        public static final ArmPosition SCORE_MID_CONE_POSITION = new ArmPosition(
+            0.658,
+            0.982,
+            -0.184,
             Units.inchesToMeters(9.4));
         public static final ArmPosition STOW_POSITION = new ArmPosition(
-            Units.degreesToRadians(21.0),
-            Units.inchesToMeters(66.0),
-            Units.degreesToRadians(24.0),
+            Math.PI/2,
+            MIN_ARM_LENGTH,
+            -Math.PI/2,
             Units.inchesToMeters(9.4));
         
     }
@@ -237,5 +242,16 @@ public class Constants {
         public static final double INTAKE_VOLTAGE = 6.995;
         public static final int INTAKE_EXTEND = 2;
         public static final int INTAKE_RETRACT= 3;
+    }
+
+    public static final class LightConstants {
+        public static final double LED_SOLID_GREEN = 0.77;
+        public static final double LED_SINELON_OCEAN = -0.75;
+        public static final double LED_LIGHT_CHASE_RED = -0.31;
+        public static final double LED_PARTY_MODE = -0.43;
+        public static final double LED_SOLID_YELLOW = 0.69;
+        public static final double LED_SOLID_VIOLET = 0.91;
+
+        public static final int PWM_PORT_LED = 0;
     }
 }

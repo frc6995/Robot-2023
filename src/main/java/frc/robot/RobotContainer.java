@@ -20,11 +20,14 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.InputDevices;
+import frc.robot.commands.arm.GoToPositionC;
 import frc.robot.commands.drivetrain.OperatorControlC;
 import frc.robot.driver.CommandOperatorKeypad;
 import frc.robot.subsystems.ArmS;
 import frc.robot.subsystems.DrivebaseS;
 import frc.robot.subsystems.IntakeS;
+import frc.robot.subsystems.ArmS.ArmPosition;
+import frc.robot.util.TimingTracer;
 import io.github.oblarg.oblog.annotations.Log;
 
 public class RobotContainer {
@@ -43,17 +46,15 @@ public class RobotContainer {
 
     @Log
     private final Field2d m_field = new Field2d();
-    private final Field3d m_field3d = new Field3d();
+    //private final Field3d m_field3d = new Field3d();
     private final FieldObject2d m_target = m_field.getObject("target");
+
+    private ArmPosition m_targetArmPosition = ArmConstants.STOW_POSITION;
     
     SendableChooser<Command> m_autoSelector = new SendableChooser<Command>();
 
-    @Log
-    private double m_lastLoopDuration;
-    private double m_lastLoopTimestampSeconds;
-
     public RobotContainer() {
-        m_keypad = new CommandOperatorKeypad(2, (pose)->m_field.getObject("Selection").setPose(pose), (position)->{});
+        m_keypad = new CommandOperatorKeypad(2, (pose)->m_field.getObject("Selection").setPose(pose), (position)->{m_targetArmPosition = position;});
         m_target.setPose(new Pose2d(1.909, 1.072, Rotation2d.fromRadians(Math.PI)));
         
         
@@ -71,7 +72,7 @@ public class RobotContainer {
         m_field.getObject("bluePoses").setPoses(POIManager.BLUE_COMMUNITY);
         m_field.getObject("redPoses").setPoses(POIManager.RED_COMMUNITY);
         SmartDashboard.putData(m_autoSelector);
-        CameraServer.startAutomaticCapture().setResolution(320, 240);
+        //CameraServer.startAutomaticCapture().setResolution(320, 240);
     }
 
     public void configureButtonBindings() {
@@ -80,13 +81,65 @@ public class RobotContainer {
         m_driverController.y().whileTrue(
             Commands.sequence(
             m_armS.runOnce(m_armS::resetExtender),
-            m_armS.run(()->m_armS.setExtendLength(ArmConstants.MIN_ARM_LENGTH + Units.feetToMeters(1))))
+            m_armS.run(()->{
+                m_armS.setExtendLength(ArmConstants.MIN_ARM_LENGTH + Units.feetToMeters(1));
+                m_armS.setPivotVelocity(0);
+                m_armS.setWristVelocity(0);
+            }
+            ))
         );
         //m_driverController.y().whileTrue(m_armS.run(()->m_armS.setExtendVelocity(0.1)));
-        m_driverController.start().whileTrue(m_armS.run(()->m_armS.setExtendVelocity(0.5)));
-        m_driverController.x().whileTrue(m_armS.run(()->m_armS.setExtendVelocity(-0.1)));
-        m_driverController.a().whileTrue(m_armS.run(()->m_armS.setPivotAngle(Math.PI/2)));
-        m_driverController.b().whileTrue(m_armS.run(()->m_armS.setPivotAngle(0)));
+        m_driverController.start().whileTrue(
+            m_armS.run(()->{
+                m_armS.setExtendVelocity(0.1);
+                m_armS.setPivotVelocity(0);
+                m_armS.setWristVelocity(0);
+            })
+        );
+        m_driverController.back().whileTrue(m_armS.run(()->{
+            m_armS.setExtendVelocity(-0.1);
+            m_armS.setPivotVelocity(0);
+            m_armS.setWristVelocity(0);
+        }
+        ));
+
+        m_driverController.a().whileTrue(
+            Commands.sequence(
+                m_armS.runOnce(m_armS::resetPivot),
+                m_armS.run(()->{
+                    m_armS.setPivotAngle(Math.PI/2);
+                    m_armS.setExtendVelocity(0);
+                    m_armS.setWristVelocity(0);
+                }
+                )));
+        m_driverController.b().whileTrue(
+            Commands.sequence(
+                m_armS.runOnce(m_armS::resetPivot),
+                m_armS.run(()->{
+                    m_armS.setPivotAngle(0);
+                    m_armS.setExtendVelocity(0);
+                    m_armS.setWristVelocity(0);
+                }
+                )));
+        m_driverController.leftBumper().whileTrue(
+                m_armS.run(()->{
+                    m_armS.setWristVolts(0.5);
+                    m_armS.setExtendVelocity(0);
+                    m_armS.setPivotVelocity(0);
+                })
+        );
+        m_driverController.rightBumper().whileTrue(
+            m_armS.run(()->{
+                m_armS.setWristVolts(-0.5);
+                m_armS.setExtendVelocity(0);
+                m_armS.setPivotVelocity(0);
+            })
+        );
+        m_keypad.stow().whileTrue(new GoToPositionC(m_armS, ()->ArmConstants.STOW_POSITION));
+        m_keypad.enter().whileTrue(
+            new GoToPositionC(m_armS, ()->m_targetArmPosition)
+        );
+    
 
         m_driverController.povCenter().negate().whileTrue(m_drivebaseS.run(()->{
                 double pov = Units.degreesToRadians(-m_driverController.getHID().getPOV());
@@ -101,8 +154,8 @@ public class RobotContainer {
             }
         ));
         m_operatorController.a().whileTrue(m_armS.followJointSpaceTargetC());
-        m_operatorController.b().whileTrue(m_armS.scoreMidConeC());
-        m_operatorController.x().whileTrue(m_armS.scoreHighCubeC());
+        m_operatorController.b().whileTrue(new GoToPositionC(m_armS, ()->ArmConstants.SCORE_HIGH_CONE_POSITION));
+        m_operatorController.x().whileTrue(new GoToPositionC(m_armS, ()->ArmConstants.SCORE_MID_CONE_POSITION));
     }
 
 
@@ -112,17 +165,18 @@ public class RobotContainer {
     }
 
     public void periodic() {
+        TimingTracer.update();
+        SmartDashboard.putNumber("loopTime", TimingTracer.getLoopTime());
         /* Trace the loop duration and plot to shuffleboard */
-        m_lastLoopDuration = (WPIUtilJNI.now() / 1e6) - m_lastLoopTimestampSeconds;
-        m_lastLoopTimestampSeconds += m_lastLoopDuration;
-        m_field.getObject("trajTarget").setPose(new Pose2d(
-            m_drivebaseS.m_xController.getSetpoint(),
-            m_drivebaseS.m_yController.getSetpoint(),
-            Rotation2d.fromRadians(
-            m_drivebaseS.m_thetaController.getSetpoint())
-        ));
+
+        // m_field.getObject("trajTarget").setPose(new Pose2d(
+        //     m_drivebaseS.m_xController.getSetpoint(),
+        //     m_drivebaseS.m_yController.getSetpoint(),
+        //     Rotation2d.fromRadians(
+        //     m_drivebaseS.m_thetaController.getSetpoint())
+        // ));
         m_drivebaseS.drawRobotOnField(m_field);
-        m_field3d.setRobotPose(new Pose3d(m_drivebaseS.getPose()));
+        //m_field3d.setRobotPose(new Pose3d(m_drivebaseS.getPose()));
     }
 
     public void onEnabled(){

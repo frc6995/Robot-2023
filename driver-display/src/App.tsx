@@ -62,7 +62,7 @@ type AppState = {selection:number};
 
 class App extends Component{
   state: AppState = {selection:-1};
-  ntcore = NetworkTables.createInstanceByURI("localhost");
+  ntcore = NetworkTables.createInstanceByURI("10.69.95.2");
   selectionSubscriberUID=0;
 
   selectionTopic = this.ntcore.createTopic<number>('/DriverDisplay/selection', NetworkTableTypeInfos.kInteger);

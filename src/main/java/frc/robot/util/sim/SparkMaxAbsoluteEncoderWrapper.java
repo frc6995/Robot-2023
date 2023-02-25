@@ -5,6 +5,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.Robot;
 
 public class SparkMaxAbsoluteEncoderWrapper {
  
@@ -25,7 +26,7 @@ public class SparkMaxAbsoluteEncoderWrapper {
      * Returns the current position in rotations.
      */
     public double getPosition() {
-        if(RobotBase.isReal()) {
+        if(Robot.isReal()) {
             return sparkMaxEncoder.getPosition();
         }
         else {
@@ -37,7 +38,7 @@ public class SparkMaxAbsoluteEncoderWrapper {
      * Returns the current velocity in rotations/minute.
      */
     public synchronized double getVelocity() {
-        if(RobotBase.isReal()) {
+        if(Robot.isReal()) {
             return sparkMaxEncoder.getVelocity();
         } else {
             return simVelocity;

@@ -33,7 +33,7 @@ public class CommandOperatorKeypad {
         kLowLeft(10),
         kLowCenter(11),
         kLowRight(12),
-        kKillSwitch(13),
+        kStowButton(13),
         kEnterKey(14);
     
         public final int value;
@@ -76,13 +76,34 @@ public class CommandOperatorKeypad {
         setupTrigger(rightGrid(), Button.kHighLeft, 2, 2);
         setupTrigger(rightGrid(), Button.kHighCenter, 1, 2);
         setupTrigger(rightGrid(), Button.kHighRight, 0, 2);
+        selectionEntry.setNumber(0);
 
 
     }
 
+    public Trigger stow() {
+        return key(Button.kStowButton);
+    }
+    public Trigger enter() {
+        return key(Button.kEnterKey);
+    }
+
+
     private void setupTrigger(Trigger grid, Button position, int columnInGrid, int row) {
         grid.and(key(position)).onTrue(
-            setpointCommand(()->POIManager.ownCommunity().get(columnInGrid), ()->Constants.ArmConstants.STOW_POSITION,
+            setpointCommand(()->POIManager.ownCommunity().get(columnInGrid),
+            ()->{
+                if (row == 2) {
+                    return Constants.ArmConstants.SCORE_HIGH_CONE_POSITION;
+                }
+                else if (row == 1) {
+                    return Constants.ArmConstants.SCORE_MID_CONE_POSITION;
+                }
+                else {
+                    return Constants.ArmConstants.STOW_POSITION;
+                }
+            }
+                ,
                 ((row) * 9) + columnInGrid
             ));
     }

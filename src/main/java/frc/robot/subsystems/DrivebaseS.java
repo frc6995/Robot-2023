@@ -45,6 +45,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
+import frc.robot.Robot;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.util.AllianceWrapper;
 import frc.robot.util.NomadMathUtil;
@@ -111,6 +112,14 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
     private final List<SwerveModule> m_modules = List.of(
         m_fl, m_fr, m_bl, m_br
     );
+
+    private SwerveModuleState[] currentStates = new SwerveModuleState[] {new SwerveModuleState(), new SwerveModuleState(), new SwerveModuleState(), new SwerveModuleState()};
+    private SwerveModulePosition[] currentPositions = new SwerveModulePosition[] {
+        new SwerveModulePosition(),
+        new SwerveModulePosition(),
+        new SwerveModulePosition(),
+        new SwerveModulePosition()
+    };
 
     public DrivebaseS() {
         m_navx.reset();
@@ -256,13 +265,12 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      *  This order is important to remain consistent across the codebase, or commands can get swapped around.
      */
     public SwerveModuleState[] getModuleStates() {
-        SwerveModuleState[] states = new SwerveModuleState[4];
+        
         for (int i = 0; i < NUM_MODULES; i++) {
-            states[i] = new SwerveModuleState(
-                m_modules.get(i).getCurrentVelocityMetersPerSecond(),
-                m_modules.get(i).getCanEncoderAngle());
+            currentStates[i].speedMetersPerSecond =m_modules.get(i).getCurrentVelocityMetersPerSecond();
+            currentStates[i].angle = m_modules.get(i).getCanEncoderAngle();
         }
-        return states;
+        return currentStates;
     }
 
     /**
@@ -270,13 +278,11 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      * @return an array of 4 SwerveModulePosition objects
      */
     public SwerveModulePosition[] getModulePositions() {
-        SwerveModulePosition[] states = new SwerveModulePosition[4];
         for (int i = 0; i < NUM_MODULES; i++) {
-            states[i] = new SwerveModulePosition(
-                m_modules.get(i).getDriveDistanceMeters(),
-                m_modules.get(i).getCanEncoderAngle());
+            currentPositions[i].distanceMeters = m_modules.get(i).getDriveDistanceMeters();
+            currentPositions[i].angle = m_modules.get(i).getCanEncoderAngle();
         }
-        return states;
+        return currentPositions;
     }
 
     /**
@@ -293,7 +299,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      * @return
      */
     public Pose2d getSimPose() {
-        if(RobotBase.isSimulation()) {
+        if(Robot.isSimulation()) {
             return m_quadSwerveSim.getCurPose();
         }
         else {
@@ -320,7 +326,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      */
     @Log(methodName = "getRadians")
     public Rotation2d getHeading() {
-        if(RobotBase.isSimulation()) {
+        if(Robot.isSimulation()) {
             return m_simNavx.getRotation2d();
         }
         return m_navx.getRotation2d();
@@ -339,7 +345,10 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      */
     public void resetImu() {
         m_navx.reset();
-        m_simNavx.resetToPose(new Pose2d());
+        if (Robot.isSimulation()) {
+            m_simNavx.resetToPose(new Pose2d());
+        }
+
     }
  
     public void setRotationState(double radians) {

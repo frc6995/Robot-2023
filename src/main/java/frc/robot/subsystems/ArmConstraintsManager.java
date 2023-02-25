@@ -143,7 +143,7 @@ public class ArmConstraintsManager {
         }
     }
 
-    public static List<Translation2d> solvePath(Translation2d start, Translation2d end) {
+    private static List<Translation2d> solvePath(Translation2d start, Translation2d end) {
 
         Translation2d currentPathTip = start;
         

@@ -8,6 +8,7 @@ import edu.wpi.first.hal.SimDouble;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.simulation.SimDeviceSim;
+import frc.robot.Robot;
 
 /** Class to control a simulated duty cycle encoder. */
 public class DutyCycleEncoderSim {
@@ -21,7 +22,7 @@ public class DutyCycleEncoderSim {
    * @param encoder DutyCycleEncoder to simulate
    */
   public DutyCycleEncoderSim(DutyCycleEncoder encoder) {
-    if(RobotBase.isSimulation()) {
+    if(Robot.isSimulation()) {
       SimDeviceSim wrappedSimDevice =
       new SimDeviceSim("DutyCycle:DutyCycleEncoder" + "[" + encoder.getSourceChannel() + "]");
   m_simPosition = wrappedSimDevice.getDouble("position");
@@ -36,7 +37,7 @@ public class DutyCycleEncoderSim {
    * @param turns The position.
    */
   public void set(double turns) {
-    if(RobotBase.isSimulation()) {
+    if(Robot.isSimulation()) {
       m_simPosition.set(turns);
     }
 
@@ -48,14 +49,14 @@ public class DutyCycleEncoderSim {
    * @param distance The position.
    */
   public void setDistance(double distance) {
-    if(RobotBase.isSimulation()){
+    if(Robot.isSimulation()){
       m_simPosition.set(distance / m_simDistancePerRotation.get());
     }
 
   }
 
   public void setAbsolutePosition(double distance) {
-    if(RobotBase.isSimulation()) {
+    if(Robot.isSimulation()) {
       m_simAbsolutePosition.set(distance / m_simDistancePerRotation.get());
     }
 

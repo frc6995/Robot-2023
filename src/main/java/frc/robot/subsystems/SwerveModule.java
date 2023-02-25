@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.util.sim.DutyCycleEncoderSim;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Robot;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
 import frc.robot.util.drive.SecondOrderSwerveModuleState;
 import frc.robot.util.sim.SparkMaxAbsoluteEncoderWrapper;
@@ -150,6 +151,8 @@ public class SwerveModule extends SubsystemBase{
         // Give this module a unique name on the dashboard so we have four separate sub-tabs.
         m_loggingName = "SwerveModule-" + moduleConstants.name + "-[" + m_driveMotor.getDeviceId() + ',' + m_steerMotor.getDeviceId() + ']';
         resetDistance();
+        m_driveMotor.burnFlash();
+        m_steerMotor.burnFlash();
     }
 
     /**
@@ -248,7 +251,7 @@ public class SwerveModule extends SubsystemBase{
         double goal = desiredState.angle.getRadians();
         double measurement = getCanEncoderAngle().getRadians();
         double rotationVolts = m_steerPIDController.calculate(measurement, goal);
-        if (RobotBase.isReal()) {
+        if (Robot.isReal()) {
             rotationVolts += 0.1;
             rotationVolts += 0.5 * desiredState.omegaRadiansPerSecond;
         }

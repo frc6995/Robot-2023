@@ -2,6 +2,7 @@ package frc.robot;
 
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -13,6 +14,8 @@ import frc.robot.util.AllianceWrapper;
 import io.github.oblarg.oblog.Logger;
 
 public class Robot extends TimedRobot {
+
+    private static boolean isSimulation = false;
     
     private RobotContainer robotContainer;
 
@@ -20,21 +23,24 @@ public class Robot extends TimedRobot {
 
     @Override
     public void robotInit() {
+        Robot.isSimulation = RobotBase.isSimulation();
         DriverStation.silenceJoystickConnectionWarning(true);
         LiveWindow.disableAllTelemetry();
         robotContainer = new RobotContainer();
         Logger.configureLoggingAndConfig(robotContainer, false);
-        SmartDashboard.putNumber("vel", new SwerveModuleState().speedMetersPerSecond);
-        new Trigger(DriverStation::isDSAttached).or(new Trigger(DriverStation::isFMSAttached))
-        .onTrue(new InstantCommand(()->AllianceWrapper.setAlliance(DriverStation.getAlliance())));
+        // new Trigger(DriverStation::isDSAttached).or(new Trigger(DriverStation::isFMSAttached))
+        // .onTrue(new InstantCommand(()->AllianceWrapper.setAlliance(DriverStation.getAlliance())));
+        //addPeriodic(Logger::updateEntries, 0.1);
+        addPeriodic(()->{
+            AllianceWrapper.setAlliance(DriverStation.getAlliance());
+        }, 0.5);
     }
 
     @Override
     public void robotPeriodic() {
-
+        Logger.updateEntries();
         CommandScheduler.getInstance().run();
         robotContainer.periodic();
-        Logger.updateEntries();
         
     }
 
@@ -59,6 +65,14 @@ public class Robot extends TimedRobot {
     @Override
     public void disabledPeriodic() {
         CommandScheduler.getInstance().cancelAll();
+    }
+
+    public static boolean isSimulation() {
+        return isSimulation;
+    }
+
+    public static boolean isReal() {
+        return !isSimulation;
     }
 
 }
