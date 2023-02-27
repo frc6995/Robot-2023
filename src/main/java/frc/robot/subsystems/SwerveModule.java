@@ -68,7 +68,8 @@ public class SwerveModule extends SubsystemBase{
         m_steerMotor = new CANSparkMax(moduleConstants.rotationMotorID, MotorType.kBrushless);
         m_driveMotor.restoreFactoryDefaults(false);
         m_steerMotor.restoreFactoryDefaults(false);
-
+        m_driveMotor.setSmartCurrentLimit(35);
+        m_steerMotor.setSmartCurrentLimit(25);
         //set the output of the drive encoder to be in meters (instead of motor rots) for linear measurement
         // wheel diam * pi = wheel circumference (meters/wheel rot) *
         // 1/6.86 wheel rots per motor rot *

@@ -5,22 +5,65 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMax.FaultID;
+import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import frc.robot.util.color.PicoColorSensor.RawColor;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj2.command.Command;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
+import frc.robot.util.color.PicoColorSensor;
+import io.github.oblarg.oblog.Loggable;
+import io.github.oblarg.oblog.annotations.Log;
 
-public class IntakeS extends SubsystemBase {
-  private final CANSparkMax intakeMotor = new CANSparkMax(Constants.IntakeConstants.INTAKE_CAN_ID, MotorType.kBrushed);
+public class IntakeS extends SubsystemBase implements Loggable {
+  private final CANSparkMax intakeMotor = new CANSparkMax(Constants.IntakeConstants.INTAKE_CAN_ID, MotorType.kBrushless);
+  private final CANSparkMax intakeFollowerMotor = new CANSparkMax(Constants.IntakeConstants.INTAKE_FOLLOWER_CAN_ID, MotorType.kBrushless);
+  private final PicoColorSensor colorSensor = new PicoColorSensor();
   private final DoubleSolenoid doubleSolenoid = new DoubleSolenoid(PneumaticsModuleType.REVPH, 
     Constants.IntakeConstants.INTAKE_EXTEND, Constants.IntakeConstants.INTAKE_RETRACT);
+  private RawColor sensedColor = new RawColor(0, 0, 0, 0);
   /** Creates a new IntakeS. */
-  public IntakeS() {}
+  public IntakeS() {
+    colorSensor.setDebugPrints(true);
+    intakeMotor.restoreFactoryDefaults();
+    intakeFollowerMotor.restoreFactoryDefaults();
+    intakeMotor.setIdleMode(IdleMode.kBrake);
+    intakeFollowerMotor.setIdleMode(IdleMode.kBrake);
+    intakeMotor.setSecondaryCurrentLimit(10);
+    
+    intakeMotor.setSmartCurrentLimit(10, 10);
+    intakeFollowerMotor.follow(intakeMotor, false);
+    intakeMotor.burnFlash();
+    intakeFollowerMotor.burnFlash();
+    setDefaultCommand(run(()->this.intake(0)));
+  }
+
+  @Log
+  public boolean hitCurrentLimit() {
+    return intakeMotor.getFault(FaultID.kOvercurrent);
+  }
+
+  @Log
+  public boolean hitProxSensor() {
+    return getProximity() > 150;
+  }
+
+  public double getHandLength() {
+    if (doubleSolenoid.get() == Value.kForward) {
+      return Units.inchesToMeters(16);
+    }
+    else {
+      return Units.inchesToMeters(9.4);
+    }
+  }
 
   /**
    * Sets voltage of intake motor to the voltage parameter 
@@ -30,6 +73,12 @@ public class IntakeS extends SubsystemBase {
   public void intake(double voltage) {
     intakeMotor.setVoltage(voltage);
   }
+ 
+  @Log
+  public double getProximity() {
+    return colorSensor.getProximity0();
+  }
+
 
   /**
    * Spins intake motor forward at specified voltage
@@ -81,6 +130,7 @@ public class IntakeS extends SubsystemBase {
 
   @Override
   public void periodic() {
+    sensedColor = colorSensor.getRawColor0();
     // This method will be called once per scheduler run
   }
 
@@ -90,7 +140,7 @@ public class IntakeS extends SubsystemBase {
    */
 
    public Command intakeC() {
-    return runEnd(this::intake, this::stop);
+    return runEnd(this::intake, this::stop);//.until(new Trigger(this::hitProxSensor));
   }
 
   /**
@@ -112,12 +162,30 @@ public class IntakeS extends SubsystemBase {
   }
 
   /**
+   * Retracts the intake
+   * @return returns the runOnce command
+   */
+
+  public Command retractC() {
+    return runOnce(this::retract);
+  }
+
+  /**
    * extends the intake and runs the intake motor forward
    * @return returns the sequence Command
    */
 
   public Command extendAndIntakeC() {
-    return sequence(extendC(), intakeC()).finallyDo((interrupted)-> retract());
+    return sequence(extendC(), intakeC()).finallyDo((interrupted)-> stop());
+  }
+
+  /**
+   * retracts the intake and runs the intake motor forward
+   * @return returns the sequence Command
+   */
+
+  public Command retractAndIntakeC() {
+    return sequence(retractC(), intakeC()).finallyDo((interrupted)-> stop());
   }
 
   /**
@@ -126,7 +194,16 @@ public class IntakeS extends SubsystemBase {
    */
 
   public Command extendAndOuttakeC() {
-    return sequence(extendC(), outtakeC()).finallyDo((interrupted)-> retract());
+    return sequence(extendC(), outtakeC()).finallyDo((interrupted)-> stop());
+  }
+
+  /**
+   * retracts the intake and runs the intake motor in reverse
+   * @return returns the sequence Command
+   */
+
+   public Command retractAndOuttakeC() {
+    return sequence(retractC(), outtakeC()).finallyDo((interrupted)-> stop());
   }
 
 }

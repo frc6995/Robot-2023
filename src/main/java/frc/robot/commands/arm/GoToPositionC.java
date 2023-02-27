@@ -39,11 +39,24 @@ public class GoToPositionC extends CommandBase {
   }
   @Override
   public void initialize() {
+
     // TODO Auto-generated method stub
     super.initialize();
     currentTarget = 0;
     m_startPosition = m_armS.getArmPosition();
     m_targetPosition = m_positionSupplier.get();
+
+    boolean needToRetract = false;
+    boolean needToStraighten = false;
+
+    if (Math.abs(m_startPosition.pivotRadians - m_targetPosition.pivotRadians) > Units.degreesToRadians(10)) {
+      needToRetract = true;
+    }
+
+    if (Math.abs(m_startPosition.armLength - m_targetPosition.armLength) > Units.inchesToMeters(1)) {
+      needToStraighten = true;
+    }
+
     m_armS.resetExtender();
     m_armS.resetPivot();
     m_armS.resetWrist();
@@ -53,27 +66,36 @@ public class GoToPositionC extends CommandBase {
       new ArmPosition(
         m_startPosition.pivotRadians,
         m_startPosition.armLength,
-        MathUtil.clamp(Math.PI / 2 - m_startPosition.pivotRadians, WRIST_MIN_ANGLE, WRIST_MAX_ANGLE),
+        needToStraighten ? 
+          MathUtil.clamp(m_startPosition.wristRadians, 0, WRIST_MAX_ANGLE) :
+          MathUtil.clamp(m_startPosition.wristRadians, WRIST_MIN_ANGLE,  WRIST_MAX_ANGLE),// MathUtil.clamp(Math.PI / 2 - m_startPosition.pivotRadians, WRIST_MIN_ANGLE, WRIST_MAX_ANGLE),
         m_startPosition.handLength),
       new ArmPosition(
         m_startPosition.pivotRadians,
-        MIN_ARM_LENGTH,
-        MathUtil.clamp(Math.PI / 2 - m_startPosition.pivotRadians, WRIST_MIN_ANGLE, WRIST_MAX_ANGLE),
+        // before pivot, go to shorter of two lengths
+        needToRetract ? MIN_ARM_LENGTH : Math.min(m_startPosition.armLength, m_targetPosition.armLength),
+        needToStraighten ? 
+          MathUtil.clamp(m_startPosition.wristRadians, 0,  WRIST_MAX_ANGLE) :
+          MathUtil.clamp(m_startPosition.wristRadians, WRIST_MIN_ANGLE,  WRIST_MAX_ANGLE),
         m_startPosition.handLength),
       new ArmPosition(
         m_targetPosition.pivotRadians,
-        MIN_ARM_LENGTH,
-        MathUtil.clamp(Math.PI / 2 - m_targetPosition.pivotRadians, WRIST_MIN_ANGLE,  WRIST_MAX_ANGLE),
+        needToRetract ? MIN_ARM_LENGTH : Math.min(m_startPosition.armLength, m_targetPosition.armLength),
+        needToStraighten ? 
+          MathUtil.clamp(m_targetPosition.wristRadians, 0,  WRIST_MAX_ANGLE) :
+          MathUtil.clamp(m_targetPosition.wristRadians, WRIST_MIN_ANGLE,  WRIST_MAX_ANGLE),
         m_startPosition.handLength),
       new ArmPosition(
         m_targetPosition.pivotRadians,
         m_targetPosition.armLength,
-        MathUtil.clamp( Math.PI / 2 - m_targetPosition.pivotRadians, WRIST_MIN_ANGLE, WRIST_MAX_ANGLE),
+        needToStraighten ? 
+          MathUtil.clamp(m_targetPosition.wristRadians, 0,  WRIST_MAX_ANGLE) :
+          MathUtil.clamp(m_targetPosition.wristRadians, WRIST_MIN_ANGLE,  WRIST_MAX_ANGLE),
         m_startPosition.handLength),
       new ArmPosition(
         m_targetPosition.pivotRadians,
         m_targetPosition.armLength,
-        m_targetPosition.wristRadians,
+        MathUtil.clamp(m_targetPosition.wristRadians, WRIST_MIN_ANGLE,  WRIST_MAX_ANGLE),
         m_startPosition.handLength)
       
 
@@ -101,7 +123,7 @@ public class GoToPositionC extends CommandBase {
     var actualPosition = m_armS.getArmPosition();
     var atSetpoint = (Math.abs(setpoint.armLength - actualPosition.armLength) < Units.inchesToMeters(2)
       && Math.abs(setpoint.pivotRadians - actualPosition.pivotRadians) < Units.degreesToRadians(5)
-      && Math.abs(setpoint.wristRadians - actualPosition.wristRadians) < Units.degreesToRadians(5)
+      && Math.abs(setpoint.wristRadians - actualPosition.wristRadians) < Units.degreesToRadians(10)
     );
     return atSetpoint;
   }

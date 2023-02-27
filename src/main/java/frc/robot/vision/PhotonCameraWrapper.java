@@ -59,7 +59,8 @@ public class PhotonCameraWrapper {
         // Assemble the list of cameras & mount locations
 
         robotPoseEstimator =
-                new PhotonPoseEstimator(atfl, PoseStrategy.MULTI_TAG_PNP, photonCamera, robotToCam);
+                new PhotonPoseEstimator(atfl, PoseStrategy.CLOSEST_TO_REFERENCE_POSE, photonCamera, robotToCam);
+        robotPoseEstimator.setMultiTagFallbackStrategy(PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
     }
 
     /**

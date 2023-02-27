@@ -27,13 +27,13 @@ public class OperatorControlC extends CommandBase {
      * versus using a double which would only update when the constructor is called
      */
     private final DoubleSupplier m_forwardX;
-    private final SlewRateLimiter m_xRateLimiter = new SlewRateLimiter(3);
+    private final SlewRateLimiter m_xRateLimiter = new SlewRateLimiter(2);
     private final DoubleSupplier m_forwardY;
-    private final SlewRateLimiter m_yRateLimiter = new SlewRateLimiter(3);
+    private final SlewRateLimiter m_yRateLimiter = new SlewRateLimiter(2);
     private final DoubleSupplier m_rotation;
     private final SlewRateLimiter m_thetaRateLimiter = new SlewRateLimiter(2);
 
-    private final double MAX_LINEAR_SPEED = Units.feetToMeters(6);
+    private final double MAX_LINEAR_SPEED = Units.feetToMeters(11);
 
     public static final double MAX_TURN_SPEED = Units.degreesToRadians(360);
 
@@ -71,11 +71,13 @@ public class OperatorControlC extends CommandBase {
         double fwdX = -m_forwardX.getAsDouble();
         fwdX = deadbandInputs(fwdX);
         fwdX = Math.copySign(fwdX*fwdX, fwdX);
+        fwdX = m_xRateLimiter.calculate(fwdX);
         
 
         double fwdY = -m_forwardY.getAsDouble();
         fwdY = deadbandInputs(fwdY);
         fwdY = Math.copySign(fwdY*fwdY, fwdY);
+        fwdY = m_yRateLimiter.calculate(fwdY);
         
 
         double driveDirectionRadians = Math.atan2(fwdY, fwdX);

@@ -9,6 +9,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.WPIUtilJNI;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.Field3d;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
@@ -26,7 +27,9 @@ import frc.robot.driver.CommandOperatorKeypad;
 import frc.robot.subsystems.ArmS;
 import frc.robot.subsystems.DrivebaseS;
 import frc.robot.subsystems.IntakeS;
+import frc.robot.subsystems.LightS;
 import frc.robot.subsystems.ArmS.ArmPosition;
+import frc.robot.subsystems.LightS.States;
 import frc.robot.util.TimingTracer;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -35,26 +38,31 @@ public class RobotContainer {
     /**
      * Establishes the controls and subsystems of the robot
      */
-
     private final CommandXboxController m_driverController = new CommandXboxController(InputDevices.GAMEPAD_PORT);
     private final CommandXboxController m_operatorController = new CommandXboxController(1);
     private final CommandOperatorKeypad m_keypad;
     private final DrivebaseS m_drivebaseS = new DrivebaseS();
-    private final ArmS m_armS = new ArmS();
+    
 
     private final IntakeS m_intakeS = new IntakeS();
+    private final ArmS m_armS = new ArmS(m_intakeS::getHandLength);
 
     @Log
     private final Field2d m_field = new Field2d();
-    //private final Field3d m_field3d = new Field3d();
+    @Log
+    private final Field3d m_field3d = new Field3d();
     private final FieldObject2d m_target = m_field.getObject("target");
 
     private ArmPosition m_targetArmPosition = ArmConstants.STOW_POSITION;
+    private Pose2d m_targetAlignmentPose = new Pose2d(1.909, 1.072, Rotation2d.fromRadians(Math.PI));
     
     SendableChooser<Command> m_autoSelector = new SendableChooser<Command>();
 
     public RobotContainer() {
-        m_keypad = new CommandOperatorKeypad(2, (pose)->m_field.getObject("Selection").setPose(pose), (position)->{m_targetArmPosition = position;});
+        m_keypad = new CommandOperatorKeypad(2, (pose)->{
+            m_targetAlignmentPose = pose;
+            m_field.getObject("Selection").setPose(pose);
+        }, (position)->{m_targetArmPosition = position;});
         m_target.setPose(new Pose2d(1.909, 1.072, Rotation2d.fromRadians(Math.PI)));
         
         
@@ -76,19 +84,35 @@ public class RobotContainer {
     }
 
     public void configureButtonBindings() {
-        //m_driverController.rightBumper().toggleOnTrue(m_drivebaseS.chasePoseC(m_target::getPose));
+        m_driverController.a().toggleOnTrue(m_drivebaseS.chasePoseC(()->m_targetAlignmentPose));
+        m_driverController.start().onTrue(m_intakeS.extendC());
+        m_driverController.back().onTrue(m_intakeS.retractC());
+        // OFFICIAL CALEB PREFERENCE
+        m_driverController.rightBumper().toggleOnTrue(new GoToPositionC(m_armS, ()->ArmConstants.RAMP_CONE_INTAKE_POSITION));
+        m_driverController.rightTrigger().toggleOnTrue(new GoToPositionC(m_armS, ()->ArmConstants.RAMP_CUBE_INTAKE_POSITION));
+
+        m_driverController.leftBumper().toggleOnTrue(new GoToPositionC(m_armS, ()->ArmConstants.GROUND_CONE_INTAKE_POSITION));
+        m_driverController.leftTrigger().toggleOnTrue(new GoToPositionC(m_armS, ()->ArmConstants.GROUND_CUBE_INTAKE_POSITION));
+        m_driverController.y().toggleOnTrue(new GoToPositionC(m_armS, ()->ArmConstants.OVERTOP_CONE_INTAKE_POSITION).alongWith(m_intakeS.retractC()));
+        m_driverController.rightStick().toggleOnTrue(new GoToPositionC(m_armS, ()->ArmConstants.PLATFORM_CONE_INTAKE_POSITION));
+
+
+        
+
+        //m_driverController.rightBumper().toggleOnTrue(m_drivebaseS.chasePoseC(()->m_targetAlignmentPose));
         //m_driverController.a().whileTrue(m_intakeS.extendAndIntakeC());
-        m_driverController.y().whileTrue(
-            Commands.sequence(
-            m_armS.runOnce(m_armS::resetExtender),
-            m_armS.run(()->{
-                m_armS.setExtendLength(ArmConstants.MIN_ARM_LENGTH + Units.feetToMeters(1));
-                m_armS.setPivotVelocity(0);
-                m_armS.setWristVelocity(0);
-            }
-            ))
-        );
-        //m_driverController.y().whileTrue(m_armS.run(()->m_armS.setExtendVelocity(0.1)));
+        // m_driverController.y().whileTrue(
+        //     Commands.sequence(
+        //     m_armS.runOnce(m_armS::resetExtender),
+        //     m_armS.run(()->{
+        //         m_armS.setExtendLength(ArmConstants.MIN_ARM_LENGTH + Units.feetToMeters(1));
+        //         m_armS.setPivotVelocity(0);
+        //         m_armS.setWristVelocity(0);
+        //     }
+        //     ))
+        // );
+        // MANUAL CONTROL
+        /*
         m_driverController.start().whileTrue(
             m_armS.run(()->{
                 m_armS.setExtendVelocity(0.1);
@@ -107,16 +131,16 @@ public class RobotContainer {
             Commands.sequence(
                 m_armS.runOnce(m_armS::resetPivot),
                 m_armS.run(()->{
-                    m_armS.setPivotAngle(Math.PI/2);
+                    m_armS.setPivotVelocity(-0.1);
                     m_armS.setExtendVelocity(0);
                     m_armS.setWristVelocity(0);
                 }
                 )));
-        m_driverController.b().whileTrue(
+        m_driverController.y().whileTrue(
             Commands.sequence(
                 m_armS.runOnce(m_armS::resetPivot),
                 m_armS.run(()->{
-                    m_armS.setPivotAngle(0);
+                    m_armS.setPivotVelocity(0.1);
                     m_armS.setExtendVelocity(0);
                     m_armS.setWristVelocity(0);
                 }
@@ -135,9 +159,12 @@ public class RobotContainer {
                 m_armS.setPivotVelocity(0);
             })
         );
-        m_keypad.stow().whileTrue(new GoToPositionC(m_armS, ()->ArmConstants.STOW_POSITION));
-        m_keypad.enter().whileTrue(
+        */
+        // END MANUAL CONTROL
+        m_keypad.stow().onTrue(new GoToPositionC(m_armS, ()->ArmConstants.STOW_POSITION));
+        m_keypad.enter().toggleOnTrue(
             new GoToPositionC(m_armS, ()->m_targetArmPosition)
+            .deadlineWith(Commands.run(()->LightS.getInstance().requestState(States.Scoring)))
         );
     
 
@@ -153,9 +180,32 @@ public class RobotContainer {
                 );
             }
         ));
-        m_operatorController.a().whileTrue(m_armS.followJointSpaceTargetC());
-        m_operatorController.b().whileTrue(new GoToPositionC(m_armS, ()->ArmConstants.SCORE_HIGH_CONE_POSITION));
-        m_operatorController.x().whileTrue(new GoToPositionC(m_armS, ()->ArmConstants.SCORE_MID_CONE_POSITION));
+        /*
+        m_driverController.a().toggleOnTrue(
+            Commands.sequence(
+                Commands.parallel(
+                    new GoToPositionC(m_armS, ()->ArmConstants.GROUND_CUBE_INTAKE_POSITION),
+                    m_intakeS.extendAndIntakeC()
+                )
+                .until(m_intakeS::hitCurrentLimit),
+                new GoToPositionC(m_armS, ()->ArmConstants.STOW_POSITION)
+            )
+            
+            
+        );
+                m_driverController.y().whileTrue(
+            Commands.deadline(
+                new GoToPositionC(m_armS, ()->ArmConstants.GROUND_CONE_INTAKE_POSITION),
+                m_intakeS.extendC()
+            ));
+            // .andThen(
+            //     m_intakeS.retractAndIntakeC()
+            //     .withTimeout(0.75)
+            // ));*/
+        m_driverController.b().whileTrue(m_intakeS.intakeC());
+        m_driverController.x().whileTrue(m_intakeS.outtakeC());
+
+        
     }
 
 
@@ -175,8 +225,9 @@ public class RobotContainer {
         //     Rotation2d.fromRadians(
         //     m_drivebaseS.m_thetaController.getSetpoint())
         // ));
+        LightS.getInstance().periodic();
         m_drivebaseS.drawRobotOnField(m_field);
-        //m_field3d.setRobotPose(new Pose3d(m_drivebaseS.getPose()));
+        m_field3d.setRobotPose(new Pose3d(m_drivebaseS.getPose()));
     }
 
     public void onEnabled(){

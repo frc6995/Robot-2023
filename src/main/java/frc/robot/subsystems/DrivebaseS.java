@@ -25,6 +25,7 @@ import com.pathplanner.lib.PathPoint;
 import com.pathplanner.lib.commands.PPSwerveControllerCommand;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -87,7 +88,8 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      * Takes in kinematics and robot angle for parameters
      */
     private final SwerveDrivePoseEstimator m_poseEstimator;
-    private final PhotonCameraWrapper m_cameraWrapper;
+    private final PhotonCameraWrapper m_camera1Wrapper;
+    private final PhotonCameraWrapper m_camera2Wrapper;
 
     private final List<SwerveModuleSim> m_moduleSims = List.of(
         DrivebaseS.swerveSimModuleFactory(),
@@ -126,21 +128,31 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         
         m_poseEstimator =
         new SwerveDrivePoseEstimator(m_kinematics, getHeading(), getModulePositions(), new Pose2d());
+        m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(0.9, 0.9, 0.9));
         m_thetaController.setTolerance(Units.degreesToRadians(2));
         m_xController.setTolerance(0.05);
         m_yController.setTolerance(0.05);
-        m_cameraWrapper = new PhotonCameraWrapper("OV9281", VisionConstants.robotToCam);
+        m_camera1Wrapper = new PhotonCameraWrapper(VisionConstants.CAM_1_NAME, VisionConstants.robotToCam1);
+        m_camera2Wrapper = new PhotonCameraWrapper(VisionConstants.CAM_2_NAME, VisionConstants.robotToCam2);
+        
         resetPose(new Pose2d(1.835, 1.072, Rotation2d.fromRadians(Math.PI)));
     }
 
     @Override
     public void periodic() {
-        // var cam1Pose = m_cameraWrapper.getEstimatedGlobalPose(getPose());
-        // if (cam1Pose.getFirst() != null) {
-        //     var pose = cam1Pose.getFirst();
-        //     var timestamp = cam1Pose.getSecond();
-        //     m_poseEstimator.addVisionMeasurement(pose, timestamp);
-        // }
+        var cam1Pose = m_camera1Wrapper.getEstimatedGlobalPose(getPose());
+        if (cam1Pose.getFirst() != null) {
+            var pose = cam1Pose.getFirst();
+            var timestamp = cam1Pose.getSecond();
+            m_poseEstimator.addVisionMeasurement(pose, timestamp);
+        }
+
+        var cam2Pose = m_camera2Wrapper.getEstimatedGlobalPose(getPose());
+        if (cam2Pose.getFirst() != null) {
+            var pose = cam2Pose.getFirst();
+            var timestamp = cam2Pose.getSecond();
+            m_poseEstimator.addVisionMeasurement(pose, timestamp);
+        }
 
         // update the odometry every 20ms
         m_poseEstimator.update(getHeading(), getModulePositions());

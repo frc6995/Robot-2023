@@ -31,13 +31,13 @@ public class LightS {
    * of the state (the lower the number, the higher the priority)
    */
   public static enum States {
-    Disabled(LED_SOLID_GREEN), // set in robotPeriodic
+    Disabled(LED_BOUNCE_GREEN), // set in robotPeriodic
     Error(LED_LIGHT_CHASE_RED),
     Climbing(LED_PARTY_MODE), // set through triggers in RobotContainer
     RequestingCube(LED_SOLID_VIOLET),
     RequestingCone(LED_SOLID_YELLOW),
     Scoring(LED_SINELON_OCEAN),
-    Default(LED_SOLID_GREEN);
+    Default(LED_SINELON_OCEAN);
 
     public final double lightCode;
 

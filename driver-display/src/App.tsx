@@ -69,7 +69,7 @@ class App extends Component{
   
   constructor(props: any) {
     super(props);
-    this.selectionSubscriberUID = this.selectionTopic!.subscribe((value)=>{this.setState({selection: value || -1}); console.log(value); });
+    this.selectionSubscriberUID = this.selectionTopic!.subscribe((value)=>{this.setState({selection: (value ===null ? -1 : value)}); console.log(value); });
     console.log(this.selectionSubscriberUID)
   }
   
