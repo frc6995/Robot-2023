@@ -1,11 +1,18 @@
 package frc.robot.util;
+import com.pathplanner.lib.PathPlannerTrajectory.PathPlannerState;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 public class NomadMathUtil {
+
+    public static double FIELD_WIDTH = 8.0137;
+    public static double FIELD_LENGTH = 16.54175;
 
     public static Rotation2d getDirection(Transform2d transform) {
         return getDirection(transform.getTranslation());
@@ -50,6 +57,31 @@ public class NomadMathUtil {
         return new SwerveModuleState(desiredState.speedMetersPerSecond, desiredState.angle);
         }
   }
+    public static PathPlannerState mirrorState(
+        PathPlannerState blueState
+    ) {
+        PathPlannerState newState = new PathPlannerState();
+        newState.accelerationMetersPerSecondSq = blueState.accelerationMetersPerSecondSq;
+        newState.angularVelocityRadPerSec = -blueState.angularVelocityRadPerSec;
+        newState.curvatureRadPerMeter = -blueState.curvatureRadPerMeter;
+        newState.holonomicAngularVelocityRadPerSec = -blueState.holonomicAngularVelocityRadPerSec;
+        newState.holonomicRotation = Rotation2d.fromRadians(Math.PI - blueState.holonomicRotation.getRadians());
+        newState.poseMeters = new Pose2d(FIELD_LENGTH - blueState.poseMeters.getX(), blueState.poseMeters.getY(), 
+            Rotation2d.fromRadians(Math.PI - blueState.poseMeters.getRotation().getRadians()));
+        newState.timeSeconds = blueState.timeSeconds;
+        newState.velocityMetersPerSecond = blueState.velocityMetersPerSecond;
+        return newState;
+    }
+
+    public static PathPlannerState mirrorState(
+        PathPlannerState blueState, DriverStation.Alliance alliance
+    ) {
+        if (alliance != Alliance.Red) {
+            return blueState;
+        }
+        return mirrorState(blueState);
+        
+    }
 
     
 }

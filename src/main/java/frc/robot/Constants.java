@@ -205,7 +205,7 @@ public class Constants {
         public static final double ARM_PIVOT_KG_MIN_EXTEND = 0;//1.414 * (ARM_ROTATIONS_PER_MOTOR_ROTATION * 400) / 2 / Math.cos(Units.degreesToRadians(10.5));
         public static final double ARM_PIVOT_KG_MAX_EXTEND = 0;//0.13 / Math.cos(0.707);//2.872 * (ARM_ROTATIONS_PER_MOTOR_ROTATION * 400) / 2 / Math.cos(Units.degreesToRadians(10.5));
 
-        public static final double PIVOT_MAX_VELOCITY = 4; // rad/s
+        public static final double PIVOT_MAX_VELOCITY = 1.4; // rad/s
         public static final double PIVOT_MAX_ACCEL_RETRACTED = 8;
         public static final double PIVOT_MAX_ACCEL_EXTENDED = 8;
 

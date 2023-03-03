@@ -22,7 +22,7 @@ import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.PathPoint;
-import com.pathplanner.lib.commands.PPSwerveControllerCommand;
+import frc.robot.util.trajectory.PPSwerveControllerCommand;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
@@ -512,7 +512,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
             m_thetaController,
             
             this::drive,
-            false,
+            true,
             this
         );
         return command;

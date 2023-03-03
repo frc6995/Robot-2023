@@ -1,5 +1,6 @@
 package frc.robot;
 
+import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
 
 import edu.wpi.first.cameraserver.CameraServer;
@@ -77,6 +78,7 @@ public class RobotContainer {
 
         configureButtonBindings();
         m_autoSelector.setDefaultOption("twoPiece", twoPieceAuto());
+        m_autoSelector.setDefaultOption("threePiece", highConeCubeConeBalanceAuto());
         m_field.getObject("bluePoses").setPoses(POIManager.BLUE_COMMUNITY);
         m_field.getObject("redPoses").setPoses(POIManager.RED_COMMUNITY);
         SmartDashboard.putData(m_autoSelector);
@@ -243,6 +245,27 @@ public class RobotContainer {
             ),
             m_drivebaseS.pathPlannerCommand(PathPlanner.loadPath("1Piece.2", 2, 2)),
             m_intakeS.extendAndOuttakeC().withTimeout(1)
+        );
+    }
+
+    public Command highConeCubeConeBalanceAuto() {
+        var pathGroup = PathPlanner.loadPathGroup("3PieceGroup", new PathConstraints(2.5, 1.5),  new PathConstraints[0]);
+        return Commands.sequence(
+            m_intakeS.retractC(),
+            Commands.sequence(
+                m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION),
+                m_intakeS.outtakeC().withTimeout(1)
+            ),
+            Commands.deadline(
+                Commands.parallel(
+                    m_drivebaseS.pathPlannerCommand(pathGroup.get(0)),
+                    m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION)
+                )
+                ,
+                Commands.waitSeconds(1).andThen(m_intakeS.intakeC())
+            )
+        
+            
         );
     }
 }

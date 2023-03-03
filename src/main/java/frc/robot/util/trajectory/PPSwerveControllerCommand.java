@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import frc.robot.util.NomadMathUtil;
 import frc.robot.util.drive.SecondOrderChassisSpeeds;
 import frc.robot.util.drive.SecondOrderSwerveDriveKinematics;
 import frc.robot.util.drive.SecondOrderSwerveModuleState;
@@ -225,7 +226,7 @@ public class PPSwerveControllerCommand extends CommandBase {
 
     if (useAllianceColor && trajectory.fromGUI) {
       desiredState =
-          PathPlannerTrajectory.transformStateForAlliance(
+          NomadMathUtil.mirrorState(
               desiredState, DriverStation.getAlliance());
     }
 

@@ -115,14 +115,14 @@ public class ArmConstraints {
         return Math.max(maxLength, getMinLength(angle));
     }
 
-    private double getMinLength(double angle) {
+    public double getMinLength(double angle) {
         if (angle < 0 || angle > Math.PI) {
             return 0.610;
         }
         return ArmConstants.MIN_ARM_LENGTH;
     }
 
-    private double constrainLength(double length, double angle) {
+    public double constrainLength(double length, double angle) {
         return MathUtil.clamp(length, getMinLength(angle), maxLength(angle, constraints));
     }
 }

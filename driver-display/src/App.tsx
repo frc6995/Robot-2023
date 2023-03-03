@@ -58,28 +58,36 @@ function Grid(props:Props) {
   )
 }
   
-type AppState = {selection:number};
+type AppState = {selection:number, time:number};
 
 class App extends Component{
-  state: AppState = {selection:-1};
+  state: AppState = {selection:-1, time:0};
   ntcore = NetworkTables.createInstanceByURI("10.69.95.2");
   selectionSubscriberUID=0;
+  matchTimeUID = 0;
 
   selectionTopic = this.ntcore.createTopic<number>('/DriverDisplay/selection', NetworkTableTypeInfos.kInteger);
+  matchTimeTopic = this.ntcore.createTopic<number>('/DriverDisplay/matchTime', NetworkTableTypeInfos.kDouble);
   
   constructor(props: any) {
     super(props);
     this.selectionSubscriberUID = this.selectionTopic!.subscribe((value)=>{this.setState({selection: (value ===null ? -1 : value)}); console.log(value); });
+    this.matchTimeUID = this.matchTimeTopic!.subscribe((value)=>{
+      this.setState({time: (value ===null ? -1 : Math.ceil(value))});});
     console.log(this.selectionSubscriberUID)
   }
   
   componentWillUnmount(): void {
     this.selectionTopic.unsubscribe(this.selectionSubscriberUID, true);
+    this.matchTimeTopic.unsubscribe(this.matchTimeUID, true);
   }
   render() {
     return (
       <div className="App">
         <Grid selection={this.state.selection}></Grid>
+        <div style={{color:"white", fontSize: "10vw"}}>
+          {this.state.time/*this.state.time === -1 ? "--": `${Math.floor(this.state.time / 60).toFixed(0)}:${(this.state.time % 60).toString().padStart(2, '0')}`*/}
+        </div>
       </div>
     );
     }

@@ -4,6 +4,7 @@
 
 package frc.robot.commands.arm;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -24,6 +25,7 @@ public class GoToPositionC extends CommandBase {
   private ArmPosition m_targetPosition;
   private List<ArmPosition> m_waypoints;
   private Supplier<ArmPosition> m_positionSupplier;
+  private double maxRotateLength = 0.64;
   private int currentTarget = 0;
   /** Creates a new GoToPositionC. */
   public GoToPositionC(ArmS armS, Supplier<ArmPosition> positionSupplier) {
@@ -48,6 +50,11 @@ public class GoToPositionC extends CommandBase {
 
     boolean needToRetract = false;
     boolean needToStraighten = false;
+    /**
+     * 
+     */
+    double rotateLength = 
+    MathUtil.clamp(Math.min(m_startPosition.armLength, m_targetPosition.armLength), MIN_ARM_LENGTH, maxRotateLength);
 
     if (Math.abs(m_startPosition.pivotRadians - m_targetPosition.pivotRadians) > Units.degreesToRadians(10)) {
       needToRetract = true;
@@ -60,46 +67,40 @@ public class GoToPositionC extends CommandBase {
     m_armS.resetExtender();
     m_armS.resetPivot();
     m_armS.resetWrist();
-    m_waypoints = List.of(
-      m_startPosition,
-      // rotate the wrist to world-vertical
-      new ArmPosition(
-        m_startPosition.pivotRadians,
-        m_startPosition.armLength,
-        needToStraighten ? 
-          MathUtil.clamp(m_startPosition.wristRadians, 0, WRIST_MAX_ANGLE) :
-          MathUtil.clamp(m_startPosition.wristRadians, WRIST_MIN_ANGLE,  WRIST_MAX_ANGLE),// MathUtil.clamp(Math.PI / 2 - m_startPosition.pivotRadians, WRIST_MIN_ANGLE, WRIST_MAX_ANGLE),
-        m_startPosition.handLength),
-      new ArmPosition(
-        m_startPosition.pivotRadians,
-        // before pivot, go to shorter of two lengths
-        needToRetract ? MIN_ARM_LENGTH : Math.min(m_startPosition.armLength, m_targetPosition.armLength),
-        needToStraighten ? 
-          MathUtil.clamp(m_startPosition.wristRadians, 0,  WRIST_MAX_ANGLE) :
-          MathUtil.clamp(m_startPosition.wristRadians, WRIST_MIN_ANGLE,  WRIST_MAX_ANGLE),
-        m_startPosition.handLength),
-      new ArmPosition(
-        m_targetPosition.pivotRadians,
-        needToRetract ? MIN_ARM_LENGTH : Math.min(m_startPosition.armLength, m_targetPosition.armLength),
-        needToStraighten ? 
-          MathUtil.clamp(m_targetPosition.wristRadians, 0,  WRIST_MAX_ANGLE) :
-          MathUtil.clamp(m_targetPosition.wristRadians, WRIST_MIN_ANGLE,  WRIST_MAX_ANGLE),
-        m_startPosition.handLength),
-      new ArmPosition(
-        m_targetPosition.pivotRadians,
-        m_targetPosition.armLength,
-        needToStraighten ? 
-          MathUtil.clamp(m_targetPosition.wristRadians, 0,  WRIST_MAX_ANGLE) :
-          MathUtil.clamp(m_targetPosition.wristRadians, WRIST_MIN_ANGLE,  WRIST_MAX_ANGLE),
-        m_startPosition.handLength),
-      new ArmPosition(
-        m_targetPosition.pivotRadians,
-        m_targetPosition.armLength,
-        MathUtil.clamp(m_targetPosition.wristRadians, WRIST_MIN_ANGLE,  WRIST_MAX_ANGLE),
-        m_startPosition.handLength)
+
+    m_waypoints = new LinkedList<ArmPosition>();
+    m_waypoints.add(m_startPosition);
+    {
+      // Step 1, get within the safe length interval for rotating. If we can get to the target length, do it.
+      double targetLength = m_targetPosition.armLength;
+      double minStartLength = m_armS.constraints.getMinLength(m_startPosition.pivotRadians);
+      double firstRetractLength = m_startPosition.armLength;
+      // if (firstRetractLength > maxRotateLength) {
+      //   firstRetractLength = maxRotateLength;
+      // }
+      // if (targetLength < minStartLength) {
+      //   firstRetractLength = minStartLength;
+      // }
+      firstRetractLength = MathUtil.clamp(firstRetractLength, minStartLength, maxRotateLength);
+      targetLength = MathUtil.clamp(targetLength, minStartLength, maxRotateLength);
       
 
-    );
+      m_waypoints.add(new ArmPosition(
+        m_startPosition.pivotRadians,
+        firstRetractLength,
+        m_targetPosition.wristRadians,
+        m_startPosition.handLength
+      ));
+
+      //step 2, move wrist and pivot to target position. 
+      m_waypoints.add(new ArmPosition(
+        m_targetPosition.pivotRadians,
+        targetLength,
+        m_targetPosition.wristRadians, m_startPosition.handLength));
+      //step 3, extend/retract to target length
+      m_waypoints.add(m_targetPosition);
+    }
+    
   }
 
   public void execute() {
@@ -113,17 +114,26 @@ public class GoToPositionC extends CommandBase {
     }
 
     var currentTargetPosition = m_waypoints.get(currentTarget);
-    m_armS.setExtendLength(currentTargetPosition.armLength);
+    m_armS.setExtendLength(m_armS.constrainLength(currentTargetPosition.armLength));
     m_armS.setPivotAngle(currentTargetPosition.pivotRadians);
     m_armS.setWristAngle(currentTargetPosition.wristRadians);
   }
 
+  public boolean isFinished() {
+
+    var actualPosition = m_armS.getArmPosition();
+    var atSetpoint = (Math.abs(m_armS.constrainLength(m_targetPosition.armLength) - actualPosition.armLength) < Units.inchesToMeters(2)
+      && Math.abs(m_targetPosition.pivotRadians - actualPosition.pivotRadians) < 0.2
+      && Math.abs(m_targetPosition.wristRadians - actualPosition.wristRadians) < Units.degreesToRadians(10)
+    );
+    return atSetpoint;
+  }
   private boolean isAtSetpoint (ArmPosition setpoint) {
     
     var actualPosition = m_armS.getArmPosition();
-    var atSetpoint = (Math.abs(setpoint.armLength - actualPosition.armLength) < Units.inchesToMeters(2)
-      && Math.abs(setpoint.pivotRadians - actualPosition.pivotRadians) < Units.degreesToRadians(5)
-      && Math.abs(setpoint.wristRadians - actualPosition.wristRadians) < Units.degreesToRadians(10)
+    var atSetpoint = (Math.abs(m_armS.constrainLength(setpoint.armLength) - actualPosition.armLength) < Units.inchesToMeters(2)
+      && Math.abs(setpoint.pivotRadians - actualPosition.pivotRadians) < 0.2
+      //&& Math.abs(setpoint.wristRadians - actualPosition.wristRadians) < Units.degreesToRadians(10)
     );
     return atSetpoint;
   }

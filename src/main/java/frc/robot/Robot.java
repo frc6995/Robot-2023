@@ -1,6 +1,8 @@
 package frc.robot;
 
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -21,6 +23,7 @@ public class Robot extends TimedRobot {
 
     private Command autonomousCommand;
 
+    private NetworkTableEntry matchTimeEntry = NetworkTableInstance.getDefault().getEntry("/DriverDisplay/matchTime");
     @Override
     public void robotInit() {
         Robot.isSimulation = RobotBase.isSimulation();
@@ -41,7 +44,7 @@ public class Robot extends TimedRobot {
         Logger.updateEntries();
         CommandScheduler.getInstance().run();
         robotContainer.periodic();
-        
+        matchTimeEntry.setNumber(DriverStation.getMatchTime());
     }
 
     @Override

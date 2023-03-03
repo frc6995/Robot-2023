@@ -57,6 +57,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.arm.GoToPositionC;
 import frc.robot.commands.arm.HoldCurrentPositionC;
 import frc.robot.util.NomadMathUtil;
 import frc.robot.util.TimingTracer;
@@ -68,7 +69,7 @@ import io.github.oblarg.oblog.annotations.Log;
 public class ArmS extends SubsystemBase implements Loggable {
     
     public final Field2d VISUALIZER = new Field2d();
-    private ArmConstraints constraints = new ArmConstraints(VISUALIZER);
+    public ArmConstraints constraints = new ArmConstraints(VISUALIZER);
     private Supplier<Double> handLengthSupplier;
     //public ArmConstraintsManager setpointManager = new ArmConstraintsManager(VISUALIZER);
     public ArmS(Supplier<Double> handLengthSupplier) {
@@ -82,7 +83,27 @@ public class ArmS extends SubsystemBase implements Loggable {
         //SmartDashboard.putData(MECH_VISUALIZER);
         //SmartDashboard.putData(VISUALIZER);
         setDefaultCommand(new HoldCurrentPositionC(this));
+        VISUALIZER.getObject("positions").setPoses(
+            SCORE_HIGH_CONE_POSITION.asPose(),
+            SCORE_MID_CONE_POSITION.asPose(),
+            STOW_POSITION.asPose(),
+            GROUND_CUBE_INTAKE_POSITION.asPose(),
+            GROUND_CONE_INTAKE_POSITION.asPose(),
+            RAMP_CONE_INTAKE_POSITION.asPose(),
+            RAMP_CUBE_INTAKE_POSITION.asPose(),
+            PLATFORM_CONE_INTAKE_POSITION.asPose(),
+            OVERTOP_CONE_INTAKE_POSITION.asPose()
+
+
+        );
         //setDefaultCommand(followJointSpaceTargetC());
+    }
+
+    public double constrainLength(double length) {
+        return constraints.constrainLength(length, getContinuousRangeAngle());
+    }
+    public double constrainLength(double length, double angle) {
+        return constraints.constrainLength(length, angle);
     }
 
     public void periodic() {    
@@ -131,7 +152,7 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     private final ProfiledPIDController m_extendController =
         new ProfiledPIDController(12,0,0,
-            new Constraints(1.5, 1.5),
+            new Constraints(1.4, 3),
             0.02
         );
 
@@ -339,7 +360,7 @@ public class ArmS extends SubsystemBase implements Loggable {
             volts = 0;
         }
         //volts = MathUtil.clamp(volts, -2, 2);
-        m_pivotMotor.setVoltage(volts);
+        m_pivotMotor.setVoltage(MathUtil.clamp(volts, -12, 12));
     }
 
     /**
@@ -460,6 +481,10 @@ public class ArmS extends SubsystemBase implements Loggable {
         double frac = (getLengthMeters() - MIN_ARM_LENGTH) / (0.908 - MIN_ARM_LENGTH);
         result += frac * (maxkG - minkG);
         return result;
+    }
+
+    public Command goToPositionC(ArmPosition position) {
+        return new GoToPositionC(this, ()->position);
     }
 
     /**
@@ -588,7 +613,7 @@ public class ArmS extends SubsystemBase implements Loggable {
             volts = 0;
         }
 
-        m_wristMotor.setVoltage(volts);
+        m_wristMotor.setVoltage(MathUtil.clamp(volts, -12, 12));
     }
 
     /**
@@ -760,7 +785,7 @@ public class ArmS extends SubsystemBase implements Loggable {
     private void pivotSimulationPeriodic() {
         m_pivotSim.setCGRadius(getPivotCGRadius());
         m_pivotSim.setMOI(getPivotMOI());
-        double volts = DriverStation.isEnabled() ? m_pivotMotor.getAppliedOutput() : 0;
+        double volts = MathUtil.clamp(DriverStation.isEnabled() ? m_pivotMotor.getAppliedOutput() : 0, -12, 12);
         m_pivotSim.setInputVoltage(NomadMathUtil.subtractkS(volts, PIVOT_KS));
         m_pivotSim.update(TimingTracer.getLoopTime());
         m_pivotEncoderWrapper.setSimPosition(Units.radiansToRotations(m_pivotSim.getAngleRads() + PIVOT_ENCODER_OFFSET));
@@ -778,7 +803,7 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     public void extendSimulationPeriodic() {
         m_extendSim.setAngleFromHorizontal(getAngle().getRadians());
-        m_extendSim.setInputVoltage(NomadMathUtil.subtractkS(m_extendMotor.getAppliedOutput(), 
+        m_extendSim.setInputVoltage(NomadMathUtil.subtractkS(MathUtil.clamp(m_extendMotor.getAppliedOutput(), -12, 12), 
             ARM_EXTEND_KS + (ARM_EXTEND_KG_VERTICAL * Math.sin(getContinuousRangeAngle()))));
         m_extendSim.update(TimingTracer.getLoopTime());
         m_extendEncoderWrapper.setSimPosition(m_extendSim.getPositionMeters());
@@ -796,7 +821,7 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     public void wristSimulationPeriodic() {
         m_wristSim.setGravityAngle(-Math.PI/2 - getAngle().getRadians());
-        m_wristSim.setInputVoltage(DriverStation.isEnabled() ? m_wristMotor.getAppliedOutput() : 0);
+        m_wristSim.setInputVoltage(MathUtil.clamp(DriverStation.isEnabled() ? m_wristMotor.getAppliedOutput() : 0, -12, 12));
         m_wristSim.update(TimingTracer.getLoopTime());
         m_wristEncoderWrapper.setSimPosition(m_wristSim.getAngleRads());
         m_wristEncoderWrapper.setSimVelocity(m_wristSim.getVelocityRadPerSec());
@@ -914,6 +939,11 @@ public class ArmS extends SubsystemBase implements Loggable {
             this.wristRadians = wristRadians;
             this.handLength = handLength;
         }
+
+        public Pose2d asPose() {
+            return new Pose2d(this.pivotRadians, this.armLength, Rotation2d.fromRadians(this.wristRadians));
+        }
+
     }
 
 }
