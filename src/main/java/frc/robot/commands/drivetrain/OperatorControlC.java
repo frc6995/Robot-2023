@@ -27,9 +27,9 @@ public class OperatorControlC extends CommandBase {
      * versus using a double which would only update when the constructor is called
      */
     private final DoubleSupplier m_forwardX;
-    private final SlewRateLimiter m_xRateLimiter = new SlewRateLimiter(2);
+    private final SlewRateLimiter m_xRateLimiter = new SlewRateLimiter(1);
     private final DoubleSupplier m_forwardY;
-    private final SlewRateLimiter m_yRateLimiter = new SlewRateLimiter(2);
+    private final SlewRateLimiter m_yRateLimiter = new SlewRateLimiter(1);
     private final DoubleSupplier m_rotation;
     private final SlewRateLimiter m_thetaRateLimiter = new SlewRateLimiter(2);
 
