@@ -206,7 +206,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
     return sequence(retractC(), outtakeC()).finallyDo((interrupted)-> stop());
   }
 
-  public Command intakeUntilBeamBreak() {
+  public Command intakeUntilBeamBreakC() {
     return Commands.either
     ( intakeC().until(cubeDebouncedBeamBreak),
     intakeC().until(coneDebouncedBeamBreak),

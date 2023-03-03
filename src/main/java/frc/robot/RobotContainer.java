@@ -204,7 +204,7 @@ public class RobotContainer {
             //     m_intakeS.retractAndIntakeC()
             //     .withTimeout(0.75)
             // ));*/
-        m_driverController.b().whileTrue(m_intakeS.intakeUntilBeamBreak());
+        m_driverController.b().whileTrue(m_intakeS.intakeUntilBeamBreakC());
         m_driverController.x().whileTrue(m_intakeS.outtakeC());
 
         
