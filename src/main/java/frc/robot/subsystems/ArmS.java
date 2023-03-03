@@ -151,8 +151,8 @@ public class ArmS extends SubsystemBase implements Loggable {
         = new SimpleMotorFeedforward(ARM_EXTEND_KS, ARM_EXTEND_KV, 0.01);
 
     private final ProfiledPIDController m_extendController =
-        new ProfiledPIDController(12,0,0,
-            new Constraints(1.4, 3),
+        new ProfiledPIDController(4,0,0,
+            new Constraints(1, 1.5),
             0.02
         );
 

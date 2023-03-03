@@ -206,8 +206,8 @@ public class Constants {
         public static final double ARM_PIVOT_KG_MAX_EXTEND = 0;//0.13 / Math.cos(0.707);//2.872 * (ARM_ROTATIONS_PER_MOTOR_ROTATION * 400) / 2 / Math.cos(Units.degreesToRadians(10.5));
 
         public static final double PIVOT_MAX_VELOCITY = 1.4; // rad/s
-        public static final double PIVOT_MAX_ACCEL_RETRACTED = 8;
-        public static final double PIVOT_MAX_ACCEL_EXTENDED = 8;
+        public static final double PIVOT_MAX_ACCEL_RETRACTED = 2;
+        public static final double PIVOT_MAX_ACCEL_EXTENDED = 2;
 
         /* WRIST/HAND */
 
@@ -282,7 +282,7 @@ public class Constants {
 
     public static final class IntakeConstants {
         public static final int INTAKE_CAN_ID = 30; 
-        public static final double INTAKE_VOLTAGE = 6.995;
+        public static final double INTAKE_VOLTAGE = 6.995 / 3.0;
         public static final int INTAKE_EXTEND = 0;
         public static final int INTAKE_RETRACT= 1;
         public static final int INTAKE_FOLLOWER_CAN_ID = 31 ;

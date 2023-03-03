@@ -5,9 +5,12 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.SparkMaxLimitSwitch;
 import com.revrobotics.CANSparkMax.FaultID;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.SparkMaxLimitSwitch.Type;
+
 import frc.robot.util.color.PicoColorSensor.RawColor;
 
 import edu.wpi.first.math.util.Units;
@@ -15,6 +18,8 @@ import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -26,20 +31,21 @@ import io.github.oblarg.oblog.annotations.Log;
 public class IntakeS extends SubsystemBase implements Loggable {
   private final CANSparkMax intakeMotor = new CANSparkMax(Constants.IntakeConstants.INTAKE_CAN_ID, MotorType.kBrushless);
   private final CANSparkMax intakeFollowerMotor = new CANSparkMax(Constants.IntakeConstants.INTAKE_FOLLOWER_CAN_ID, MotorType.kBrushless);
-  private final PicoColorSensor colorSensor = new PicoColorSensor();
+  private final SparkMaxLimitSwitch m_beamBreak = intakeFollowerMotor.getReverseLimitSwitch(Type.kNormallyClosed);
   private final DoubleSolenoid doubleSolenoid = new DoubleSolenoid(PneumaticsModuleType.REVPH, 
     Constants.IntakeConstants.INTAKE_EXTEND, Constants.IntakeConstants.INTAKE_RETRACT);
-  private RawColor sensedColor = new RawColor(0, 0, 0, 0);
-  /** Creates a new IntakeS. */
+  private Trigger cubeDebouncedBeamBreak = new Trigger(this::hitBeamBreak).debounce(0.1);
+  private Trigger coneDebouncedBeamBreak = new Trigger(this::hitBeamBreak).debounce(0.2);
+    /** Creates a new IntakeS. */
   public IntakeS() {
-    colorSensor.setDebugPrints(true);
+    m_beamBreak.enableLimitSwitch(false);
     intakeMotor.restoreFactoryDefaults();
     intakeFollowerMotor.restoreFactoryDefaults();
     intakeMotor.setIdleMode(IdleMode.kBrake);
     intakeFollowerMotor.setIdleMode(IdleMode.kBrake);
-    intakeMotor.setSecondaryCurrentLimit(10);
+    intakeMotor.setSecondaryCurrentLimit(30);
     
-    intakeMotor.setSmartCurrentLimit(10, 10);
+    intakeMotor.setSmartCurrentLimit(30, 30);
     intakeFollowerMotor.follow(intakeMotor, false);
     intakeMotor.burnFlash();
     intakeFollowerMotor.burnFlash();
@@ -52,8 +58,8 @@ public class IntakeS extends SubsystemBase implements Loggable {
   }
 
   @Log
-  public boolean hitProxSensor() {
-    return getProximity() > 150;
+  public boolean hitBeamBreak() {
+    return m_beamBreak.isPressed();
   }
 
   public double getHandLength() {
@@ -73,11 +79,6 @@ public class IntakeS extends SubsystemBase implements Loggable {
   public void intake(double voltage) {
     intakeMotor.setVoltage(voltage);
   }
- 
-  @Log
-  public double getProximity() {
-    return colorSensor.getProximity0();
-  }
 
 
   /**
@@ -85,7 +86,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
    */
 
   public void intake() {
-    intake(Constants.IntakeConstants.INTAKE_VOLTAGE);
+    intake(Constants.IntakeConstants.INTAKE_VOLTAGE * 2);
   }
 
   /**
@@ -130,7 +131,6 @@ public class IntakeS extends SubsystemBase implements Loggable {
 
   @Override
   public void periodic() {
-    sensedColor = colorSensor.getRawColor0();
     // This method will be called once per scheduler run
   }
 
@@ -204,6 +204,14 @@ public class IntakeS extends SubsystemBase implements Loggable {
 
    public Command retractAndOuttakeC() {
     return sequence(retractC(), outtakeC()).finallyDo((interrupted)-> stop());
+  }
+
+  public Command intakeUntilBeamBreak() {
+    return Commands.either
+    ( intakeC().until(cubeDebouncedBeamBreak),
+    intakeC().until(coneDebouncedBeamBreak),
+    ()->doubleSolenoid.get() == Value.kForward);
+    
   }
 
 }
