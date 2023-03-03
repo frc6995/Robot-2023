@@ -57,6 +57,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Robot;
 import frc.robot.commands.arm.GoToPositionC;
 import frc.robot.commands.arm.HoldCurrentPositionC;
 import frc.robot.util.NomadMathUtil;
@@ -115,7 +116,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         //     poseList.add(new Pose2d(path[i], new Rotation2d()));
         // }
         // VISUALIZER.getObject("path").setPoses(poseList);
-        constraints.update(handLengthSupplier.get(), getContinuousWristAngle());
+        //constraints.update(Units.inc);
         updateVisualizer();
     }
 
@@ -335,7 +336,10 @@ public class ArmS extends SubsystemBase implements Loggable {
      */
 
     private void pivotPeriodic() {
-        updatePivotPlant();
+        if(Robot.isSimulation()){
+            updatePivotPlant();
+        }
+
         //m_pivotFeedForward = new LinearPlantInversionFeedforward<>(m_pivotPlant, 0.02);
         //m_pivotController.setConstraints(new Constraints(PIVOT_MAX_VELOCITY, getMaxPivotAcceleration()));
        
@@ -444,7 +448,7 @@ public class ArmS extends SubsystemBase implements Loggable {
             .get(0,0)
             + (getPivotkG() * getAngle().getCos())
             + PIVOT_KS * Math.signum(velocityRadPerSec));
-        SmartDashboard.putNumber("armCommandVelocity", velocityRadPerSec);
+        //SmartDashboard.putNumber("armCommandVelocity", velocityRadPerSec);
     }
 
     /**
@@ -457,13 +461,13 @@ public class ArmS extends SubsystemBase implements Loggable {
         // We don't want continuous input, but we need the rollover point to be outside our range of motion.
         
         targetAngle = continuousRangeAngleModulus(targetAngle);
-        SmartDashboard.putNumber("armRequestAngle", targetAngle);
+        // SmartDashboard.putNumber("armRequestAngle", targetAngle);
         var outputVelocity = m_pivotController.calculate(
             getContinuousRangeAngle(),
             targetAngle
         );
-        SmartDashboard.putNumber("armError", m_pivotController.getPositionError());
-        SmartDashboard.putNumber("armRequestVel", outputVelocity + m_pivotController.getSetpoint().velocity);
+        // SmartDashboard.putNumber("armError", m_pivotController.getPositionError());
+        // SmartDashboard.putNumber("armRequestVel", outputVelocity + m_pivotController.getSetpoint().velocity);
         setPivotVelocity(outputVelocity + m_pivotController.getSetpoint().velocity);
     }
 
