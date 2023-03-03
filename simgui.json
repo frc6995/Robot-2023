@@ -182,11 +182,16 @@
           "width": 0.7799999713897705
         },
         "bottom": 544,
+        "driveTarget": {
+          "length": 0.8999999761581421,
+          "width": 0.8999999761581421
+        },
         "height": 8.013679504394531,
         "image": "C:\\Users\\jashu\\PathWeaver\\Games\\2023 Charged Up\\2023-field.png",
         "left": 46,
         "modules": {
           "length": 0.4000000059604645,
+          "style": "Hidden",
           "width": 0.4000000059604645
         },
         "poi": {

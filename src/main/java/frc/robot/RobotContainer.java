@@ -220,15 +220,9 @@ public class RobotContainer {
         TimingTracer.update();
         SmartDashboard.putNumber("loopTime", TimingTracer.getLoopTime());
         /* Trace the loop duration and plot to shuffleboard */
-
-        // m_field.getObject("trajTarget").setPose(new Pose2d(
-        //     m_drivebaseS.m_xController.getSetpoint(),
-        //     m_drivebaseS.m_yController.getSetpoint(),
-        //     Rotation2d.fromRadians(
-        //     m_drivebaseS.m_thetaController.getSetpoint())
-        // ));
         LightS.getInstance().periodic();
         m_drivebaseS.drawRobotOnField(m_field);
+        m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
         m_field3d.setRobotPose(new Pose3d(m_drivebaseS.getPose()));
     }
 
@@ -249,7 +243,7 @@ public class RobotContainer {
     }
 
     public Command highConeCubeConeBalanceAuto() {
-        var pathGroup = PathPlanner.loadPathGroup("3PieceGroup", new PathConstraints(2.5, 1.5),  new PathConstraints[0]);
+        var pathGroup = PathPlanner.loadPathGroup("3PieceGroup", new PathConstraints(3, 2.5),  new PathConstraints[0]);
         return Commands.sequence(
             m_intakeS.retractC(),
             Commands.sequence(
@@ -258,7 +252,7 @@ public class RobotContainer {
             ),
             Commands.deadline(
                 Commands.parallel(
-                    m_drivebaseS.pathPlannerCommand(pathGroup.get(0)),
+                    m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds()))),
                     m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION)
                 )
                 ,

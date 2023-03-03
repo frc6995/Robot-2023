@@ -479,6 +479,10 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         m_thetaController.reset();
     }
 
+    public Pose2d getTargetPose() {
+        return new Pose2d(m_xController.getSetpoint(), m_yController.getSetpoint(), new Rotation2d(m_thetaController.getSetpoint()));
+    }
+
     /****COMMANDS */
     public Command driveTime(double speed, double time) {
         return run(
