@@ -1,5 +1,7 @@
 package frc.robot;
 
+import java.io.Console;
+
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
 
@@ -79,6 +81,7 @@ public class RobotContainer {
 
         configureButtonBindings();
         m_autoSelector.setDefaultOption("twoPiece", twoPieceAuto());
+
         m_autoSelector.setDefaultOption("threePiece", highConeCubeConeBalanceAuto());
         m_field.getObject("bluePoses").setPoses(POIManager.BLUE_COMMUNITY);
         m_field.getObject("redPoses").setPoses(POIManager.RED_COMMUNITY);
@@ -249,18 +252,23 @@ public class RobotContainer {
             m_intakeS.retractC(),
             Commands.sequence(
                 m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION),
-                m_intakeS.outtakeC().withTimeout(1)
+                m_intakeS.outtakeC().withTimeout(1),
+                m_armS.goToPositionC(ArmConstants.STOW_POSITION)
             ),
-            Commands.deadline(
-                Commands.parallel(
-                    m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds()))),
-                    m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION)
-                )
-                ,
-                Commands.waitSeconds(1).andThen(m_intakeS.intakeC())
-            )
-        
-            
+            Commands.sequence(
+                m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds()))),
+                m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION),
+                m_intakeS.intakeUntilBeamBreakC().withTimeout(1),
+                m_armS.goToPositionC(ArmConstants.STOW_POSITION)
+            ),
+            Commands.sequence(
+                m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds()))),
+                m_armS.goToPositionC(ArmConstants.HYBRID_NODE_OUTTAKE_POSITION),
+                m_intakeS.intakeUntilBeamBreakC().withTimeout(1)
+            ),
+
+            m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
+
         );
     }
 }
