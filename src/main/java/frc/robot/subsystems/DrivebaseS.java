@@ -29,7 +29,9 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Quaternion;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -136,6 +138,15 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         m_camera2Wrapper = new PhotonCameraWrapper(VisionConstants.CAM_2_NAME, VisionConstants.robotToCam2);
         
         resetPose(new Pose2d(1.835, 1.072, Rotation2d.fromRadians(Math.PI)));
+    }
+
+    public Rotation3d getRotation3d() {
+        return new Rotation3d(new Quaternion(
+            m_navx.getQuaternionW(),
+            m_navx.getQuaternionX(),
+            m_navx.getQuaternionY(),
+            m_navx.getQuaternionZ()
+        ));
     }
 
     @Override

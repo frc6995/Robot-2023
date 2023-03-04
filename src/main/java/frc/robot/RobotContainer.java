@@ -7,6 +7,7 @@ import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.WPIUtilJNI;
@@ -223,7 +224,7 @@ public class RobotContainer {
         LightS.getInstance().periodic();
         m_drivebaseS.drawRobotOnField(m_field);
         m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
-        m_field3d.setRobotPose(new Pose3d(m_drivebaseS.getPose()));
+        m_field3d.setRobotPose(new Pose3d(m_drivebaseS.getPose().getX(), m_drivebaseS.getPose().getY(), 0, m_drivebaseS.getRotation3d()));
     }
 
     public void onEnabled(){
