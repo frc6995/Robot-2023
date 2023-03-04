@@ -29,7 +29,9 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Quaternion;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -44,8 +46,10 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
+import frc.robot.subsystems.LightS.States;
 import frc.robot.Robot;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.util.AllianceWrapper;
@@ -136,6 +140,20 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         m_camera2Wrapper = new PhotonCameraWrapper(VisionConstants.CAM_2_NAME, VisionConstants.robotToCam2);
         
         resetPose(new Pose2d(1.835, 1.072, Rotation2d.fromRadians(Math.PI)));
+    }
+
+    public Rotation3d getRotation3d() {
+        return new Rotation3d(new Quaternion(
+            m_navx.getQuaternionW(),
+            m_navx.getQuaternionX(),
+            m_navx.getQuaternionY(),
+            m_navx.getQuaternionZ()
+        ));
+    }
+
+    @Log
+    public double getPitch() {
+        return Units.degreesToRadians(m_navx.getPitch());
     }
 
     @Override
@@ -590,6 +608,23 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
             (PathPlannerTrajectory traj) -> {}, // empty output for current trajectory.
             (startPose, endPose)->DrivebaseS.generateTrajectoryToPose(startPose, endPose, getFieldRelativeLinearSpeedsMPS()),
             this);
+    }
+
+    public Command chargeStationFrontFirstC() {
+        return Commands.sequence(
+            // high speed to push down the ramp (until a tilt is detected)
+            run(()->this.driveAllianceRelative(new ChassisSpeeds(1.3, 0, 0))).until(()-> this.getPitch() < -0.13),
+            // higher speed to get all the way on the ramp (for time)
+            run(()->this.driveAllianceRelative(new ChassisSpeeds(1.5, 0, 0))).withTimeout(0.7),
+            // slow speed to move past the tipping point (until it tips bac)
+            run(()->this.driveAllianceRelative(new ChassisSpeeds(0.5, 0, 0)))
+                .alongWith(Commands.run(()->LightS.getInstance().requestState(States.Climbing)))
+                .until(()-> this.getPitch() > -0.15),
+            // short burst of backwards speed to cancel forward momentul
+            run(()->this.driveAllianceRelative(new ChassisSpeeds(-0.1, 0, 0))).withTimeout(0.2),
+            // put wheels in circle formation to prevent sliding
+            run(()->this.driveAllianceRelative(new ChassisSpeeds(0, 0, 0.1))).withTimeout(0.2)
+        );
     }
 
 }

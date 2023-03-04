@@ -1,4 +1,5 @@
 package frc.robot;
+import java.io.Console;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
@@ -10,6 +11,7 @@ import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.WPIUtilJNI;
@@ -83,6 +85,7 @@ public class RobotContainer {
 
         configureButtonBindings();
         m_autoSelector.setDefaultOption("twoPiece", twoPieceAuto());
+
         m_autoSelector.setDefaultOption("threePiece", highConeCubeConeBalanceAuto());
         m_field.getObject("bluePoses").setPoses(POIManager.BLUE_COMMUNITY);
         m_field.getObject("redPoses").setPoses(POIManager.RED_COMMUNITY);
@@ -209,6 +212,7 @@ public class RobotContainer {
                 );
             }
         ));
+        m_driverController.back().whileTrue(m_drivebaseS.chargeStationFrontFirstC());
         /*
         m_driverController.a().toggleOnTrue(
             Commands.sequence(
@@ -250,7 +254,7 @@ public class RobotContainer {
         LightS.getInstance().periodic();
         m_drivebaseS.drawRobotOnField(m_field);
         m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
-        m_field3d.setRobotPose(new Pose3d(m_drivebaseS.getPose()));
+        m_field3d.setRobotPose(new Pose3d(m_drivebaseS.getPose().getX(), m_drivebaseS.getPose().getY(), 0, m_drivebaseS.getRotation3d()));
     }
 
     public void onEnabled(){
@@ -293,18 +297,23 @@ public class RobotContainer {
             m_intakeS.retractC(),
             Commands.sequence(
                 m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION),
-                m_intakeS.outtakeC().withTimeout(1)
+                m_intakeS.outtakeC().withTimeout(1),
+                m_armS.goToPositionC(ArmConstants.STOW_POSITION)
             ),
-            Commands.deadline(
-                Commands.parallel(
-                    m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds()))),
-                    m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION)
-                )
-                ,
-                Commands.waitSeconds(1).andThen(m_intakeS.intakeC())
-            )
-        
-            
+            Commands.sequence(
+                m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds()))),
+                m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION),
+                m_intakeS.intakeUntilBeamBreakC().withTimeout(1),
+                m_armS.goToPositionC(ArmConstants.STOW_POSITION)
+            ),
+            Commands.sequence(
+                m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds()))),
+                m_armS.goToPositionC(ArmConstants.HYBRID_NODE_OUTTAKE_POSITION),
+                m_intakeS.intakeUntilBeamBreakC().withTimeout(1)
+            ),
+
+            m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
+
         );
     }
 }

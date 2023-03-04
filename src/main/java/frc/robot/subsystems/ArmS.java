@@ -491,36 +491,10 @@ public class ArmS extends SubsystemBase implements Loggable {
         return new GoToPositionC(this, ()->position);
     }
 
-    /**
-     * holds arm at angle 0
-     * @return the run command
-     */
-
-    public Command holdC() {
-        return run(()->setPivotAngle(0));
+    public Command holdPositionC(){
+        return new HoldCurrentPositionC(this);
     }
 
-    /**
-     * rotates arm counterclockwise at .5 radians per second
-     * and then drops voltage to 0
-     * @return the run command
-     */
-
-    public Command counterClockwiseC() {
-        return run(()->setPivotVelocity(0.5))
-        .finallyDo((interrupted)->setPivotVolts(0));
-    }
-
-    /**
-     * rotates arm clockwise at .5 radians per second
-     * and then drops voltage to 0
-     * @return the run command
-     */
-
-    public Command clockwiseC() {
-        return run(()->setPivotVelocity(-0.5))
-        .finallyDo((interrupted)->setPivotVolts(0));
-    }
     // endregion
 
     // region wrist

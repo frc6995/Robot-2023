@@ -46,10 +46,10 @@ public class Constants {
         static private double HW = WHEEL_BASE_WIDTH_M/2.0;
 
         public enum ModuleConstants {
-            FL("FL", 18, 17, 6, 5.708331, HW, HW),
-            FR("FR", 12, 11, 7, 3.783000, HW, -HW),
-            BL("BL", 16, 15, 8, 1.787997, -HW, HW),
-            BR("BR", 14, 13, 9, 5.660000, -HW, -HW);
+            FL("FL", 18, 17, 6, 6.221643 + 5.708331 - 2 * Math.PI, HW, HW),
+            FR("FR", 12, 11, 7, 3.783000 + 0.014729, HW, -HW),
+            BL("BL", 16, 15, 8, 1.787997 + 0.034934, -HW, HW),
+            BR("BR", 14, 13, 9, 6.233086 + 5.660000 - 2 * Math.PI , -HW, -HW);
     
             public final String name;
             public final int driveMotorID;
@@ -281,6 +281,11 @@ public class Constants {
             1.400,
             Units.inchesToMeters(9.4)
         );
+        public static final ArmPosition HYBRID_NODE_OUTTAKE_POSITION = new ArmPosition(
+            Units.degreesToRadians(66),
+            MIN_ARM_LENGTH,
+            Units.degreesToRadians(0),
+            Units.inchesToMeters(9.4));
 
         public static final ArmPosition SCORE_HYBRID_POSITION = new ArmPosition(
             Units.degreesToRadians(66),
