@@ -275,6 +275,11 @@ public class Constants {
             1.400,
             Units.inchesToMeters(9.4)
         );
+        public static final ArmPosition HYBRID_NODE_OUTTAKE_POSITION = new ArmPosition(
+            Units.degreesToRadians(66),
+            MIN_ARM_LENGTH,
+            Units.degreesToRadians(0),
+            Units.inchesToMeters(9.4));
 
         
     }
