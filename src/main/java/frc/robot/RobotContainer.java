@@ -1,5 +1,8 @@
 package frc.robot;
 
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
+
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
 
@@ -23,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.InputDevices;
 import frc.robot.commands.arm.GoToPositionC;
+import frc.robot.commands.arm.HoldCurrentPositionC;
 import frc.robot.commands.drivetrain.OperatorControlC;
 import frc.robot.driver.CommandOperatorKeypad;
 import frc.robot.subsystems.ArmS;
@@ -56,6 +60,7 @@ public class RobotContainer {
 
     private ArmPosition m_targetArmPosition = ArmConstants.STOW_POSITION;
     private Pose2d m_targetAlignmentPose = new Pose2d(1.909, 1.072, Rotation2d.fromRadians(Math.PI));
+    private boolean m_isCubeSelected = true;
     
     SendableChooser<Command> m_autoSelector = new SendableChooser<Command>();
 
@@ -63,7 +68,7 @@ public class RobotContainer {
         m_keypad = new CommandOperatorKeypad(2, (pose)->{
             m_targetAlignmentPose = pose;
             m_field.getObject("Selection").setPose(pose);
-        }, (position)->{m_targetArmPosition = position;});
+        }, (position)->{m_targetArmPosition = position;}, (selectedCube)->{m_isCubeSelected = selectedCube;});
         m_target.setPose(new Pose2d(1.909, 1.072, Rotation2d.fromRadians(Math.PI)));
         
         
@@ -87,17 +92,39 @@ public class RobotContainer {
 
     public void configureButtonBindings() {
         m_driverController.a().toggleOnTrue(m_drivebaseS.chasePoseC(()->m_targetAlignmentPose));
-        m_driverController.start().onTrue(m_intakeS.extendC());
-        m_driverController.back().onTrue(m_intakeS.retractC());
+        m_driverController.b().toggleOnTrue(
+            Commands.sequence(
+                m_intakeS.outtakeC().withTimeout(0.5),
+                m_armS.stowC()
+            )
+            );
+        m_driverController.start().onTrue(m_armS.stowC());
+        //m_driverController.back().onTrue(m_intakeS.retractC());
         // OFFICIAL CALEB PREFERENCE
-        m_driverController.rightBumper().toggleOnTrue(new GoToPositionC(m_armS, ()->ArmConstants.RAMP_CONE_INTAKE_POSITION));
-        m_driverController.rightTrigger().toggleOnTrue(new GoToPositionC(m_armS, ()->ArmConstants.RAMP_CUBE_INTAKE_POSITION));
+        m_driverController.y().toggleOnTrue(armIntakeCG(ArmConstants.OVERTOP_CONE_INTAKE_POSITION, false));
+
+
+
+        m_driverController.rightBumper().toggleOnTrue(armIntakeSelectedCG(
+            ArmConstants.RAMP_CUBE_INTAKE_POSITION, 
+            ArmConstants.RAMP_CONE_INTAKE_POSITION, ()->m_isCubeSelected));
+
+        m_driverController.rightTrigger().toggleOnTrue(armIntakeSelectedCG(
+            ArmConstants.GROUND_CUBE_INTAKE_POSITION, 
+            ArmConstants.GROUND_CONE_INTAKE_POSITION, ()->m_isCubeSelected));
+            
+        m_driverController.leftBumper().toggleOnTrue(armIntakeSelectedCG(
+            ArmConstants.PLATFORM_CUBE_INTAKE_POSITION, 
+            ArmConstants.PLATFORM_CONE_INTAKE_POSITION, ()->m_isCubeSelected));
+        m_driverController.leftTrigger().toggleOnTrue(m_armS.goToPositionC(ArmConstants.GROUND_CONE_INTAKE_POSITION));
+
+        /*m_driverController.rightTrigger().toggleOnTrue(new GoToPositionC(m_armS, ()->ArmConstants.RAMP_CUBE_INTAKE_POSITION));
 
         m_driverController.leftBumper().toggleOnTrue(new GoToPositionC(m_armS, ()->ArmConstants.GROUND_CONE_INTAKE_POSITION));
         m_driverController.leftTrigger().toggleOnTrue(new GoToPositionC(m_armS, ()->ArmConstants.GROUND_CUBE_INTAKE_POSITION));
-        m_driverController.y().toggleOnTrue(new GoToPositionC(m_armS, ()->ArmConstants.OVERTOP_CONE_INTAKE_POSITION).alongWith(m_intakeS.retractC()));
+        
         m_driverController.rightStick().toggleOnTrue(new GoToPositionC(m_armS, ()->ArmConstants.PLATFORM_CONE_INTAKE_POSITION));
-
+        */
 
         
 
@@ -204,8 +231,7 @@ public class RobotContainer {
             //     m_intakeS.retractAndIntakeC()
             //     .withTimeout(0.75)
             // ));*/
-        m_driverController.b().whileTrue(m_intakeS.intakeUntilBeamBreakC());
-        m_driverController.x().whileTrue(m_intakeS.outtakeC());
+
 
         
     }
@@ -219,6 +245,7 @@ public class RobotContainer {
     public void periodic() {
         TimingTracer.update();
         SmartDashboard.putNumber("loopTime", TimingTracer.getLoopTime());
+        LightS.getInstance().requestState(m_isCubeSelected? States.RequestingCube : States.RequestingCone);
         /* Trace the loop duration and plot to shuffleboard */
         LightS.getInstance().periodic();
         m_drivebaseS.drawRobotOnField(m_field);
@@ -228,6 +255,24 @@ public class RobotContainer {
 
     public void onEnabled(){
         m_drivebaseS.resetRelativeRotationEncoders();
+    }
+
+    public Command armIntakeCG(ArmPosition position, boolean isCube) {
+        return 
+        Commands.sequence(
+            Commands.deadline(
+                m_intakeS.setGamePieceC(()->isCube).andThen(m_intakeS.intakeUntilBeamBreakC()),
+                m_armS.goToPositionC(position).andThen(new HoldCurrentPositionC(m_armS))
+
+            ),
+            m_armS.stowC()
+        );
+    }
+
+    public Command armIntakeSelectedCG(ArmPosition cubePosition, ArmPosition conePosition, BooleanSupplier isCube) {
+        return Commands.either(
+            armIntakeCG(cubePosition, true), armIntakeCG(conePosition, false), isCube)
+            ;
     }
 
     public Command twoPieceAuto() {

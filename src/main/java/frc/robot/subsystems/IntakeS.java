@@ -21,6 +21,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
+
+import java.util.function.BooleanSupplier;
+
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
@@ -34,7 +37,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
   private final SparkMaxLimitSwitch m_beamBreak = intakeFollowerMotor.getReverseLimitSwitch(Type.kNormallyClosed);
   private final DoubleSolenoid doubleSolenoid = new DoubleSolenoid(PneumaticsModuleType.REVPH, 
     Constants.IntakeConstants.INTAKE_EXTEND, Constants.IntakeConstants.INTAKE_RETRACT);
-  private Trigger cubeDebouncedBeamBreak = new Trigger(this::hitBeamBreak).debounce(0.1);
+  private Trigger cubeDebouncedBeamBreak = new Trigger(this::hitBeamBreak).debounce(0.06);
   private Trigger coneDebouncedBeamBreak = new Trigger(this::hitBeamBreak).debounce(0.2);
     /** Creates a new IntakeS. */
   public IntakeS() {
@@ -43,9 +46,9 @@ public class IntakeS extends SubsystemBase implements Loggable {
     intakeFollowerMotor.restoreFactoryDefaults();
     intakeMotor.setIdleMode(IdleMode.kBrake);
     intakeFollowerMotor.setIdleMode(IdleMode.kBrake);
-    intakeMotor.setSecondaryCurrentLimit(30);
+    intakeMotor.setSecondaryCurrentLimit(10);
     
-    intakeMotor.setSmartCurrentLimit(30, 30);
+    intakeMotor.setSmartCurrentLimit(10, 10);
     intakeFollowerMotor.follow(intakeMotor, false);
     intakeMotor.burnFlash();
     intakeFollowerMotor.burnFlash();
@@ -113,6 +116,10 @@ public class IntakeS extends SubsystemBase implements Loggable {
     doubleSolenoid.set(Value.kReverse);
   }
 
+  public void setGamePiece(boolean isCube) {
+    doubleSolenoid.set(isCube? Value.kForward : Value.kReverse);
+  }
+
   /**
    * Toggles the intake between extend and retract
    */
@@ -139,6 +146,9 @@ public class IntakeS extends SubsystemBase implements Loggable {
    * @return returns the runEnd Command
    */
 
+   public Command setGamePieceC(BooleanSupplier isCube) {
+    return runOnce(()->setGamePiece(isCube.getAsBoolean()));
+   }
    public Command intakeC() {
     return runEnd(this::intake, this::stop);//.until(new Trigger(this::hitProxSensor));
   }
@@ -207,10 +217,9 @@ public class IntakeS extends SubsystemBase implements Loggable {
   }
 
   public Command intakeUntilBeamBreakC() {
-    return Commands.either
-    ( intakeC().until(cubeDebouncedBeamBreak),
-    intakeC().until(coneDebouncedBeamBreak),
-    ()->doubleSolenoid.get() == Value.kForward);
+    return intakeC().until(()->{
+      return doubleSolenoid.get() == Value.kForward ? 
+      cubeDebouncedBeamBreak.getAsBoolean() : coneDebouncedBeamBreak.getAsBoolean();});
     
   }
 

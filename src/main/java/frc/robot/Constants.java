@@ -226,13 +226,13 @@ public class Constants {
 
         public static final ArmPosition SCORE_HIGH_CONE_POSITION = new ArmPosition(
             0.658,
-            1.479,
+            1.429,
             0,
             Units.inchesToMeters(9.4));
         public static final ArmPosition SCORE_MID_CONE_POSITION = new ArmPosition(
-            0.668,
-            0.982,
-            0,
+            0.74,
+            1.082,
+            -0.74,
             Units.inchesToMeters(9.4));
         public static final ArmPosition STOW_POSITION = new ArmPosition(
             Units.degreesToRadians(66),
@@ -245,9 +245,9 @@ public class Constants {
             0.56,
             Units.inchesToMeters(9.4));
         public static final ArmPosition GROUND_CONE_INTAKE_POSITION = new ArmPosition(
-            -0.396,
+            -0.42,
             0.611,
-            1.186,
+            WRIST_MAX_ANGLE - Units.degreesToRadians(6),
             Units.inchesToMeters(9.4));
         public static final ArmPosition RAMP_CONE_INTAKE_POSITION = new ArmPosition(
             2.682,
@@ -269,12 +269,24 @@ public class Constants {
             MathUtil.angleModulus(Units.degreesToRadians(339.446)),
             Units.inchesToMeters(9.4)
         );
+        public static final ArmPosition PLATFORM_CUBE_INTAKE_POSITION = new ArmPosition(
+            1.130,
+            0.764,
+            MathUtil.angleModulus(Units.degreesToRadians(339.446)),
+            Units.inchesToMeters(9.4)
+        );
         public static final ArmPosition OVERTOP_CONE_INTAKE_POSITION = new ArmPosition(
             3.50,
             0.628,
             1.400,
             Units.inchesToMeters(9.4)
         );
+
+        public static final ArmPosition SCORE_HYBRID_POSITION = new ArmPosition(
+            Units.degreesToRadians(66),
+            MIN_ARM_LENGTH,
+            0,
+            Units.inchesToMeters(9.4));
 
         
     }

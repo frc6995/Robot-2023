@@ -444,7 +444,7 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     public void setPivotVelocity(double velocityRadPerSec) {
         setPivotVolts(m_pivotFeedForward.calculate(
-            VecBuilder.fill(0, getPivotVelocity()), VecBuilder.fill(0, velocityRadPerSec))
+            VecBuilder.fill(0, velocityRadPerSec))
             .get(0,0)
             + (getPivotkG() * getAngle().getCos())
             + PIVOT_KS * Math.signum(velocityRadPerSec));
@@ -680,18 +680,18 @@ public class ArmS extends SubsystemBase implements Loggable {
         });
     }
 
-    public Command scoreHighConeC() {
-        return followTargetC(()->new Pose2d(Units.inchesToMeters(48 + 12.5), Units.inchesToMeters(56), new Rotation2d()));
-    }
-    public Command scoreMidConeC() {
-        return followTargetC(()->new Pose2d(Units.inchesToMeters(31 + 12.5), Units.inchesToMeters(44), new Rotation2d()));
-    }
+    // public Command scoreHighConeC() {
+    //     return followTargetC(()->new Pose2d(Units.inchesToMeters(48 + 12.5), Units.inchesToMeters(56), new Rotation2d()));
+    // }
+    // public Command scoreMidConeC() {
+    //     return followTargetC(()->new Pose2d(Units.inchesToMeters(31 + 12.5), Units.inchesToMeters(44), new Rotation2d()));
+    // }
 
-    public Command scoreHighCubeC() {
-        return followJointSpaceTargetC(()->SCORE_HIGH_CONE_POSITION);
-    }
+    // public Command scoreHighCubeC() {
+    //     return followJointSpaceTargetC(()->SCORE_HIGH_CONE_POSITION);
+    // }
     public Command stowC() {
-        return followTargetC(()->new Pose2d(0, Units.inchesToMeters(ARM_PIVOT_TRANSLATION.getY() + 10) + MIN_ARM_LENGTH + HAND_LENGTH, new Rotation2d(Math.PI/2)));
+        return new GoToPositionC(this, ()->STOW_POSITION);
     }
 
     public Command followJointSpaceTargetC() {
