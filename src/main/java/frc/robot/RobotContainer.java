@@ -83,6 +83,8 @@ public class RobotContainer {
         m_autoSelector.setDefaultOption("twoPiece", twoPieceAuto());
 
         m_autoSelector.setDefaultOption("threePiece", highConeCubeConeBalanceAuto());
+
+
         m_field.getObject("bluePoses").setPoses(POIManager.BLUE_COMMUNITY);
         m_field.getObject("redPoses").setPoses(POIManager.RED_COMMUNITY);
         SmartDashboard.putData(m_autoSelector);
@@ -234,17 +236,7 @@ public class RobotContainer {
         m_drivebaseS.resetRelativeRotationEncoders();
     }
 
-    public Command twoPieceAuto() {
-        return Commands.sequence(
-            m_intakeS.extendAndOuttakeC().withTimeout(1),
-            Commands.deadline(
-                m_drivebaseS.pathPlannerCommand(PathPlanner.loadPath("1Piece.1", 2, 2)),
-                m_intakeS.extendAndIntakeC()
-            ),
-            m_drivebaseS.pathPlannerCommand(PathPlanner.loadPath("1Piece.2", 2, 2)),
-            m_intakeS.extendAndOuttakeC().withTimeout(1)
-        );
-    }
+    //Autonomous Commands:
 
     public Command highConeCubeConeBalanceAuto() {
         var pathGroup = PathPlanner.loadPathGroup("3PieceGroup", new PathConstraints(3, 2.5),  new PathConstraints[0]);
@@ -269,6 +261,75 @@ public class RobotContainer {
 
             m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
 
+        );
+    }
+
+    
+
+    public Command EighteenPointAuto(){
+        
+        return Commands.sequence(
+            
+        );
+    }
+
+    //Bump:
+
+    public Command BumpFifteenPointAuto(){
+        
+        return Commands.sequence(
+            
+        );
+    }
+
+    public Command BumpTwentyonePointAutoNo2nd(){
+        
+        return Commands.sequence(
+            
+        );
+    }
+
+    public Command BumpTwentyonePointAutoWith2nd(){
+
+        return Commands.sequence(
+            
+        );
+    }
+
+    public Command BumpTwentysevenPointAuto(){
+
+        return Commands.sequence(
+            
+        );
+    }
+
+    //No Bump
+
+    public Command FifteenPointAuto(){
+        
+        return Commands.sequence(
+            
+        );
+    }
+
+    public Command TwentyonePointAutoNo2nd(){
+        
+        return Commands.sequence(
+            
+        );
+    }
+
+    public Command TwentyonePointAutoWith2nd(){
+
+        return Commands.sequence(
+            
+        );
+    }
+
+    public Command TwentysevenPointAuto(){
+
+        return Commands.sequence(
+            
         );
     }
 }
