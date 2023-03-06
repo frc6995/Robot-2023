@@ -87,10 +87,11 @@ public class RobotContainer {
         );
 
         configureButtonBindings();
-        m_autoSelector.setDefaultOption("twoPiece", twoPieceAuto());
 
-        m_autoSelector.setDefaultOption("threePiece", highConeCubeConeBalanceAuto());
-        m_autoSelector.setDefaultOption("High Cone, StraightBack, Balance", coneBalanceAuto());
+        //Autonomous Option Selections:
+        m_autoSelector.setDefaultOption("18 Point", eighteenPointAuto());
+
+
         m_field.getObject("bluePoses").setPoses(POIManager.BLUE_COMMUNITY);
         m_field.getObject("redPoses").setPoses(POIManager.RED_COMMUNITY);
         SmartDashboard.putData(m_autoSelector);
@@ -171,7 +172,6 @@ public class RobotContainer {
         m_drivebaseS.resetRelativeRotationEncoders();
     }
 
-    //Autonomous Commands:
     public Command armIntakeCG(ArmPosition position, boolean isCube) {
         return 
         Commands.sequence(
@@ -186,31 +186,12 @@ public class RobotContainer {
 
     public Command armIntakeSelectedCG(ArmPosition cubePosition, ArmPosition conePosition, BooleanSupplier isCube) {
         return Commands.either(
-            armIntakeCG(cubePosition, true), armIntakeCG(conePosition, false), isCube)
-            ;
+            armIntakeCG(cubePosition, true), armIntakeCG(conePosition, false), isCube);
     }
 
 
-    public Command coneBalanceAuto() {
-        return sequence(
-            m_intakeS.retractC().asProxy(),
-            m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy(),
-            m_intakeS.outtakeC().withTimeout(0.5).asProxy(),
-            m_armS.stowC().asProxy(),
-            m_drivebaseS.chargeStationFrontFirstC()
-        );
-    }
-    public Command twoPieceAuto() {
-        return Commands.sequence(
-            m_intakeS.extendAndOuttakeC().withTimeout(1),
-            Commands.deadline(
-                m_drivebaseS.pathPlannerCommand(PathPlanner.loadPath("1Piece.1", 2, 2)),
-                m_intakeS.extendAndIntakeC()
-            ),
-            m_drivebaseS.pathPlannerCommand(PathPlanner.loadPath("1Piece.2", 2, 2)),
-            m_intakeS.extendAndOuttakeC().withTimeout(1)
-        );
-    }
+
+    //Autonomous Commands:
 
     public Command highConeCubeConeBalanceAuto() {
         var pathGroup = PathPlanner.loadPathGroup("3PieceGroup", new PathConstraints(3, 2.5),  new PathConstraints[0]);
@@ -240,37 +221,49 @@ public class RobotContainer {
 
     
 
-    public Command EighteenPointAuto(){
+    public Command eighteenPointAuto(){
         
         return Commands.sequence(
-            
+            m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy(),
+            m_intakeS.outtakeC().withTimeout(0.4),
+            Commands.parallel(
+                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy(),
+                m_drivebaseS.chargeStationDownfieldC()
+            )
         );
     }
 
     //Bump:
 
-    public Command BumpFifteenPointAuto(){
+    public Command bumpFifteenPointAuto(){
+        var singlePath = PathPlanner.loadPath("21 Point No 2nd", new PathConstraints(2, 2));
+        return Commands.sequence(
+            m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy(),
+            m_intakeS.outtakeC().withTimeout(0.4),
+            Commands.parallel(
+                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy(),
+                m_drivebaseS.pathPlannerCommand(singlePath)
+            )
+
+            //Add upfield charge station dock command.
+        );
+    }
+
+    public Command bumpTwentyonePointAutoNo2nd(){
         
         return Commands.sequence(
             
         );
     }
 
-    public Command BumpTwentyonePointAutoNo2nd(){
-        
-        return Commands.sequence(
-            
-        );
-    }
-
-    public Command BumpTwentyonePointAutoWith2nd(){
+    public Command bumpTwentyonePointAutoWith2nd(){
 
         return Commands.sequence(
             
         );
     }
 
-    public Command BumpTwentysevenPointAuto(){
+    public Command bumpTwentysevenPointAuto(){
 
         return Commands.sequence(
             
@@ -279,28 +272,28 @@ public class RobotContainer {
 
     //No Bump
 
-    public Command FifteenPointAuto(){
+    public Command fifteenPointAuto(){
         
         return Commands.sequence(
             
         );
     }
 
-    public Command TwentyonePointAutoNo2nd(){
+    public Command twentyonePointAutoNo2nd(){
         
         return Commands.sequence(
             
         );
     }
 
-    public Command TwentyonePointAutoWith2nd(){
+    public Command twentyonePointAutoWith2nd(){
 
         return Commands.sequence(
             
         );
     }
 
-    public Command TwentysevenPointAuto(){
+    public Command twentysevenPointAuto(){
 
         return Commands.sequence(
             
