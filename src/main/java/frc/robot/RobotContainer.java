@@ -87,9 +87,6 @@ public class RobotContainer {
         );
 
         configureButtonBindings();
-        m_autoSelector.setDefaultOption("twoPiece", twoPieceAuto());
-
-        m_autoSelector.setDefaultOption("threePiece", highConeCubeConeBalanceAuto());
         m_autoSelector.setDefaultOption("High Cone, StraightBack, Balance", coneBalanceAuto());
         m_field.getObject("bluePoses").setPoses(POIManager.BLUE_COMMUNITY);
         m_field.getObject("redPoses").setPoses(POIManager.RED_COMMUNITY);
@@ -147,11 +144,7 @@ public class RobotContainer {
                     )
                 );
             }
-        ));
-        m_driverController.back().whileTrue(highConeCubeBalanceAuto());
-
-
-        
+        ));        
     }
 
 
@@ -201,54 +194,6 @@ public class RobotContainer {
             m_intakeS.outtakeC().withTimeout(0.5).asProxy(),
             m_armS.stowC().asProxy(),
             m_drivebaseS.chargeStationFrontFirstC()
-        );
-    }
-    public Command twoPieceAuto() {
-        return Commands.sequence(
-            m_intakeS.extendAndOuttakeC().withTimeout(1),
-            Commands.deadline(
-                m_drivebaseS.pathPlannerCommand(PathPlanner.loadPath("1Piece.1", 2, 2)),
-                m_intakeS.extendAndIntakeC()
-            ),
-            m_drivebaseS.pathPlannerCommand(PathPlanner.loadPath("1Piece.2", 2, 2)),
-            m_intakeS.extendAndOuttakeC().withTimeout(1)
-        );
-    }
-
-    public Command highConeCubeConeBalanceAuto() {
-        var pathGroup = PathPlanner.loadPathGroup("3PieceGroup", new PathConstraints(3, 2.5),  new PathConstraints[0]);
-        return Commands.sequence(
-            m_intakeS.retractC(),
-            Commands.sequence(
-                m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION),
-                m_intakeS.outtakeC().withTimeout(1),
-                m_armS.goToPositionC(ArmConstants.STOW_POSITION)
-            ),
-            Commands.sequence(
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds()))),
-                m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION),
-                m_intakeS.intakeUntilBeamBreakC().withTimeout(1),
-                m_armS.goToPositionC(ArmConstants.STOW_POSITION)
-            ),
-            Commands.sequence(
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds()))),
-                m_armS.goToPositionC(ArmConstants.HYBRID_NODE_OUTTAKE_POSITION),
-                m_intakeS.intakeUntilBeamBreakC().withTimeout(1)
-            ),
-
-            m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
-
-        );
-    }
-
-    public Command highConeCubeBalanceAuto() {
-        var pathGroup = PathPlanner.loadPathGroup("2 Cone", new PathConstraints(3, 2),  new PathConstraints[0]);
-        return Commands.sequence(
-            parallel(
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.stopC())
-            ),
-            parallel(m_drivebaseS.pathPlannerCommand(pathGroup.get(1)))
-            
         );
     }
 }

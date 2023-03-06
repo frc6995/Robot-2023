@@ -202,11 +202,11 @@ public class Constants {
         public static final int PIVOT_MOTOR_ID = 22;
         public static final int PIVOT_FOLLOWER_MOTOR_ID = 23;
         public static final double PIVOT_KS = 0.11 * 0.6 ;
-        public static final double ARM_PIVOT_KG_MIN_EXTEND = 0;//1.414 * (ARM_ROTATIONS_PER_MOTOR_ROTATION * 400) / 2 / Math.cos(Units.degreesToRadians(10.5));
+        public static final double ARM_PIVOT_KG_MIN_EXTEND = 0.1;//1.414 * (ARM_ROTATIONS_PER_MOTOR_ROTATION * 400) / 2 / Math.cos(Units.degreesToRadians(10.5));
         public static final double ARM_PIVOT_KG_MAX_EXTEND = 1;//0.13 / Math.cos(0.707);//2.872 * (ARM_ROTATIONS_PER_MOTOR_ROTATION * 400) / 2 / Math.cos(Units.degreesToRadians(10.5));
 
-        public static final double PIVOT_MAX_VELOCITY = 1.4; // rad/s
-        public static final double PIVOT_MAX_ACCEL = 2;
+        public static final double PIVOT_MAX_VELOCITY = 1.8; // rad/s
+        public static final double PIVOT_MAX_ACCEL = 2.5;
 
         /* WRIST/HAND */
 
