@@ -87,7 +87,11 @@ public class RobotContainer {
         );
 
         configureButtonBindings();
-        m_autoSelector.setDefaultOption("High Cone, StraightBack, Balance", coneBalanceAuto());
+
+        //Autonomous Option Selections:
+        m_autoSelector.setDefaultOption("18 Point", eighteenPointAuto());
+
+
         m_field.getObject("bluePoses").setPoses(POIManager.BLUE_COMMUNITY);
         m_field.getObject("redPoses").setPoses(POIManager.RED_COMMUNITY);
         SmartDashboard.putData(m_autoSelector);
@@ -168,7 +172,6 @@ public class RobotContainer {
         m_drivebaseS.resetRelativeRotationEncoders();
     }
 
-    //Autonomous Commands:
     public Command armIntakeCG(ArmPosition position, boolean isCube) {
         return 
         Commands.sequence(
@@ -183,18 +186,116 @@ public class RobotContainer {
 
     public Command armIntakeSelectedCG(ArmPosition cubePosition, ArmPosition conePosition, BooleanSupplier isCube) {
         return Commands.either(
-            armIntakeCG(cubePosition, true), armIntakeCG(conePosition, false), isCube)
-            ;
+            armIntakeCG(cubePosition, true), armIntakeCG(conePosition, false), isCube);
     }
 
 
-    public Command coneBalanceAuto() {
-        return sequence(
-            m_intakeS.retractC().asProxy(),
+    //Autonomous Commands:
+
+    public Command highConeCubeConeBalanceAuto() {
+        var pathGroup = PathPlanner.loadPathGroup("3PieceGroup", new PathConstraints(3, 2.5),  new PathConstraints[0]);
+        return Commands.sequence(
+            m_intakeS.retractC(),
+            Commands.sequence(
+                m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION),
+                m_intakeS.outtakeC().withTimeout(1),
+                m_armS.goToPositionC(ArmConstants.STOW_POSITION)
+            ),
+            Commands.sequence(
+                m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds()))),
+                m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION),
+                m_intakeS.intakeUntilBeamBreakC().withTimeout(1),
+                m_armS.goToPositionC(ArmConstants.STOW_POSITION)
+            ),
+            Commands.sequence(
+                m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds()))),
+                m_armS.goToPositionC(ArmConstants.HYBRID_NODE_OUTTAKE_POSITION),
+                m_intakeS.intakeUntilBeamBreakC().withTimeout(1)
+            ),
+
+            m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
+
+        );
+    }
+
+    
+
+    public Command eighteenPointAuto(){
+        
+        return Commands.sequence(
             m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy(),
-            m_intakeS.outtakeC().withTimeout(0.5).asProxy(),
-            m_armS.stowC().asProxy(),
-            m_drivebaseS.chargeStationFrontFirstC()
+            m_intakeS.outtakeC().withTimeout(0.4),
+            Commands.parallel(
+                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy(),
+                m_drivebaseS.chargeStationDownfieldC()
+            )
+        );
+    }
+
+    //Bump:
+
+    public Command bumpFifteenPointAuto(){
+        var singlePath = PathPlanner.loadPath("21 Point No 2nd", new PathConstraints(2, 2));
+        return Commands.sequence(
+            m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy(),
+            m_intakeS.outtakeC().withTimeout(0.4),
+            Commands.parallel(
+                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy(),
+                m_drivebaseS.pathPlannerCommand(singlePath)
+            )
+
+            //Add upfield charge station dock command.
+        );
+    }
+
+    public Command bumpTwentyonePointAutoNo2nd(){
+        
+        return Commands.sequence(
+            
+        );
+    }
+
+    public Command bumpTwentyonePointAutoWith2nd(){
+
+        return Commands.sequence(
+            
+        );
+    }
+
+    public Command bumpTwentysevenPointAuto(){
+
+        return Commands.sequence(
+            
+        );
+    }
+
+    //No Bump
+
+    public Command fifteenPointAuto(){
+        
+        return Commands.sequence(
+            
+        );
+    }
+
+    public Command twentyonePointAutoNo2nd(){
+        
+        return Commands.sequence(
+            
+        );
+    }
+
+    public Command twentyonePointAutoWith2nd(){
+
+        return Commands.sequence(
+            
+        );
+    }
+
+    public Command twentysevenPointAuto(){
+
+        return Commands.sequence(
+            
         );
     }
 }
