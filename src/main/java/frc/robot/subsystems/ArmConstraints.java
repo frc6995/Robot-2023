@@ -119,7 +119,7 @@ public class ArmConstraints {
         if (angle < 0 || angle > Math.PI) {
             return 0.610;
         }
-        return ArmConstants.MIN_ARM_LENGTH;
+        return ArmConstants.MIN_ARM_LENGTH + Units.inchesToMeters(0.125);
     }
 
     public double constrainLength(double length, double angle) {

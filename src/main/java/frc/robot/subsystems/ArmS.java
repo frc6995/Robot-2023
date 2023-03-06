@@ -203,10 +203,15 @@ public class ArmS extends SubsystemBase implements Loggable {
      */
 
     public void setExtendVolts(double volts) {
-        SmartDashboard.putNumber("armExtendVolts", volts);
+        //SmartDashboard.putNumber("armExtendVolts", volts);
         m_extendMotor.setVoltage(volts);
     }
 
+
+    @Log
+    public double getExtendVolts(){
+        return m_extendMotor.getAppliedOutput() * 12;
+    }
     /**
      * @return returns the distance from the pivot to the wrist joint in meters
      */
@@ -238,7 +243,7 @@ public class ArmS extends SubsystemBase implements Loggable {
             + ARM_EXTEND_KG_VERTICAL * Math.sin(getContinuousRangeAngle())
             //+ ARM_EXTEND_KS * Math.signum(velocityMetersPerSecond)
         );
-        SmartDashboard.putNumber("extendRequestVelocity", velocityMetersPerSecond);
+        //SmartDashboard.putNumber("extendRequestVelocity", velocityMetersPerSecond);
     }
 
     /**
@@ -299,7 +304,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         = new LinearPlantInversionFeedforward<>(m_pivotPlant, 0.02);
 
     private ProfiledPIDController m_pivotController = new ProfiledPIDController(
-        1, 0, 0, new Constraints(PIVOT_MAX_VELOCITY,PIVOT_MAX_ACCEL_EXTENDED));
+        1, 0, 0, new Constraints(PIVOT_MAX_VELOCITY,PIVOT_MAX_ACCEL));
 
     private double armStartAngle = PIVOT_ENCODER_OFFSET;
 
@@ -344,11 +349,15 @@ public class ArmS extends SubsystemBase implements Loggable {
         //m_pivotController.setConstraints(new Constraints(PIVOT_MAX_VELOCITY, getMaxPivotAcceleration()));
        
     }
-    public double getMaxPivotAcceleration() {
-        double t = (getLengthMeters() - MIN_ARM_LENGTH) / (MAX_ARM_LENGTH - MIN_ARM_LENGTH);
-        return MathUtil.interpolate(PIVOT_MAX_ACCEL_RETRACTED, PIVOT_MAX_ACCEL_EXTENDED, t);
-    }
+    // public double getMaxPivotAcceleration() {
+    //     double t = (getLengthMeters() - MIN_ARM_LENGTH) / (MAX_ARM_LENGTH - MIN_ARM_LENGTH);
+    //     return MathUtil.interpolate(PIVOT_MAX_ACCEL_RETRACTED, PIVOT_MAX_ACCEL_EXTENDED, t);
+    // }
 
+    @Log
+    public double getPivotVolts(){
+        return m_pivotMotor.getAppliedOutput() * 12;
+    }
     /**
      * Sets voltage of pivot motor to the volts parameter
      * @param volts Desired voltage
@@ -444,7 +453,7 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     public void setPivotVelocity(double velocityRadPerSec) {
         setPivotVolts(m_pivotFeedForward.calculate(
-            VecBuilder.fill(0, getPivotVelocity()), VecBuilder.fill(0, velocityRadPerSec))
+            VecBuilder.fill(0, velocityRadPerSec))
             .get(0,0)
             + (getPivotkG() * getAngle().getCos())
             + PIVOT_KS * Math.signum(velocityRadPerSec));
@@ -479,10 +488,10 @@ public class ArmS extends SubsystemBase implements Loggable {
      */
 
     public double getPivotkG() {
-        double minkG = 0;
-        double maxkG = 0.2;
+        double minkG = ARM_PIVOT_KG_MIN_EXTEND;
+        double maxkG = ARM_PIVOT_KG_MAX_EXTEND;
         double result = minkG;
-        double frac = (getLengthMeters() - MIN_ARM_LENGTH) / (0.908 - MIN_ARM_LENGTH);
+        double frac = (getLengthMeters() - MIN_ARM_LENGTH) / (MAX_ARM_LENGTH - MIN_ARM_LENGTH);
         result += frac * (maxkG - minkG);
         return result;
     }
@@ -654,18 +663,18 @@ public class ArmS extends SubsystemBase implements Loggable {
         });
     }
 
-    public Command scoreHighConeC() {
-        return followTargetC(()->new Pose2d(Units.inchesToMeters(48 + 12.5), Units.inchesToMeters(56), new Rotation2d()));
-    }
-    public Command scoreMidConeC() {
-        return followTargetC(()->new Pose2d(Units.inchesToMeters(31 + 12.5), Units.inchesToMeters(44), new Rotation2d()));
-    }
+    // public Command scoreHighConeC() {
+    //     return followTargetC(()->new Pose2d(Units.inchesToMeters(48 + 12.5), Units.inchesToMeters(56), new Rotation2d()));
+    // }
+    // public Command scoreMidConeC() {
+    //     return followTargetC(()->new Pose2d(Units.inchesToMeters(31 + 12.5), Units.inchesToMeters(44), new Rotation2d()));
+    // }
 
-    public Command scoreHighCubeC() {
-        return followJointSpaceTargetC(()->SCORE_HIGH_CONE_POSITION);
-    }
+    // public Command scoreHighCubeC() {
+    //     return followJointSpaceTargetC(()->SCORE_HIGH_CONE_POSITION);
+    // }
     public Command stowC() {
-        return followTargetC(()->new Pose2d(0, Units.inchesToMeters(ARM_PIVOT_TRANSLATION.getY() + 10) + MIN_ARM_LENGTH + HAND_LENGTH, new Rotation2d(Math.PI/2)));
+        return new GoToPositionC(this, ()->STOW_POSITION);
     }
 
     public Command followJointSpaceTargetC() {

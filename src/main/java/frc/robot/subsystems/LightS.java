@@ -39,10 +39,10 @@ public class LightS {
     Scoring(LED_SINELON_OCEAN),
     Default(LED_SINELON_OCEAN);
 
-    public final double lightCode;
+    public final double lightSpeed;
 
-    private States(double lightCode) {
-      this.lightCode = lightCode;
+    private States(double lightSpeed) {
+      this.lightSpeed = lightSpeed;
     }
   }
 
@@ -66,7 +66,7 @@ public class LightS {
    */
   public void periodic() {
     requestState(States.Default);
-    spark.set(m_states.first().lightCode);
+    spark.set(m_states.first().lightSpeed);
     m_states.removeAll(Set.of(States.values()));
   }
 }
