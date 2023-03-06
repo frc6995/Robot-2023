@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.DrivebaseS;
 import frc.robot.util.AllianceWrapper;
+import frc.robot.util.drive.AsymmetricSlewRateLimiter;
 import frc.robot.util.drive.SecondOrderChassisSpeeds;
 
 public class OperatorControlC extends CommandBase {
@@ -27,9 +28,9 @@ public class OperatorControlC extends CommandBase {
      * versus using a double which would only update when the constructor is called
      */
     private final DoubleSupplier m_forwardX;
-    private final SlewRateLimiter m_xRateLimiter = new SlewRateLimiter(1);
+    private final AsymmetricSlewRateLimiter m_xRateLimiter = new AsymmetricSlewRateLimiter(1, 3);
     private final DoubleSupplier m_forwardY;
-    private final SlewRateLimiter m_yRateLimiter = new SlewRateLimiter(1);
+    private final AsymmetricSlewRateLimiter m_yRateLimiter = new AsymmetricSlewRateLimiter(1, 3);
     private final DoubleSupplier m_rotation;
     private final SlewRateLimiter m_thetaRateLimiter = new SlewRateLimiter(2);
 

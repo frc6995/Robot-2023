@@ -525,6 +525,9 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         });
     }
 
+    public Command stopC() {
+        return runOnce(()->this.drive(new ChassisSpeeds()));
+    }
     public Command pathPlannerCommand(PathPlannerTrajectory path) {
         PPSwerveControllerCommand command = new PPSwerveControllerCommand(
             path,
@@ -617,11 +620,11 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
             // higher speed to get all the way on the ramp (for time)
             run(()->this.driveAllianceRelative(new ChassisSpeeds(1.5, 0, 0))).withTimeout(0.7),
             // slow speed to move past the tipping point (until it tips bac)
-            run(()->this.driveAllianceRelative(new ChassisSpeeds(0.5, 0, 0)))
+            run(()->this.driveAllianceRelative(new ChassisSpeeds(0.8, 0, 0)))
                 .alongWith(Commands.run(()->LightS.getInstance().requestState(States.Climbing)))
                 .until(()-> this.getPitch() > -0.15),
             // short burst of backwards speed to cancel forward momentul
-            run(()->this.driveAllianceRelative(new ChassisSpeeds(-0.1, 0, 0))).withTimeout(0.2),
+            run(()->this.driveAllianceRelative(new ChassisSpeeds(-0.4, 0, 0))).withTimeout(0.3),
             // put wheels in circle formation to prevent sliding
             run(()->this.driveAllianceRelative(new ChassisSpeeds(0, 0, 0.1))).withTimeout(0.2)
         );

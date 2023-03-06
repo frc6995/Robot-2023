@@ -89,7 +89,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
    */
 
   public void intake() {
-    intake(Constants.IntakeConstants.INTAKE_VOLTAGE * 2);
+    intake(Constants.IntakeConstants.INTAKE_VOLTAGE * 2 * (isExtended() ? 1 : 2));
   }
 
   /**
@@ -139,6 +139,10 @@ public class IntakeS extends SubsystemBase implements Loggable {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+  }
+
+  public boolean isExtended() {
+    return doubleSolenoid.get() == Value.kForward;
   }
 
   /**

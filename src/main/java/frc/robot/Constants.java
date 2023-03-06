@@ -176,7 +176,7 @@ public class Constants {
         public static final int EXTEND_MOTOR_ID = 20;
 
         //Arm length measured from shoulder pivot to wrist pivot
-        public static final double MIN_ARM_LENGTH = Units.inchesToMeters(20);
+        public static final double MIN_ARM_LENGTH = Units.inchesToMeters(19.875);
         public static final double MAX_ARM_LENGTH = 1.497;
 
         public static final Translation2d ARM_PIVOT_TRANSLATION = new Translation2d(0, Units.inchesToMeters(18.69));
@@ -191,7 +191,7 @@ public class Constants {
         /* PIVOT */
         public static final double MIN_ARM_ANGLE = 5.86 - 2*Math.PI;
         public static final double MAX_ARM_ANGLE = Math.PI + 0.42;
-        public static final double ARM_ROTATIONS_PER_MOTOR_ROTATION = 1.0/375.0; //(1.0/25.0) * (16.0/60.0);
+        public static final double ARM_ROTATIONS_PER_MOTOR_ROTATION = 1.0/225.0; //(1.0/25.0) * (16.0/60.0);
 
         public static final double PIVOT_ENCODER_OFFSET = 0.423 * Math.PI * 2.0;
 
@@ -201,13 +201,12 @@ public class Constants {
         
         public static final int PIVOT_MOTOR_ID = 22;
         public static final int PIVOT_FOLLOWER_MOTOR_ID = 23;
-        public static final double PIVOT_KS = 0.11;
+        public static final double PIVOT_KS = 0.11 * 0.6 ;
         public static final double ARM_PIVOT_KG_MIN_EXTEND = 0;//1.414 * (ARM_ROTATIONS_PER_MOTOR_ROTATION * 400) / 2 / Math.cos(Units.degreesToRadians(10.5));
-        public static final double ARM_PIVOT_KG_MAX_EXTEND = 0;//0.13 / Math.cos(0.707);//2.872 * (ARM_ROTATIONS_PER_MOTOR_ROTATION * 400) / 2 / Math.cos(Units.degreesToRadians(10.5));
+        public static final double ARM_PIVOT_KG_MAX_EXTEND = 1;//0.13 / Math.cos(0.707);//2.872 * (ARM_ROTATIONS_PER_MOTOR_ROTATION * 400) / 2 / Math.cos(Units.degreesToRadians(10.5));
 
         public static final double PIVOT_MAX_VELOCITY = 1.4; // rad/s
-        public static final double PIVOT_MAX_ACCEL_RETRACTED = 2;
-        public static final double PIVOT_MAX_ACCEL_EXTENDED = 2;
+        public static final double PIVOT_MAX_ACCEL = 2;
 
         /* WRIST/HAND */
 
@@ -216,19 +215,24 @@ public class Constants {
         // positive angles match pivot (up and over, with 0 being straight out the robot front)
         public static final int WRIST_MOTOR_ID = 25;
         public static final double WRIST_ROTATIONS_PER_MOTOR_ROTATION = 1.0/300.0;
-        public static final double WRIST_ENCODER_OFFSET = 5.382308 - Math.PI;//0.995;
+        public static final double WRIST_ENCODER_OFFSET = 0.0972610;//5.382308 - Math.PI;//0.995;
         public static final double HAND_LENGTH = Units.inchesToMeters(8);
         public static final double HAND_MASS_KILOS = Units.lbsToKilograms(5);
       
         public static final double WRIST_MIN_ANGLE = Units.degreesToRadians(-60);
         public static final double WRIST_MAX_ANGLE = Units.degreesToRadians(80);
-        public static final double WRIST_KG = 5.744 * 1.6 * (1 / 300.0 / 0.2);
+        public static final double WRIST_KG = 5.744 * 1.6 * 5 / (300.0);
 
         public static final ArmPosition SCORE_HIGH_CONE_POSITION = new ArmPosition(
             0.658,
             1.429,
             0,
             Units.inchesToMeters(9.4));
+        public static final ArmPosition SCORE_HIGH_CUBE_POSITION = new ArmPosition(
+        0.658 - Units.degreesToRadians(10),
+        1.429,
+        (Math.PI/2)-0.7,
+        Units.inchesToMeters(9.4));
         public static final ArmPosition SCORE_MID_CONE_POSITION = new ArmPosition(
             0.74,
             1.082,
@@ -236,7 +240,7 @@ public class Constants {
             Units.inchesToMeters(9.4));
         public static final ArmPosition STOW_POSITION = new ArmPosition(
             Units.degreesToRadians(66),
-            MIN_ARM_LENGTH,
+            MIN_ARM_LENGTH + Units.inchesToMeters(0.125),
             WRIST_MAX_ANGLE - Units.degreesToRadians(5),
             Units.inchesToMeters(9.4));
         public static final ArmPosition GROUND_CUBE_INTAKE_POSITION = new ArmPosition(
@@ -247,7 +251,7 @@ public class Constants {
         public static final ArmPosition GROUND_CONE_INTAKE_POSITION = new ArmPosition(
             -0.42,
             0.611,
-            WRIST_MAX_ANGLE - Units.degreesToRadians(6),
+            WRIST_MAX_ANGLE - Units.degreesToRadians(8),
             Units.inchesToMeters(9.4));
         public static final ArmPosition RAMP_CONE_INTAKE_POSITION = new ArmPosition(
             2.682,
@@ -260,6 +264,12 @@ public class Constants {
             2.768,
             0.516,
             Units.degreesToRadians(37.755),
+            Units.inchesToMeters(9.4)
+        );
+        public static final ArmPosition RAMP_CUBE_INTAKE_POSITION_FRONT = new ArmPosition(
+            0.3 - Units.degreesToRadians(3),
+            MIN_ARM_LENGTH + Units.inchesToMeters(0.125),
+            WRIST_MAX_ANGLE - Units.degreesToRadians(1),
             Units.inchesToMeters(9.4)
         );
 
@@ -283,13 +293,13 @@ public class Constants {
         );
         public static final ArmPosition HYBRID_NODE_OUTTAKE_POSITION = new ArmPosition(
             Units.degreesToRadians(66),
-            MIN_ARM_LENGTH,
+            MIN_ARM_LENGTH + Units.inchesToMeters(0.125),
             Units.degreesToRadians(0),
             Units.inchesToMeters(9.4));
 
         public static final ArmPosition SCORE_HYBRID_POSITION = new ArmPosition(
             Units.degreesToRadians(66),
-            MIN_ARM_LENGTH,
+            MIN_ARM_LENGTH + Units.inchesToMeters(0.125),
             0,
             Units.inchesToMeters(9.4));
 

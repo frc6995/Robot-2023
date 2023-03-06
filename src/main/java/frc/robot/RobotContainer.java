@@ -23,10 +23,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.InputDevices;
+import frc.robot.POIManager.POIS;
 import frc.robot.commands.arm.GoToPositionC;
 import frc.robot.commands.arm.HoldCurrentPositionC;
 import frc.robot.commands.drivetrain.OperatorControlC;
@@ -39,6 +41,7 @@ import frc.robot.subsystems.ArmS.ArmPosition;
 import frc.robot.subsystems.LightS.States;
 import frc.robot.util.TimingTracer;
 import io.github.oblarg.oblog.annotations.Log;
+import static edu.wpi.first.wpilibj2.command.Commands.*;
 
 public class RobotContainer {
 
@@ -87,6 +90,7 @@ public class RobotContainer {
         m_autoSelector.setDefaultOption("twoPiece", twoPieceAuto());
 
         m_autoSelector.setDefaultOption("threePiece", highConeCubeConeBalanceAuto());
+        m_autoSelector.setDefaultOption("High Cone, StraightBack, Balance", coneBalanceAuto());
         m_field.getObject("bluePoses").setPoses(POIManager.BLUE_COMMUNITY);
         m_field.getObject("redPoses").setPoses(POIManager.RED_COMMUNITY);
         SmartDashboard.putData(m_autoSelector);
@@ -105,11 +109,12 @@ public class RobotContainer {
         //m_driverController.back().onTrue(m_intakeS.retractC());
         // OFFICIAL CALEB PREFERENCE
         m_driverController.y().toggleOnTrue(armIntakeCG(ArmConstants.OVERTOP_CONE_INTAKE_POSITION, false));
+        m_driverController.x().onTrue(m_armS.stowC());
 
 
 
         m_driverController.rightBumper().toggleOnTrue(armIntakeSelectedCG(
-            ArmConstants.RAMP_CUBE_INTAKE_POSITION, 
+            ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT, 
             ArmConstants.RAMP_CONE_INTAKE_POSITION, ()->m_isCubeSelected));
 
         m_driverController.rightTrigger().toggleOnTrue(armIntakeSelectedCG(
@@ -119,81 +124,12 @@ public class RobotContainer {
         m_driverController.leftBumper().toggleOnTrue(armIntakeSelectedCG(
             ArmConstants.PLATFORM_CUBE_INTAKE_POSITION, 
             ArmConstants.PLATFORM_CONE_INTAKE_POSITION, ()->m_isCubeSelected));
-        m_driverController.leftTrigger().toggleOnTrue(m_armS.goToPositionC(ArmConstants.GROUND_CONE_INTAKE_POSITION));
+        m_driverController.leftTrigger().whileTrue(new ConditionalCommand(
+            m_drivebaseS.chasePoseC(()->POIManager.ownPOI(POIS.CUBE_RAMP)),
+            m_drivebaseS.chasePoseC(()->POIManager.ownPOI(POIS.CONE_RAMP)),
+            ()->m_isCubeSelected));
 
-        /*m_driverController.rightTrigger().toggleOnTrue(new GoToPositionC(m_armS, ()->ArmConstants.RAMP_CUBE_INTAKE_POSITION));
-
-        m_driverController.leftBumper().toggleOnTrue(new GoToPositionC(m_armS, ()->ArmConstants.GROUND_CONE_INTAKE_POSITION));
-        m_driverController.leftTrigger().toggleOnTrue(new GoToPositionC(m_armS, ()->ArmConstants.GROUND_CUBE_INTAKE_POSITION));
-        
-        m_driverController.rightStick().toggleOnTrue(new GoToPositionC(m_armS, ()->ArmConstants.PLATFORM_CONE_INTAKE_POSITION));
-        */
-
-        
-
-        //m_driverController.rightBumper().toggleOnTrue(m_drivebaseS.chasePoseC(()->m_targetAlignmentPose));
-        //m_driverController.a().whileTrue(m_intakeS.extendAndIntakeC());
-        // m_driverController.y().whileTrue(
-        //     Commands.sequence(
-        //     m_armS.runOnce(m_armS::resetExtender),
-        //     m_armS.run(()->{
-        //         m_armS.setExtendLength(ArmConstants.MIN_ARM_LENGTH + Units.feetToMeters(1));
-        //         m_armS.setPivotVelocity(0);
-        //         m_armS.setWristVelocity(0);
-        //     }
-        //     ))
-        // );
-        // MANUAL CONTROL
-        /*
-        m_driverController.start().whileTrue(
-            m_armS.run(()->{
-                m_armS.setExtendVelocity(0.1);
-                m_armS.setPivotVelocity(0);
-                m_armS.setWristVelocity(0);
-            })
-        );
-        m_driverController.back().whileTrue(m_armS.run(()->{
-            m_armS.setExtendVelocity(-0.1);
-            m_armS.setPivotVelocity(0);
-            m_armS.setWristVelocity(0);
-        }
-        ));
-
-        m_driverController.a().whileTrue(
-            Commands.sequence(
-                m_armS.runOnce(m_armS::resetPivot),
-                m_armS.run(()->{
-                    m_armS.setPivotVelocity(-0.1);
-                    m_armS.setExtendVelocity(0);
-                    m_armS.setWristVelocity(0);
-                }
-                )));
-        m_driverController.y().whileTrue(
-            Commands.sequence(
-                m_armS.runOnce(m_armS::resetPivot),
-                m_armS.run(()->{
-                    m_armS.setPivotVelocity(0.1);
-                    m_armS.setExtendVelocity(0);
-                    m_armS.setWristVelocity(0);
-                }
-                )));
-        m_driverController.leftBumper().whileTrue(
-                m_armS.run(()->{
-                    m_armS.setWristVolts(0.5);
-                    m_armS.setExtendVelocity(0);
-                    m_armS.setPivotVelocity(0);
-                })
-        );
-        m_driverController.rightBumper().whileTrue(
-            m_armS.run(()->{
-                m_armS.setWristVolts(-0.5);
-                m_armS.setExtendVelocity(0);
-                m_armS.setPivotVelocity(0);
-            })
-        );
-        */
-        // END MANUAL CONTROL
-        m_keypad.stow().onTrue(new GoToPositionC(m_armS, ()->ArmConstants.STOW_POSITION));
+        m_keypad.stow().onTrue(m_intakeS.intakeC().withTimeout(0.25));
         m_keypad.enter().toggleOnTrue(
             new GoToPositionC(m_armS, ()->m_targetArmPosition)
             .deadlineWith(Commands.run(()->LightS.getInstance().requestState(States.Scoring)))
@@ -212,29 +148,7 @@ public class RobotContainer {
                 );
             }
         ));
-        m_driverController.back().whileTrue(m_drivebaseS.chargeStationFrontFirstC());
-        /*
-        m_driverController.a().toggleOnTrue(
-            Commands.sequence(
-                Commands.parallel(
-                    new GoToPositionC(m_armS, ()->ArmConstants.GROUND_CUBE_INTAKE_POSITION),
-                    m_intakeS.extendAndIntakeC()
-                )
-                .until(m_intakeS::hitCurrentLimit),
-                new GoToPositionC(m_armS, ()->ArmConstants.STOW_POSITION)
-            )
-            
-            
-        );
-                m_driverController.y().whileTrue(
-            Commands.deadline(
-                new GoToPositionC(m_armS, ()->ArmConstants.GROUND_CONE_INTAKE_POSITION),
-                m_intakeS.extendC()
-            ));
-            // .andThen(
-            //     m_intakeS.retractAndIntakeC()
-            //     .withTimeout(0.75)
-            // ));*/
+        m_driverController.back().whileTrue(highConeCubeBalanceAuto());
 
 
         
@@ -248,7 +162,7 @@ public class RobotContainer {
 
     public void periodic() {
         TimingTracer.update();
-        SmartDashboard.putNumber("loopTime", TimingTracer.getLoopTime());
+        //SmartDashboard.putNumber("loopTime", TimingTracer.getLoopTime());
         LightS.getInstance().requestState(m_isCubeSelected? States.RequestingCube : States.RequestingCone);
         /* Trace the loop duration and plot to shuffleboard */
         LightS.getInstance().periodic();
@@ -279,6 +193,16 @@ public class RobotContainer {
             ;
     }
 
+
+    public Command coneBalanceAuto() {
+        return sequence(
+            m_intakeS.retractC().asProxy(),
+            m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy(),
+            m_intakeS.outtakeC().withTimeout(0.5).asProxy(),
+            m_armS.stowC().asProxy(),
+            m_drivebaseS.chargeStationFrontFirstC()
+        );
+    }
     public Command twoPieceAuto() {
         return Commands.sequence(
             m_intakeS.extendAndOuttakeC().withTimeout(1),
@@ -314,6 +238,17 @@ public class RobotContainer {
 
             m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
 
+        );
+    }
+
+    public Command highConeCubeBalanceAuto() {
+        var pathGroup = PathPlanner.loadPathGroup("2 Cone", new PathConstraints(3, 2),  new PathConstraints[0]);
+        return Commands.sequence(
+            parallel(
+                m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.stopC())
+            ),
+            parallel(m_drivebaseS.pathPlannerCommand(pathGroup.get(1)))
+            
         );
     }
 }

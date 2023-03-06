@@ -265,7 +265,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
     }
 
     public void periodic() {
-        SmartDashboard.putNumber(m_loggingName, getMagEncoderAngle().getRadians());
+        //SmartDashboard.putNumber(m_loggingName, getMagEncoderAngle().getRadians());
     }
 
     public SwerveModuleState getCurrentState() {

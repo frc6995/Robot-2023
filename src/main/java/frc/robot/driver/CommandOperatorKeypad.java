@@ -96,7 +96,10 @@ public class CommandOperatorKeypad {
         grid.and(key(position)).onTrue(
             setpointCommand(()->POIManager.ownCommunity().get(columnInGrid),
             ()->{
-                if (row == 2) {
+                if (row == 2 && columnInGrid %3 == 1) {
+                    return Constants.ArmConstants.SCORE_HIGH_CUBE_POSITION;
+                }
+                else if (row == 2 && columnInGrid %3 != 1) {
                     return Constants.ArmConstants.SCORE_HIGH_CONE_POSITION;
                 }
                 else if (row == 1) {
@@ -107,7 +110,7 @@ public class CommandOperatorKeypad {
                 }
             },
             ()->{
-                return (row == 0 || columnInGrid == 1);
+                return (row == 0 || columnInGrid % 3 == 1);
             },
                 ((row) * 9) + columnInGrid
             ));

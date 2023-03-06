@@ -16,6 +16,18 @@ public class POIManager {
     // 6 arm positions (3 rows x 2 pieces)
     public static final double FIELD_LENGTH = 16.542;
     public static final double FIELD_WIDTH = 8.014;
+    public enum POIS {
+        CUBE_RAMP (POIManager.mirrorPose(new Pose2d(2.056, 7.484, Rotation2d.fromDegrees(90)))),
+        CONE_RAMP (new Pose2d(14.511, 7.296, Rotation2d.fromDegrees(90)));
+
+        Pose2d bluePose;
+        Pose2d redPose;
+        private POIS(Pose2d bluePose) {
+            this.bluePose = bluePose;
+            redPose = POIManager.mirrorPose(bluePose);
+
+        }
+    }
     /**
      * The drivetrain scoring positions for the blue community.
      * Pose 0 is for the farthest-right scoring station from the driver perspective.
@@ -62,6 +74,15 @@ public class POIManager {
         }
         else {
             return BLUE_COMMUNITY;
+        }
+    }
+
+    public static Pose2d ownPOI(POIS poi) {
+        if (AllianceWrapper.getAlliance() == Alliance.Red) {
+            return poi.redPose;
+        }
+        else {
+            return poi.bluePose;
         }
     }
 
