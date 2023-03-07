@@ -158,7 +158,7 @@ public class RobotContainer {
                     )
                 );
             }
-        ));
+        ));        
     }
 
 
@@ -198,7 +198,6 @@ public class RobotContainer {
         return Commands.either(
             armIntakeCG(cubePosition, true), armIntakeCG(conePosition, false), isCube);
     }
-
 
 
     //Autonomous Commands:
