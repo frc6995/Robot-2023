@@ -149,7 +149,7 @@ public class RobotContainer {
 
         m_driverController.povCenter().negate().whileTrue(m_drivebaseS.run(()->{
                 double pov = Units.degreesToRadians(-m_driverController.getHID().getPOV());
-                double adjustSpeed = 0.25; // m/s
+                double adjustSpeed = 0.5; // m/s
                 m_drivebaseS.driveAllianceRelative(
                     new ChassisSpeeds(
                         Math.cos(pov) * adjustSpeed,

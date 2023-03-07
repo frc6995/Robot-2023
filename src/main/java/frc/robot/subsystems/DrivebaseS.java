@@ -132,7 +132,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         
         m_poseEstimator =
         new SwerveDrivePoseEstimator(m_kinematics, getHeading(), getModulePositions(), new Pose2d());
-        m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(0.9, 0.9, 0.9));
+        m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(0.9, 0.9, 10));
         m_thetaController.setTolerance(Units.degreesToRadians(2));
         m_xController.setTolerance(0.05);
         m_yController.setTolerance(0.05);
