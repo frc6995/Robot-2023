@@ -39,6 +39,7 @@ import frc.robot.subsystems.IntakeS;
 import frc.robot.subsystems.LightS;
 import frc.robot.subsystems.ArmS.ArmPosition;
 import frc.robot.subsystems.LightS.States;
+import frc.robot.util.NomadMathUtil;
 import frc.robot.util.TimingTracer;
 import io.github.oblarg.oblog.annotations.Log;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
@@ -206,6 +207,7 @@ public class RobotContainer {
     public Command eighteenPointAuto(){
         
         return Commands.sequence(
+            Commands.runOnce(()->m_drivebaseS.resetPose(NomadMathUtil.mirrorPose(POIManager.BLUE_COMMUNITY.get(3)))),
             m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy(),
             m_intakeS.outtakeC().withTimeout(0.4),
             Commands.parallel(
@@ -222,6 +224,7 @@ public class RobotContainer {
         //var singlePath = PathPlanner.loadPath("21 Point No 2nd", new PathConstraints(2, 2));
         var pathGroup = PathPlanner.loadPathGroup("Bump 15 Point", new PathConstraints(2, 2),  new PathConstraints[0]);
         return Commands.sequence(
+            m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
             m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
             m_intakeS.outtakeC().withTimeout(0.4),
 
@@ -246,12 +249,14 @@ public class RobotContainer {
 
         var singlePath = PathPlanner.loadPath("Bump 21 Point No 2nd", new PathConstraints(2, 2));
         return Commands.sequence(
+            m_drivebaseS.resetPoseToBeginningC(singlePath),
             m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
             m_intakeS.outtakeC().withTimeout(0.4),
             Commands.parallel(
                 m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
                 m_drivebaseS.pathPlannerCommand(singlePath)
-            )
+            ),
+            m_drivebaseS.chargeStationUpfieldC()
 
             //Add Charge Station Upfield Dock Commmand
         );
@@ -261,6 +266,7 @@ public class RobotContainer {
 
         var pathGroup = PathPlanner.loadPathGroup("Bump 21 Point With 2nd", new PathConstraints(2, 2),  new PathConstraints[0]);
         return Commands.sequence(
+            m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
             m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
             m_intakeS.outtakeC().withTimeout(0.4),
 
@@ -283,6 +289,7 @@ public class RobotContainer {
 
         var pathGroup = PathPlanner.loadPathGroup("Bump 27 Point", new PathConstraints(2, 2),  new PathConstraints[0]);
         return Commands.sequence(
+            m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
             m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
             m_intakeS.outtakeC().withTimeout(0.4),
 
@@ -315,6 +322,7 @@ public class RobotContainer {
         
         var pathGroup = PathPlanner.loadPathGroup("15 Point", new PathConstraints(2, 2),  new PathConstraints[0]);
         return Commands.sequence(
+            m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
             m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
             m_intakeS.outtakeC().withTimeout(0.4),
 
@@ -339,14 +347,14 @@ public class RobotContainer {
         
         var singlePath = PathPlanner.loadPath("21 Point No 2nd", new PathConstraints(2, 2));
         return Commands.sequence(
+            m_drivebaseS.resetPoseToBeginningC(singlePath),
             m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
             m_intakeS.outtakeC().withTimeout(0.4),
             Commands.parallel(
                 m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
                 m_drivebaseS.pathPlannerCommand(singlePath)
-            )
-
-            //Add Charge Station Upfield Dock Commmand
+            ),
+            m_drivebaseS.chargeStationUpfieldC()
         );
     }
 
@@ -354,6 +362,7 @@ public class RobotContainer {
 
         var pathGroup = PathPlanner.loadPathGroup("21 Point With 2nd", new PathConstraints(2, 2),  new PathConstraints[0]);
         return Commands.sequence(
+            m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
             m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
             m_intakeS.outtakeC().withTimeout(0.4),
 
@@ -376,6 +385,7 @@ public class RobotContainer {
 
         var pathGroup = PathPlanner.loadPathGroup("27 Point", new PathConstraints(2, 2),  new PathConstraints[0]);
         return Commands.sequence(
+            m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
             m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
             m_intakeS.outtakeC().withTimeout(0.4),
 
