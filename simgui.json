@@ -1,6 +1,16 @@
 {
   "HALProvider": {
     "Other Devices": {
+      "SPARK MAX [11]": {
+        "header": {
+          "open": true
+        }
+      },
+      "SPARK MAX [12]": {
+        "header": {
+          "open": true
+        }
+      },
       "SPARK MAX [20]": {
         "header": {
           "open": true
@@ -160,10 +170,7 @@
           "width": 0.800000011920929
         },
         "top": 24,
-        "width": 4.0,
-        "window": {
-          "visible": true
-        }
+        "width": 4.0
       },
       "/Shuffleboard/RobotContainer/m_field": {
         "Robot": {
@@ -224,6 +231,11 @@
         "window": {
           "visible": true
         }
+      },
+      "/SmartDashboard/SendableChooser[0]": {
+        "window": {
+          "visible": true
+        }
       }
     }
   },
@@ -241,6 +253,15 @@
       "Shuffleboard": {
         "ArmS": {
           "VISUALIZER": {
+            "open": true
+          },
+          "open": true
+        },
+        "DrivebaseS": {
+          "SwerveModule-FL-[18,17]": {
+            "open": true
+          },
+          "SwerveModule-FR-[12,11]": {
             "open": true
           },
           "open": true
@@ -267,7 +288,7 @@
               "autoFit": true
             }
           ],
-          "height": 225,
+          "height": 768,
           "series": [
             {
               "color": [
@@ -336,6 +357,29 @@
                 1.0
               ],
               "id": "SPARK MAX [20]-Applied Output"
+            }
+          ]
+        }
+      ]
+    },
+    "Plot <2>": {
+      "plots": [
+        {
+          "axis": [
+            {
+              "autoFit": true
+            }
+          ],
+          "height": 332,
+          "series": [
+            {
+              "color": [
+                0.2980392277240753,
+                0.44705885648727417,
+                0.6901960968971252,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/DrivebaseS/SwerveModule-FR-[12,11]/getCurrentVelocityMetersPerSecond"
             }
           ]
         }

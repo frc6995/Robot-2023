@@ -1,6 +1,5 @@
 package frc.robot.commands.drivetrain;
 
-import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -14,7 +13,7 @@ import frc.robot.util.AllianceWrapper;
 import frc.robot.util.drive.AsymmetricSlewRateLimiter;
 import frc.robot.util.drive.SecondOrderChassisSpeeds;
 
-public class OperatorControlC extends CommandBase {
+public class OperatorControlHeadingC extends CommandBase {
 
     /**
      * Command to allow for driver input in teleop
@@ -32,50 +31,21 @@ public class OperatorControlC extends CommandBase {
     private final AsymmetricSlewRateLimiter m_xRateLimiter = new AsymmetricSlewRateLimiter(1, 3);
     private final DoubleSupplier m_forwardY;
     private final AsymmetricSlewRateLimiter m_yRateLimiter = new AsymmetricSlewRateLimiter(1, 3);
-    private final DoubleSupplier m_rotation;
-    private final SlewRateLimiter m_thetaRateLimiter = new SlewRateLimiter(2);
-    private final DoubleSupplier m_headingToHold;
-    private final BooleanSupplier m_holdHeading;
-
-    private boolean lastHoldHeading = false;
+    private final DoubleSupplier m_heading;
 
     private final double MAX_LINEAR_SPEED = Units.feetToMeters(11);
 
-    public static final double MAX_TURN_SPEED = Units.degreesToRadians(360);
-
-    public OperatorControlC(
+    public OperatorControlHeadingC(
         DoubleSupplier fwdX, 
         DoubleSupplier fwdY, 
-        DoubleSupplier rot,
+        DoubleSupplier heading,
         DrivebaseS subsystem
     ) {
 
         m_drive = subsystem;
         m_forwardX = fwdX;
         m_forwardY = fwdY;
-        m_rotation = rot;
-        m_headingToHold = ()->0;
-        m_holdHeading = ()->false;
-
-        addRequirements(subsystem);
-
-    }
-
-    public OperatorControlC(
-        DoubleSupplier fwdX, 
-        DoubleSupplier fwdY, 
-        DoubleSupplier rot,
-        DoubleSupplier headingToHold,
-        BooleanSupplier holdHeading,
-        DrivebaseS subsystem
-    ) {
-
-        m_drive = subsystem;
-        m_forwardX = fwdX;
-        m_forwardY = fwdY;
-        m_rotation = rot;
-        m_headingToHold = headingToHold;
-        m_holdHeading = holdHeading;
+        m_heading = heading;
 
         addRequirements(subsystem);
 
@@ -83,15 +53,19 @@ public class OperatorControlC extends CommandBase {
 
     @Override
     public void initialize() {
-        m_xRateLimiter.reset(m_forwardX.getAsDouble());
-        m_yRateLimiter.reset(m_forwardY.getAsDouble());
-        m_thetaRateLimiter.reset(m_rotation.getAsDouble());
-        
+        m_xRateLimiter.reset(preprocessInputs(-m_forwardX.getAsDouble()));
+        m_yRateLimiter.reset(preprocessInputs(-m_forwardY.getAsDouble()));
+        m_drive.m_profiledThetaController.reset(m_drive.getPoseHeading().getRadians(), 0);
+    }
+
+    private double preprocessInputs (double input) {
+        input = deadbandInputs(input);
+        input = Math.copySign(input * input , input);
+        return input;
     }
     
     @Override
     public void execute() {
-
         /**
          * Units are given in meters per second radians per second
          * Since joysticks give output from -1 to 1, we multiply the outputs by the max speed
@@ -99,14 +73,13 @@ public class OperatorControlC extends CommandBase {
          */
 
         double fwdX = -m_forwardX.getAsDouble();
-        fwdX = deadbandInputs(fwdX);
-        fwdX = Math.copySign(fwdX*fwdX, fwdX);
+        fwdX = preprocessInputs(fwdX);
+
         fwdX = m_xRateLimiter.calculate(fwdX);
         
 
         double fwdY = -m_forwardY.getAsDouble();
-        fwdY = deadbandInputs(fwdY);
-        fwdY = Math.copySign(fwdY*fwdY, fwdY);
+        fwdY = preprocessInputs(fwdY);
         fwdY = m_yRateLimiter.calculate(fwdY);
         
 
@@ -115,25 +88,7 @@ public class OperatorControlC extends CommandBase {
         fwdX = driveMagnitude * Math.cos(driveDirectionRadians);
         fwdY = driveMagnitude * Math.sin(driveDirectionRadians);
 
-        double rot;
-        if (!m_holdHeading.getAsBoolean()) {
-
-            rot = -m_rotation.getAsDouble();
-            //rot = Math.copySign(rot * rot, rot);
-            rot = deadbandInputs(rot);
-            rot = m_thetaRateLimiter.calculate(rot);
-            rot *= MAX_TURN_SPEED;
-            lastHoldHeading = false;
-        }
-        else {
-            if (!lastHoldHeading) {
-                m_drive.m_profiledThetaController.reset(m_drive.getPoseHeading().getRadians(), 0);
-            }
-            rot = m_drive.m_profiledThetaController.calculate(m_drive.getPoseHeading().getRadians(), m_headingToHold.getAsDouble());
-            lastHoldHeading = true;
-        }
-
-
+        var rot = m_drive.m_profiledThetaController.calculate(m_drive.getPoseHeading().getRadians(), m_heading.getAsDouble());
 
         var correctedHeading = m_drive.getPoseHeading().plus(Rotation2d.fromRadians(rot * 0.09));
         if (AllianceWrapper.getAlliance() == Alliance.Red) {
