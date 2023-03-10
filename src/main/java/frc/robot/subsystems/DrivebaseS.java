@@ -27,6 +27,7 @@ import frc.robot.util.trajectory.PPSwerveControllerCommand;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Quaternion;
@@ -39,6 +40,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -51,6 +53,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
 import frc.robot.subsystems.LightS.States;
 import frc.robot.Robot;
+import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.util.AllianceWrapper;
 import frc.robot.util.NomadMathUtil;
@@ -78,6 +81,9 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
     public final PIDController m_xController = new PIDController(3, 0, 0);
     public final PIDController m_yController = new PIDController(3, 0, 0);
     public final PIDController m_thetaController = new PIDController(3, 0, 0);
+    // constraints determined from OperatorControlC slew settings.
+    public final ProfiledPIDController m_profiledThetaController = 
+        new ProfiledPIDController(3, 0, 0, new Constraints(2*Math.PI, 4*Math.PI));
     public final PPHolonomicDriveController m_holonomicDriveController = new PPHolonomicDriveController(m_xController, m_yController, m_thetaController);
 
     private final SwerveDriveKinematics m_kinematics = new SecondOrderSwerveDriveKinematics(
@@ -132,8 +138,11 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         
         m_poseEstimator =
         new SwerveDrivePoseEstimator(m_kinematics, getHeading(), getModulePositions(), new Pose2d());
-        m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(0.9, 0.9, 0.9));
+        m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(0.9, 0.9, 10));
         m_thetaController.setTolerance(Units.degreesToRadians(2));
+        m_thetaController.enableContinuousInput(-Math.PI, Math.PI);
+        m_profiledThetaController.setTolerance(Units.degreesToRadians(2));
+        m_profiledThetaController.enableContinuousInput(-Math.PI, Math.PI);
         m_xController.setTolerance(0.05);
         m_yController.setTolerance(0.05);
         m_camera1Wrapper = new PhotonCameraWrapper(VisionConstants.CAM_1_NAME, VisionConstants.robotToCam1);
@@ -337,6 +346,16 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         }
     }
 
+    public Command resetPoseToBeginningC(PathPlannerTrajectory trajectory) {
+        return Commands.runOnce(()->resetPose(NomadMathUtil.mirrorPose(
+            new Pose2d(
+                trajectory.getInitialState().poseMeters.getTranslation(),
+                trajectory.getInitialState().holonomicRotation
+            ), AllianceWrapper.getAlliance()
+            )
+        ));
+    }
+
     /**
      * Reset the pose of odometry and sim to the given pose.
      * @param pose The Pose2d to reset to.
@@ -418,7 +437,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         } else {
             for(int idx = 0; idx < QuadSwerveSim.NUM_MODULES; idx++){
                 double azmthVolts = m_modules.get(idx).getAppliedRotationVoltage();
-                double wheelVolts = m_modules.get(idx).getAppliedDriveVoltage() * 1.44;
+                double wheelVolts = NomadMathUtil.subtractkS(m_modules.get(idx).getAppliedDriveVoltage(), DriveConstants.DRIVE_FF_CONST[0]) * 1.44;
                 m_moduleSims.get(idx).setInputVoltages(wheelVolts, azmthVolts);
             }
         }
@@ -426,8 +445,8 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         Pose2d prevRobotPose = m_quadSwerveSim.getCurPose();
 
         // Update model (several small steps)
-        for (int i = 0; i< 20; i++) {
-            m_quadSwerveSim.update(0.001);
+        for (int i = 0; i< 40; i++) {
+            m_quadSwerveSim.update(0.0005);
         }
         
 
@@ -628,6 +647,28 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
                     .until(()-> Math.abs(this.getPitch()) < 0.15),
                 // short burst of backwards speed to cancel forward momentul
                 run(()->this.driveAllianceRelative(new ChassisSpeeds(-0.6, 0, 0))).withTimeout(0.6),
+                // put wheels in circle formation to prevent sliding
+                run(()->this.driveAllianceRelative(new ChassisSpeeds(0, 0, 0.1))).withTimeout(0.2))
+                , Commands.none(), ()->Math.abs(this.getPitch()) > 0.05)
+
+        );
+    }
+
+    public Command chargeStationUpfieldC() {
+        return Commands.sequence(
+            // high speed to push down the ramp (until a tilt is detected)
+            run(()->this.driveAllianceRelative(new ChassisSpeeds(-1.3, 0, 0)))
+            .until(()->Math.abs(this.getPitch()) > 0.13).withTimeout(3),
+            Commands.either(
+                Commands.sequence(
+                                // higher speed to get all the way on the ramp (for time)
+                run(()->this.driveAllianceRelative(new ChassisSpeeds(-1.5, 0, 0))).withTimeout(0.7),
+                // slow speed to move past the tipping point (until it tips bac)
+                run(()->this.driveAllianceRelative(new ChassisSpeeds(-0.7, 0, 0)))
+                    .alongWith(Commands.run(()->LightS.getInstance().requestState(States.Climbing)))
+                    .until(()-> Math.abs(this.getPitch()) < 0.15),
+                // short burst of backwards speed to cancel forward momentul
+                run(()->this.driveAllianceRelative(new ChassisSpeeds(0.6, 0, 0))).withTimeout(0.6),
                 // put wheels in circle formation to prevent sliding
                 run(()->this.driveAllianceRelative(new ChassisSpeeds(0, 0, 0.1))).withTimeout(0.2))
                 , Commands.none(), ()->Math.abs(this.getPitch()) > 0.05)

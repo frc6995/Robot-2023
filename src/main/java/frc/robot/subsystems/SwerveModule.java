@@ -257,8 +257,13 @@ public class SwerveModule extends SubsystemBase implements Loggable{
             rotationVolts += 0.1;
             rotationVolts += 0.5 * desiredState.omegaRadiansPerSecond;
         }
+        
         double driveVolts = m_drivePIDController.calculate(getCurrentVelocityMetersPerSecond(), desiredState.speedMetersPerSecond)
             + m_driveFeedForward.calculate(desiredState.speedMetersPerSecond, desiredState.accelerationMetersPerSecondSquared);
+
+        if (Math.abs(m_drivePIDController.getPositionError()) < 0.02) {
+            driveVolts = 0;
+        }
             //(this.desiredState.speedMetersPerSecond - previousState.speedMetersPerSecond) / 0.02);
         m_steerMotor.setVoltage(rotationVolts);
         m_driveMotor.setVoltage(driveVolts);

@@ -83,5 +83,22 @@ public class NomadMathUtil {
         
     }
 
+    public static Pose2d mirrorPose(
+        Pose2d bluePose
+    ) {
+        return new Pose2d(FIELD_LENGTH - bluePose.getX(), bluePose.getY(), 
+            Rotation2d.fromRadians(Math.PI - bluePose.getRotation().getRadians()));
+    }
+
+    public static Pose2d mirrorPose(
+        Pose2d bluePose, DriverStation.Alliance alliance
+    ) {
+        if (alliance != Alliance.Red) {
+            return bluePose;
+        }
+        return mirrorPose(bluePose);
+        
+    }
+
     
 }
