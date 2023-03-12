@@ -130,7 +130,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         //m_magEncoderSim.setAbsolutePosition(m_magEncoderOffset/ (2*Math.PI));
         //Drive motors should brake, rotation motors should coast (to allow module realignment)
         m_driveMotor.setIdleMode(IdleMode.kBrake);
-        m_steerMotor.setIdleMode(IdleMode.kCoast);
+        m_steerMotor.setIdleMode(IdleMode.kBrake);
 
         // Config the pid controllers
 
@@ -233,6 +233,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
      * the module offset from forward.
     */
     public void initRotationOffset() {
+        m_steerPIDController.reset(getMagEncoderAngle().getRadians());
         m_steerEncoderWrapper.setPosition(getMagEncoderAngle().getRadians());
     }
 
@@ -258,21 +259,12 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         desiredState = SecondOrderSwerveModuleState.optimize(desiredState, getCanEncoderAngle());
         
         double goal = desiredState.angle.getRadians();
-        double measurement = getCanEncoderAngle().getRadians();
+        double measurement = getMagEncoderAngle().getRadians();
         double rotationVolts = m_steerPIDController.calculate(measurement, goal);
-        if (Robot.isReal()) {
-            rotationVolts += 0.1 * Math.signum(rotationVolts);
-            rotationVolts += 0.5 * desiredState.omegaRadiansPerSecond;
-        }
         
         double driveVolts = m_drivePIDController.calculate(getCurrentVelocityMetersPerSecond(), desiredState.speedMetersPerSecond)
         +  m_driveFeedForward.calculate(desiredState.speedMetersPerSecond, desiredState.accelerationMetersPerSecondSquared);
 
-        // if (Math.abs(m_drivePIDController.getPositionError()) < 0.02) {
-        //     driveVolts = 0;
-        // }
-        //SmartDashboard.putNumber(m_loggingName, driveVolts);
-            //(this.desiredState.speedMetersPerSecond - previousState.speedMetersPerSecond) / 0.02);
         m_steerMotor.setVoltage(rotationVolts);
         m_driveMotor.setVoltage(driveVolts);
     }
@@ -284,13 +276,13 @@ public class SwerveModule extends SubsystemBase implements Loggable{
     public SwerveModuleState getCurrentState() {
         return new SwerveModuleState(
                 getCurrentVelocityMetersPerSecond(),
-                getCanEncoderAngle());
+                getMagEncoderAngle());
     }
     
     public SwerveModulePosition getCurrentPosition() {
         return new SwerveModulePosition(
                 getDriveDistanceMeters(),
-                getCanEncoderAngle());
+                getMagEncoderAngle());
     }
     
 

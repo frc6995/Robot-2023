@@ -104,8 +104,8 @@ public class RobotContainer {
 
         configureButtonBindings();
 
-        m_driverController.start().whileTrue(m_drivebaseS.chargeStationDownfieldC());
-        m_driverController.back().whileTrue(m_drivebaseS.chargeStationUpfieldC());
+        m_driverController.start().whileTrue(m_drivebaseS.chargeStationBatteryFirstC());
+        m_driverController.back().whileTrue(m_drivebaseS.chargeStationFrontFirstC());
 
         //Autonomous Option Selections:
         m_autoSelector.setDefaultOption("18 Point", eighteenPointAuto());
@@ -236,7 +236,7 @@ public class RobotContainer {
             m_intakeS.outtakeC().withTimeout(0.4),
             Commands.parallel(
                 m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy(),
-                m_drivebaseS.chargeStationDownfieldC()
+                m_drivebaseS.chargeStationBatteryFirstC()
             )
         ).finallyDo((end)->m_drivebaseS.drive(new ChassisSpeeds()));
     }
@@ -293,7 +293,7 @@ public class RobotContainer {
                 m_drivebaseS.pathPlannerCommand(singlePath)
             ),
 
-            m_drivebaseS.chargeStationUpfieldC()
+            m_drivebaseS.chargeStationFrontFirstC()
 
             //Add Charge Station Upfield Dock Commmand
         );
@@ -326,7 +326,7 @@ public class RobotContainer {
                 m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
             ),
 
-            m_drivebaseS.chargeStationUpfieldC()
+            m_drivebaseS.chargeStationFrontFirstC()
         );
     }
 
@@ -369,7 +369,7 @@ public class RobotContainer {
                 m_drivebaseS.pathPlannerCommand(pathGroup.get(3)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
             ),
 
-            m_drivebaseS.chargeStationDownfieldC()
+            m_drivebaseS.chargeStationBatteryFirstC()
 
         );
     }
@@ -424,7 +424,7 @@ public class RobotContainer {
                 m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
                 m_drivebaseS.pathPlannerCommand(singlePath)
             ),
-            m_drivebaseS.chargeStationUpfieldC()
+            m_drivebaseS.chargeStationFrontFirstC()
         );
     }
 
@@ -455,7 +455,7 @@ public class RobotContainer {
                 m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
             ),
 
-            m_drivebaseS.chargeStationUpfieldC()
+            m_drivebaseS.chargeStationFrontFirstC()
         );
     }
 
@@ -498,7 +498,7 @@ public class RobotContainer {
                 m_drivebaseS.pathPlannerCommand(pathGroup.get(3)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
             ),
 
-            m_drivebaseS.chargeStationDownfieldC()
+            m_drivebaseS.chargeStationBatteryFirstC()
 
         );
     }

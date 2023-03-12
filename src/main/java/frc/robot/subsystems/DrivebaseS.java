@@ -628,46 +628,46 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
             this);
     }
 
-    public Command chargeStationDownfieldC() {
+    public Command chargeStationBatteryFirstC() {
         return Commands.sequence(
             
             // high speed to push down the ramp (until a tilt is detected)
-            run(()->this.driveAllianceRelative(new ChassisSpeeds(2, 0, 0)))
+            run(()->this.drive(new ChassisSpeeds(-2, 0, 0)))
             .until(()->Math.abs(this.getPitch()) > 0.13).withTimeout(3),
             Commands.either(
                 Commands.sequence(
                                 // higher speed to get all the way on the ramp (for time)
-                run(()->this.driveAllianceRelative(new ChassisSpeeds(1.5, 0, 0))).withTimeout(0.7),
+                run(()->this.drive(new ChassisSpeeds(-1.5, 0, 0))).withTimeout(0.7),
                 // slow speed to move past the tipping point (until it tips bac)
-                run(()->this.driveAllianceRelative(new ChassisSpeeds(0.7, 0, 0)))
+                run(()->this.drive(new ChassisSpeeds(-0.7, 0, 0)))
                     .alongWith(Commands.run(()->LightS.getInstance().requestState(States.Climbing)))
                     .until(()-> Math.abs(this.getPitch()) < 0.15),
                 // short burst of backwards speed to cancel forward momentul
-                run(()->this.driveAllianceRelative(new ChassisSpeeds(-0.6, 0, 0))).withTimeout(1),
+                run(()->this.drive(new ChassisSpeeds(0.6, 0, 0))).withTimeout(1),
                 // put wheels in circle formation to prevent sliding
-                run(()->this.driveAllianceRelative(new ChassisSpeeds(0, 0, 0.1))).withTimeout(0.2))
+                run(()->this.drive(new ChassisSpeeds(0, 0, 0.1))).withTimeout(0.2))
                 , Commands.none(), ()->Math.abs(this.getPitch()) > 0.05)
 
         );
     }
 
-    public Command chargeStationUpfieldC() {
+    public Command chargeStationFrontFirstC() {
         return Commands.sequence(
             // high speed to push down the ramp (until a tilt is detected)
-            run(()->this.driveAllianceRelative(new ChassisSpeeds(-1.3, 0, 0)))
+            run(()->this.drive(new ChassisSpeeds(1.3, 0, 0)))
             .until(()->Math.abs(this.getPitch()) > 0.13).withTimeout(3),
             Commands.either(
                 Commands.sequence(
                                 // higher speed to get all the way on the ramp (for time)
-                run(()->this.driveAllianceRelative(new ChassisSpeeds(-1.5, 0, 0))).withTimeout(0.7),
+                run(()->this.drive(new ChassisSpeeds(1.5, 0, 0))).withTimeout(0.7),
                 // slow speed to move past the tipping point (until it tips bac)
-                run(()->this.driveAllianceRelative(new ChassisSpeeds(-0.7, 0, 0)))
+                run(()->this.drive(new ChassisSpeeds(0.7, 0, 0)))
                     .alongWith(Commands.run(()->LightS.getInstance().requestState(States.Climbing)))
                     .until(()-> Math.abs(this.getPitch()) < 0.15),
                 // short burst of backwards speed to cancel forward momentul
-                run(()->this.driveAllianceRelative(new ChassisSpeeds(0.6, 0, 0))).withTimeout(0.6),
+                run(()->this.drive(new ChassisSpeeds(-0.6, 0, 0))).withTimeout(0.6),
                 // put wheels in circle formation to prevent sliding
-                run(()->this.driveAllianceRelative(new ChassisSpeeds(0, 0, 0.1))).withTimeout(0.2))
+                run(()->this.drive(new ChassisSpeeds(0, 0, 0.1))).withTimeout(0.2))
                 , Commands.none(), ()->Math.abs(this.getPitch()) > 0.05)
 
         );
