@@ -274,10 +274,8 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
     private SwerveModuleState[] getStoppedStates() {
         SwerveModuleState[] states = new SwerveModuleState[4];
         for (int i = 0; i < NUM_MODULES; i++) {
-            states[i] = new SwerveModuleState(
-                0,
-                new Rotation2d(MathUtil.angleModulus(m_modules.get(i).getCanEncoderAngle().getRadians())));
-                
+            states[i] = m_modules.get(i).getCurrentState();
+            states[i].speedMetersPerSecond = 0;
         }
         return states;
     }
@@ -306,8 +304,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
     public SwerveModuleState[] getModuleStates() {
         
         for (int i = 0; i < NUM_MODULES; i++) {
-            currentStates[i].speedMetersPerSecond =m_modules.get(i).getCurrentVelocityMetersPerSecond();
-            currentStates[i].angle = m_modules.get(i).getCanEncoderAngle();
+            currentStates[i] = m_modules.get(i).getCurrentState();
         }
         return currentStates;
     }
@@ -318,8 +315,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      */
     public SwerveModulePosition[] getModulePositions() {
         for (int i = 0; i < NUM_MODULES; i++) {
-            currentPositions[i].distanceMeters = m_modules.get(i).getDriveDistanceMeters();
-            currentPositions[i].angle = m_modules.get(i).getCanEncoderAngle();
+            currentPositions[i] = m_modules.get(i).getCurrentPosition();
         }
         return currentPositions;
     }
@@ -634,8 +630,9 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
 
     public Command chargeStationDownfieldC() {
         return Commands.sequence(
+            
             // high speed to push down the ramp (until a tilt is detected)
-            run(()->this.driveAllianceRelative(new ChassisSpeeds(1.3, 0, 0)))
+            run(()->this.driveAllianceRelative(new ChassisSpeeds(2, 0, 0)))
             .until(()->Math.abs(this.getPitch()) > 0.13).withTimeout(3),
             Commands.either(
                 Commands.sequence(
@@ -646,7 +643,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
                     .alongWith(Commands.run(()->LightS.getInstance().requestState(States.Climbing)))
                     .until(()-> Math.abs(this.getPitch()) < 0.15),
                 // short burst of backwards speed to cancel forward momentul
-                run(()->this.driveAllianceRelative(new ChassisSpeeds(-0.6, 0, 0))).withTimeout(0.6),
+                run(()->this.driveAllianceRelative(new ChassisSpeeds(-0.6, 0, 0))).withTimeout(1),
                 // put wheels in circle formation to prevent sliding
                 run(()->this.driveAllianceRelative(new ChassisSpeeds(0, 0, 0.1))).withTimeout(0.2))
                 , Commands.none(), ()->Math.abs(this.getPitch()) > 0.05)

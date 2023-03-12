@@ -84,7 +84,7 @@ public class AsymmetricSlewRateLimiter {
         m_prevVal +=
         MathUtil.clamp(
             input - m_prevVal,
-            -m_negativeMagnitudeRateLimit * elapsedTime,
+            -m_positiveMagnitudeRateLimit * elapsedTime,
             m_positiveMagnitudeRateLimit * elapsedTime);
     }
 

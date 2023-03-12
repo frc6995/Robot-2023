@@ -14,12 +14,14 @@ import static frc.robot.Constants.DriveConstants.WHEEL_RADIUS_M;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
@@ -70,6 +72,8 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         m_steerMotor.restoreFactoryDefaults(false);
         m_driveMotor.setSmartCurrentLimit(35);
         m_steerMotor.setSmartCurrentLimit(25);
+        m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 10);
+        m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 10);
         //set the output of the drive encoder to be in meters (instead of motor rots) for linear measurement
         // wheel diam * pi = wheel circumference (meters/wheel rot) *
         // 1/6.86 wheel rots per motor rot *
@@ -195,6 +199,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
      * current angle is always desired angle.
      * @return a Rotation2d, where 0 is forward and pi/-pi is backward.
      */
+    @Log( methodName = "getRadians")
     public Rotation2d getCanEncoderAngle() {
         return new Rotation2d(m_steerEncoderWrapper.getPosition());
     }
@@ -210,10 +215,12 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         return m_driveEncoderWrapper.getVelocity();
     }
 
+    @Log
     public double getAppliedDriveVoltage() {
         return m_driveMotor.getAppliedOutput();
     }
 
+    @Log
     public double getAppliedRotationVoltage() {
         return m_steerMotor.getAppliedOutput();
     }
@@ -254,16 +261,17 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         double measurement = getCanEncoderAngle().getRadians();
         double rotationVolts = m_steerPIDController.calculate(measurement, goal);
         if (Robot.isReal()) {
-            rotationVolts += 0.1;
+            rotationVolts += 0.1 * Math.signum(rotationVolts);
             rotationVolts += 0.5 * desiredState.omegaRadiansPerSecond;
         }
         
         double driveVolts = m_drivePIDController.calculate(getCurrentVelocityMetersPerSecond(), desiredState.speedMetersPerSecond)
-            + m_driveFeedForward.calculate(desiredState.speedMetersPerSecond, desiredState.accelerationMetersPerSecondSquared);
+        +  m_driveFeedForward.calculate(desiredState.speedMetersPerSecond, desiredState.accelerationMetersPerSecondSquared);
 
-        if (Math.abs(m_drivePIDController.getPositionError()) < 0.02) {
-            driveVolts = 0;
-        }
+        // if (Math.abs(m_drivePIDController.getPositionError()) < 0.02) {
+        //     driveVolts = 0;
+        // }
+        //SmartDashboard.putNumber(m_loggingName, driveVolts);
             //(this.desiredState.speedMetersPerSecond - previousState.speedMetersPerSecond) / 0.02);
         m_steerMotor.setVoltage(rotationVolts);
         m_driveMotor.setVoltage(driveVolts);
@@ -276,6 +284,12 @@ public class SwerveModule extends SubsystemBase implements Loggable{
     public SwerveModuleState getCurrentState() {
         return new SwerveModuleState(
                 getCurrentVelocityMetersPerSecond(),
+                getCanEncoderAngle());
+    }
+    
+    public SwerveModulePosition getCurrentPosition() {
+        return new SwerveModulePosition(
+                getDriveDistanceMeters(),
                 getCanEncoderAngle());
     }
     
@@ -302,9 +316,11 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         m_magEncoder.setSimPosition(angle_rad);
     }
 
+    @Log
     public double getSteerSetpoint() {
         return m_steerPIDController.getSetpoint().position;
-    }   
+    }
+    @Log   
     public double getVelocitySetpoint() {
         return m_drivePIDController.getSetpoint();
     }

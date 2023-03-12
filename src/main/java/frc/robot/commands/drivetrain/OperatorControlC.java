@@ -83,9 +83,20 @@ public class OperatorControlC extends CommandBase {
 
     @Override
     public void initialize() {
-        m_xRateLimiter.reset(m_forwardX.getAsDouble());
-        m_yRateLimiter.reset(m_forwardY.getAsDouble());
-        m_thetaRateLimiter.reset(m_rotation.getAsDouble());
+        double fwdX = -m_forwardX.getAsDouble();
+        fwdX = deadbandInputs(fwdX);
+        fwdX = Math.copySign(fwdX*fwdX, fwdX);
+        m_xRateLimiter.reset(fwdX);
+
+        double fwdY = -m_forwardY.getAsDouble();
+        fwdY = deadbandInputs(fwdY);
+        fwdY = Math.copySign(fwdY*fwdY, fwdY);
+        m_yRateLimiter.reset(fwdY);
+
+        double rot = -m_rotation.getAsDouble();
+        //rot = Math.copySign(rot * rot, rot);
+        rot = deadbandInputs(rot);
+        m_thetaRateLimiter.reset(rot);
         
     }
     
@@ -116,7 +127,6 @@ public class OperatorControlC extends CommandBase {
         fwdY = driveMagnitude * Math.sin(driveDirectionRadians);
 
         double rot;
-        if (!m_holdHeading.getAsBoolean()) {
 
             rot = -m_rotation.getAsDouble();
             //rot = Math.copySign(rot * rot, rot);
@@ -124,14 +134,6 @@ public class OperatorControlC extends CommandBase {
             rot = m_thetaRateLimiter.calculate(rot);
             rot *= MAX_TURN_SPEED;
             lastHoldHeading = false;
-        }
-        else {
-            if (!lastHoldHeading) {
-                m_drive.m_profiledThetaController.reset(m_drive.getPoseHeading().getRadians(), 0);
-            }
-            rot = m_drive.m_profiledThetaController.calculate(m_drive.getPoseHeading().getRadians(), m_headingToHold.getAsDouble());
-            lastHoldHeading = true;
-        }
 
 
 

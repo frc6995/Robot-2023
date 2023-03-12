@@ -533,6 +533,8 @@ public class ArmS extends SubsystemBase implements Loggable {
         m_wristMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setPositionConversionFactor(2 * Math.PI);
         m_wristMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setVelocityConversionFactor(2 * Math.PI/ 60);
         m_wristMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setInverted(true);
+        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 10);
+        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 10);
         // m_wristMotor.setSoftLimit(SoftLimitDirection.kForward, (float) WRIST_MAX_ANGLE);
         // m_wristMotor.setSoftLimit(SoftLimitDirection.kReverse, (float) WRIST_MIN_ANGLE);
         m_wristMotor.setInverted(true);

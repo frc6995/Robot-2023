@@ -1,232 +1,41 @@
 {
-  "HALProvider": {
-    "Other Devices": {
-      "SPARK MAX [11]": {
-        "header": {
-          "open": true
-        }
-      },
-      "SPARK MAX [12]": {
-        "header": {
-          "open": true
-        }
-      },
-      "SPARK MAX [20]": {
-        "header": {
-          "open": true
-        }
-      },
-      "SPARK MAX [22]": {
-        "header": {
-          "open": true
-        }
-      },
-      "SPARK MAX [23]": {
-        "header": {
-          "open": true
-        }
-      },
-      "SPARK MAX [25]": {
-        "header": {
-          "open": true
-        }
-      }
-    }
-  },
   "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo",
       "/Shuffleboard/ArmS/MECH_VISUALIZER": "Mechanism2d",
       "/Shuffleboard/ArmS/VISUALIZER": "Field2d",
-      "/Shuffleboard/RobotContainer/m_autoSelector": "String Chooser",
       "/Shuffleboard/RobotContainer/m_field": "Field2d",
-      "/SmartDashboard/PPSwerveControllerCommand_field": "Field2d",
       "/SmartDashboard/SendableChooser[0]": "String Chooser"
     },
     "windows": {
       "/Shuffleboard/ArmS/MECH_VISUALIZER": {
-        "image": "C:\\Users\\jashu\\git\\Robot-2023\\resources\\arm-mech2d-background.png",
+        "image": "D:\\github\\Robot-2023\\resources\\arm-mech2d-background.png",
         "window": {
           "visible": true
         }
       },
-      "/Shuffleboard/ArmS/VISUALIZER": {
-        "3.5396508512757527E-4": {
-          "style": "Line"
-        },
-        "Current": {
-          "arrowSize": 4,
-          "arrows": false,
-          "length": 0.009999999776482582,
-          "style": "Box/Image",
-          "width": 0.009999999776482582
-        },
-        "LOS": {
-          "arrowSize": 15,
-          "style": "Line"
-        },
-        "Robot": {
-          "arrows": false,
-          "style": "Hidden"
-        },
-        "bottom": 191,
-        "constraints": {
-          "arrows": false,
-          "style": "Line (Closed)"
-        },
-        "constraintsBack": {
-          "style": "Line (Closed)"
-        },
-        "goal": {
-          "length": 0.30000001192092896,
-          "width": 0.30000001192092896
-        },
-        "height": 2.0,
-        "image": "C:\\Users\\jashu\\git\\Robot-2023\\resources\\index.png",
-        "left": 80,
-        "line": {
-          "arrows": false,
-          "selectable": false,
-          "style": "Line (Closed)"
-        },
-        "maximum": {
-          "arrows": false,
-          "style": "Line"
-        },
-        "maximumCurrent": {
-          "arrows": false,
-          "style": "Line (Closed)"
-        },
-        "maximumExtended": {
-          "arrows": false,
-          "selectable": false,
-          "style": "Hidden"
-        },
-        "maximumRetracted": {
-          "arrows": false,
-          "color": [
-            255.0,
-            0.0,
-            206.58233642578125,
-            255.0
-          ],
-          "selectable": false,
-          "style": "Hidden"
-        },
-        "path": {
-          "arrowColor": [
-            255.0,
-            103.2911376953125,
-            0.0,
-            255.0
-          ],
-          "arrows": false,
-          "selectable": false,
-          "style": "Hidden"
-        },
-        "pathArm": {
-          "arrows": false,
-          "color": [
-            0.0,
-            255.0,
-            109.7468032836914,
-            255.0
-          ],
-          "selectable": false,
-          "style": "Line"
-        },
-        "pathCandidates": {
-          "arrows": false,
-          "color": [
-            116.2025375366211,
-            255.0,
-            0.0,
-            255.0
-          ],
-          "style": "Line"
-        },
-        "pathTarget": {
-          "arrowSize": 2,
-          "arrows": false,
-          "length": 0.4000000059604645,
-          "selectable": false,
-          "style": "Hidden",
-          "width": 0.4000000059604645
-        },
-        "positions": {
-          "arrows": false,
-          "length": 0.30000001192092896,
-          "style": "Hidden",
-          "width": 0.30000001192092896
-        },
-        "right": 412,
-        "setpoint": {
-          "length": 0.20000000298023224,
-          "width": 0.20000000298023224
-        },
-        "target": {
-          "arrowSize": 6,
-          "style": "Box/Image",
-          "width": 0.800000011920929
-        },
-        "top": 24,
-        "width": 4.0
-      },
       "/Shuffleboard/RobotContainer/m_field": {
         "Robot": {
-          "length": 0.7799999713897705,
-          "width": 0.7799999713897705
-        },
-        "bluePoses": {
-          "color": [
-            0.1821289211511612,
-            0.2081579715013504,
-            0.6962025165557861,
-            255.0
-          ],
-          "length": 0.7799999713897705,
-          "style": "Line",
-          "width": 0.7799999713897705
+          "style": "Box/Image"
         },
         "bottom": 544,
         "driveTarget": {
-          "length": 0.8999999761581421,
-          "width": 0.8999999761581421
+          "style": "Box/Image"
         },
         "height": 8.013679504394531,
-        "image": "C:\\Users\\jashu\\PathWeaver\\Games\\2023 Charged Up\\2023-field.png",
+        "image": "D:\\github\\Robot-2023\\resources\\2023-field.png",
         "left": 46,
         "modules": {
+          "arrows": false,
           "length": 0.4000000059604645,
-          "style": "Hidden",
+          "style": "Box/Image",
           "width": 0.4000000059604645
         },
-        "poi": {
-          "length": 0.7799999713897705,
-          "width": 0.7799999713897705
-        },
         "redPoses": {
-          "color": [
-            0.8227847814559937,
-            0.1492816060781479,
-            0.1492816060781479,
-            255.0
-          ],
-          "length": 0.7799999713897705,
-          "style": "Line",
-          "width": 0.7799999713897705
+          "style": "Box/Image"
         },
         "right": 1088,
-        "target": {
-          "arrows": false,
-          "selectable": false,
-          "style": "Hidden"
-        },
         "top": 36,
-        "trajTarget": {
-          "arrows": false,
-          "style": "Hidden"
-        },
         "width": 16.541748046875,
         "window": {
           "visible": true
@@ -239,149 +48,11 @@
       }
     }
   },
-  "NetworkTables": {
-    "Persistent Values": {
-      "open": false
-    },
-    "transitory": {
-      "DriverDisplay": {
-        "open": true
-      },
-      "FMSInfo": {
-        "open": true
-      },
-      "Shuffleboard": {
-        "ArmS": {
-          "VISUALIZER": {
-            "open": true
-          },
-          "open": true
-        },
-        "DrivebaseS": {
-          "SwerveModule-FL-[18,17]": {
-            "open": true
-          },
-          "SwerveModule-FR-[12,11]": {
-            "open": true
-          },
-          "open": true
-        },
-        "RobotContainer": {
-          "m_field": {
-            "open": true
-          },
-          "open": true
-        },
-        "open": true
-      },
-      "SmartDashboard": {
-        "open": true
-      }
-    }
-  },
   "Plot": {
     "Plot <0>": {
       "plots": [
         {
-          "axis": [
-            {
-              "autoFit": true
-            }
-          ],
-          "height": 768,
-          "series": [
-            {
-              "color": [
-                0.8666667342185974,
-                0.5176470875740051,
-                0.32156863808631897,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/getPivotVelocity"
-            },
-            {
-              "color": [
-                0.7686275243759155,
-                0.30588236451148987,
-                0.32156863808631897,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/getExtendVelocity"
-            },
-            {
-              "color": [
-                0.3333333432674408,
-                0.658823549747467,
-                0.4078431725502014,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/getWristVelocity"
-            }
-          ]
-        }
-      ]
-    },
-    "Plot <1>": {
-      "plots": [
-        {
-          "axis": [
-            {
-              "autoFit": true
-            }
-          ],
-          "height": 251,
-          "series": [
-            {
-              "color": [
-                0.2980392277240753,
-                0.44705885648727417,
-                0.6901960968971252,
-                1.0
-              ],
-              "id": "SPARK MAX [25]-Applied Output"
-            },
-            {
-              "color": [
-                0.5058823823928833,
-                0.44705885648727417,
-                0.7019608020782471,
-                1.0
-              ],
-              "id": "SPARK MAX [22]-Applied Output"
-            },
-            {
-              "color": [
-                0.5764706134796143,
-                0.4705882668495178,
-                0.3764706254005432,
-                1.0
-              ],
-              "id": "SPARK MAX [20]-Applied Output"
-            }
-          ]
-        }
-      ]
-    },
-    "Plot <2>": {
-      "plots": [
-        {
-          "axis": [
-            {
-              "autoFit": true
-            }
-          ],
-          "height": 332,
-          "series": [
-            {
-              "color": [
-                0.2980392277240753,
-                0.44705885648727417,
-                0.6901960968971252,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/DrivebaseS/SwerveModule-FR-[12,11]/getCurrentVelocityMetersPerSecond"
-            }
-          ]
+          "height": 307
         }
       ]
     }

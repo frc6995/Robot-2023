@@ -3,6 +3,8 @@ package frc.robot;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.util.datalog.DataLog;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -28,6 +30,8 @@ public class Robot extends TimedRobot {
     public void robotInit() {
         Robot.isSimulation = RobotBase.isSimulation();
         DriverStation.silenceJoystickConnectionWarning(true);
+        DataLogManager.start();
+        DriverStation.startDataLog(DataLogManager.getLog());
         LiveWindow.disableAllTelemetry();
         robotContainer = new RobotContainer();
         Logger.configureLoggingAndConfig(robotContainer, false);
