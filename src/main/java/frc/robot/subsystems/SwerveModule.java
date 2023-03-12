@@ -256,7 +256,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
 
         // Save the desired state for reference (Simulation assumes the modules always are at the desired state)
         
-        desiredState = SecondOrderSwerveModuleState.optimize(desiredState, getCanEncoderAngle());
+        desiredState = SecondOrderSwerveModuleState.optimize(desiredState, getMagEncoderAngle());
         
         double goal = desiredState.angle.getRadians();
         double measurement = getMagEncoderAngle().getRadians();
