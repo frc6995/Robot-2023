@@ -31,6 +31,7 @@ import frc.robot.util.sim.DutyCycleEncoderSim;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
+import frc.robot.util.TimingTracer;
 import frc.robot.util.drive.SecondOrderSwerveModuleState;
 import frc.robot.util.sim.SparkMaxAbsoluteEncoderWrapper;
 import frc.robot.util.sim.SparkMaxEncoderWrapper;
@@ -261,8 +262,9 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         double goal = desiredState.angle.getRadians();
         double measurement = getMagEncoderAngle().getRadians();
         double rotationVolts = m_steerPIDController.calculate(measurement, goal);
-        
+        double prevSpeedSetpoint = m_drivePIDController.getSetpoint();        
         double driveVolts = m_drivePIDController.calculate(getCurrentVelocityMetersPerSecond(), desiredState.speedMetersPerSecond)
+        //+ m_driveFeedForward.calculate(prevSpeedSetpoint, desiredState.speedMetersPerSecond, TimingTracer.getLoopTime());
         +  m_driveFeedForward.calculate(desiredState.speedMetersPerSecond, desiredState.accelerationMetersPerSecondSquared);
 
         m_steerMotor.setVoltage(rotationVolts);
