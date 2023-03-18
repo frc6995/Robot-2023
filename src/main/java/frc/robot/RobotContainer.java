@@ -204,7 +204,9 @@ public class RobotContainer {
                 m_armS.goToPositionIndefiniteC(position)
 
             ),
-            m_armS.stowIndefiniteC()
+            Commands.parallel(m_armS.stowIndefiniteC(), 
+            Commands.run(()->LightS.getInstance().requestState(isCube ? States.IntakedCube : States.IntakedCone)).asProxy().withTimeout(0.75)
+            )
         );
     }
 
