@@ -87,33 +87,28 @@ public class RobotContainer {
                 m_driverController::getLeftY,
                 m_driverController::getLeftX,
                 m_driverController::getRightX,
-                // ()->{
-                //     double downfield = (AllianceWrapper.getAlliance() == Alliance.Red) ? 
-                //     Math.PI : 0.0;
-                //     if (m_driverController.start().getAsBoolean()) {
-                //         return downfield;
-                //     }
-                //     else {
-                //         return MathUtil.angleModulus(downfield + Math.PI);
-                //     }
-                // },
-                //()->false,
+                ()->{
+                    double downfield = (AllianceWrapper.getAlliance() == Alliance.Red) ? 
+                    Math.PI : 0.0;
+                    if (m_driverController.start().getAsBoolean()) {
+                        return downfield;
+                    }
+                    else {
+                        return m_drivebaseS.getPoseHeading().getRadians();
+                    }
+                },
+                m_driverController.start(),
                 m_drivebaseS
             )
         );
 
         configureButtonBindings();
 
-        m_driverController.start().whileTrue(m_drivebaseS.chargeStationBatteryFirstC());
-        m_driverController.back().whileTrue(m_drivebaseS.chargeStationFrontFirstC());
+        // m_driverController.start().whileTrue(m_drivebaseS.chargeStationBatteryFirstC());
+        // m_driverController.back().whileTrue(m_drivebaseS.chargeStationFrontFirstC());
 
         //Autonomous Option Selections:
         m_autoSelector.setDefaultOption("18 Point", eighteenPointAuto());
-        //Bump:
-        m_autoSelector.addOption("Bump 15 Point", bumpFifteenPointAuto());
-        m_autoSelector.addOption("Bump 21 Point No 2nd", bumpTwentyonePointAutoNo2nd());
-        m_autoSelector.addOption("Bump 21 Point With 2nd", bumpTwentyonePointAutoWith2nd());
-        m_autoSelector.addOption("Bump 27 Point", bumpTwentysevenPointAuto());
         //No Bump:
         m_autoSelector.addOption("15 Point", fifteenPointAuto());
         m_autoSelector.addOption("21 Point No 2nd", twentyonePointAutoNo2nd());
@@ -236,145 +231,20 @@ public class RobotContainer {
             m_drivebaseS.stopC(),
             m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).withTimeout(3).asProxy(),
             m_intakeS.outtakeC().withTimeout(0.4),
-            Commands.parallel(
-                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy(),
-                m_drivebaseS.chargeStationBatteryFirstC()
+
+            m_armS.goToPositionC(ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT).asProxy(),
+            m_drivebaseS.chasePoseC(()->new Pose2d(
+                POIS.CHARGE_STATION.ownPose().getX(),
+                m_drivebaseS.getPose().getY(),
+                POIS.CHARGE_STATION.ownPose().getRotation())
             )
+            //m_drivebaseS.chargeStationBatteryFirstC()
         ).finallyDo((end)->m_drivebaseS.drive(new ChassisSpeeds()));
     }
 
-    //Bump:
-
-    public Command bumpFifteenPointAuto(){
-
-        //var singlePath = PathPlanner.loadPath("21 Point No 2nd", new PathConstraints(2, 2));
-        var pathGroup = PathPlanner.loadPathGroup("Bump 15 Point", new PathConstraints(2, 2), new PathConstraints(1, 1), new PathConstraints(2, 2));
-        return Commands.sequence(
-            m_intakeS.retractC(),
-
-            m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
-            m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
-            m_intakeS.outtakeC().withTimeout(0.4),
-
-            Commands.parallel(
-                m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION).asProxy().withTimeout(6),
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
-                //m_drivebaseS.pathPlannerCommand(singlePath)
-            ),
-            
-            Commands.deadline(
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds()))), 
-                m_intakeS.intakeUntilBeamBreakC()),
-
-            Commands.parallel(
-                m_intakeS.intakeC().withTimeout(0.1),
-                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
-            ),
-
-            Commands.parallel(
-                m_intakeS.intakeC().withTimeout(0.1),
-                m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3)
-            ),
-
-            m_intakeS.outtakeC().withTimeout(0.4)
-        );
-    }
-
-    public Command bumpTwentyonePointAutoNo2nd(){
-
-        var singlePath = PathPlanner.loadPath("Bump 21 Point No 2nd", new PathConstraints(2, 2));
-        return Commands.sequence(
-            m_intakeS.retractC(),
-
-            m_drivebaseS.resetPoseToBeginningC(singlePath),
-            m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
-            m_intakeS.outtakeC().withTimeout(0.4),
-            Commands.parallel(
-                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
-                m_drivebaseS.pathPlannerCommand(singlePath)
-            ),
-
-            m_drivebaseS.chargeStationFrontFirstC()
-
-            //Add Charge Station Upfield Dock Commmand
-        );
-    }
-
-    public Command bumpTwentyonePointAutoWith2nd(){
-
-        var pathGroup = PathPlanner.loadPathGroup("Bump 21 Point With 2nd", new PathConstraints(2, 2),  new PathConstraints(1, 1), new PathConstraints(2, 2));
-        return Commands.sequence(
-            m_intakeS.retractC(),
-
-            m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
-            m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
-            m_intakeS.outtakeC().withTimeout(0.4),
-
-            Commands.parallel(
-                m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION).asProxy().withTimeout(5),
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
-            ),
-
-            //m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION).asProxy().withTimeout(3),
-            Commands.deadline(
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds()))),
-                m_intakeS.intakeUntilBeamBreakC()
-            ),
-
-            Commands.parallel(
-                m_intakeS.intakeC().withTimeout(0.1),
-                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
-            ),
-
-            m_drivebaseS.chargeStationFrontFirstC()
-        );
-    }
-
-    public Command bumpTwentysevenPointAuto(){
-
-        var pathGroup = PathPlanner.loadPathGroup("Bump 27 Point", new PathConstraints(2, 2),  new PathConstraints[0]);
-        return Commands.sequence(
-            m_intakeS.retractC(),
-
-            m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
-            m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
-            m_intakeS.outtakeC().withTimeout(0.4),
-
-            Commands.parallel(
-                m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION).asProxy().withTimeout(5),
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
-            ),
-
-            Commands.parallel(
-                m_intakeS.intakeUntilBeamBreakC().withTimeout(3),
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
-            ),
 
 
-            Commands.parallel(
-                m_intakeS.intakeC().withTimeout(0.1),
-                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
-            ),
 
-            Commands.parallel(
-                m_intakeS.intakeC().withTimeout(0.1),
-                m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3)
-            ),
-
-            m_intakeS.outtakeC().withTimeout(0.4),
-
-            Commands.parallel(
-                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(3)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
-            ),
-
-            m_drivebaseS.chargeStationBatteryFirstC()
-
-        );
-    }
 
     //No Bump
 

@@ -18,7 +18,8 @@ public class POIManager {
     public static final double FIELD_WIDTH = 8.014;
     public enum POIS {
         CUBE_RAMP (POIManager.mirrorPose(new Pose2d(2.056, 7.484, Rotation2d.fromDegrees(90)))),
-        CONE_RAMP (new Pose2d(14.511, 7.296, Rotation2d.fromDegrees(90)));
+        CONE_RAMP (new Pose2d(14.511, 7.296, Rotation2d.fromDegrees(90))),
+        CHARGE_STATION(new Pose2d(3.90, 2.74, Rotation2d.fromDegrees(180)));
 
         Pose2d bluePose;
         Pose2d redPose;
@@ -26,6 +27,15 @@ public class POIManager {
             this.bluePose = bluePose;
             redPose = POIManager.mirrorPose(bluePose);
 
+        }
+
+        public Pose2d ownPose() {
+            if (AllianceWrapper.getAlliance() == Alliance.Red) {
+                return redPose;
+            }
+            else {
+                return bluePose;
+            }
         }
     }
     /**

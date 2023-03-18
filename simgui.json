@@ -9,7 +9,6 @@
     },
     "windows": {
       "/Shuffleboard/ArmS/MECH_VISUALIZER": {
-        "image": "D:\\github\\Robot-2023\\resources\\arm-mech2d-background.png",
         "window": {
           "visible": true
         }
@@ -23,7 +22,7 @@
           "style": "Box/Image"
         },
         "height": 8.013679504394531,
-        "image": "D:\\github\\Robot-2023\\resources\\2023-field.png",
+        "image": "C:\\Users\\jashu\\git\\Robot-2023\\resources\\2023-field.png",
         "left": 46,
         "modules": {
           "arrows": false,
@@ -52,9 +51,12 @@
     "Plot <0>": {
       "plots": [
         {
-          "height": 307
+          "height": 76
         }
-      ]
+      ],
+      "window": {
+        "visible": false
+      }
     }
   }
 }

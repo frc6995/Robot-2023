@@ -127,15 +127,23 @@ public class OperatorControlC extends CommandBase {
         fwdY = driveMagnitude * Math.sin(driveDirectionRadians);
 
         double rot;
+        rot = -m_rotation.getAsDouble();
+        //rot = Math.copySign(rot * rot, rot);
+        rot = deadbandInputs(rot);
+        rot = m_thetaRateLimiter.calculate(rot);
+        if (!m_holdHeading.getAsBoolean()) {
 
-            rot = -m_rotation.getAsDouble();
-            //rot = Math.copySign(rot * rot, rot);
-            rot = deadbandInputs(rot);
-            rot = m_thetaRateLimiter.calculate(rot);
+
             rot *= MAX_TURN_SPEED;
             lastHoldHeading = false;
-
-
+        }
+        else {
+            if (!lastHoldHeading) {
+                m_drive.m_profiledThetaController.reset(m_drive.getPoseHeading().getRadians(), 0);
+            }
+            rot = m_drive.m_profiledThetaController.calculate(m_drive.getPoseHeading().getRadians(), m_headingToHold.getAsDouble());
+            lastHoldHeading = true;
+        }
 
         var correctedHeading = m_drive.getPoseHeading().plus(Rotation2d.fromRadians(rot * 0.09));
         if (AllianceWrapper.getAlliance() == Alliance.Red) {
