@@ -152,7 +152,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         = new SimpleMotorFeedforward(ARM_EXTEND_KS, ARM_EXTEND_KV, 0.01);
 
     private final ProfiledPIDController m_extendController =
-        new ProfiledPIDController(4,0,0,
+        new ProfiledPIDController(8,0,0,
             new Constraints(1.5, 1.5),
             0.02
         );
@@ -175,6 +175,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         m_extendMotor.enableSoftLimit(SoftLimitDirection.kReverse, true);
         m_extendHomingSwitch.enableLimitSwitch(true);
         m_extendMotor.setIdleMode(IdleMode.kCoast);
+        m_extendMotor.setSmartCurrentLimit(40);
         m_extendMotor.burnFlash();
         m_extendEncoderWrapper.setPosition(MIN_ARM_LENGTH);
         m_extendController.reset(MIN_ARM_LENGTH);
@@ -220,6 +221,11 @@ public class ArmS extends SubsystemBase implements Loggable {
         return Math.max(MIN_ARM_LENGTH-0.25, m_extendEncoderWrapper.getPosition());
     }
 
+    @Log
+    public double getExtendCurrent(){
+        return m_extendMotor.getOutputCurrent();
+    }
+
     /**
      * @return returns telescoping velocity of arm in meters per second
      */
@@ -254,7 +260,7 @@ public class ArmS extends SubsystemBase implements Loggable {
     public void setExtendLength(double lengthMeters) {
         
         setExtendVelocity(
-            MathUtil.clamp(m_extendController.calculate(getLengthMeters(), lengthMeters), -0.5, 0.5)
+            m_extendController.calculate(getLengthMeters(), lengthMeters)
             
             +m_extendController.getSetpoint().velocity
         );
@@ -295,7 +301,7 @@ public class ArmS extends SubsystemBase implements Loggable {
     private final SparkMaxAbsoluteEncoderWrapper m_pivotEncoderWrapper = new SparkMaxAbsoluteEncoderWrapper(m_pivotMotor, 0);
 
     private LinearSystem<N2, N1, N1> m_pivotPlant = LinearSystemId.createSingleJointedArmSystem(
-        DCMotor.getNEO(2),  1.0 / 3.0 * ARM_MASS_KILOS * MIN_ARM_LENGTH * MIN_ARM_LENGTH
+        DCMotor.getNEO(2),  ARM_MOI_SHRUNK
         , 1.0/ARM_ROTATIONS_PER_MOTOR_ROTATION);
 
     private DCMotor m_pivotGearbox = DCMotor.getNEO(1);
@@ -304,7 +310,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         = new LinearPlantInversionFeedforward<>(m_pivotPlant, 0.02);
 
     private ProfiledPIDController m_pivotController = new ProfiledPIDController(
-        1, 0, 0, new Constraints(PIVOT_MAX_VELOCITY,PIVOT_MAX_ACCEL));
+        4, 0, 0.00, new Constraints(PIVOT_MAX_VELOCITY,PIVOT_MAX_ACCEL));
 
     private double armStartAngle = PIVOT_ENCODER_OFFSET;
 
@@ -329,7 +335,6 @@ public class ArmS extends SubsystemBase implements Loggable {
         m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 10);
         m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 10);
         m_pivotEncoderWrapper.setSimPosition(PIVOT_ENCODER_OFFSET / (2 * Math.PI));
-
 
         m_pivotController.reset(getContinuousRangeAngle());
         m_pivotController.setTolerance(0.05, 0.05);
@@ -452,11 +457,12 @@ public class ArmS extends SubsystemBase implements Loggable {
      */
 
     public void setPivotVelocity(double velocityRadPerSec) {
+        var currentVoltageAdd = (getPivotkG() * getAngle().getCos())
+        + PIVOT_KS * Math.signum(velocityRadPerSec);
         setPivotVolts(m_pivotFeedForward.calculate(
             VecBuilder.fill(0, velocityRadPerSec))
             .get(0,0)
-            + (getPivotkG() * getAngle().getCos())
-            + PIVOT_KS * Math.signum(velocityRadPerSec));
+            + currentVoltageAdd);
         //SmartDashboard.putNumber("armCommandVelocity", velocityRadPerSec);
     }
 
@@ -496,8 +502,17 @@ public class ArmS extends SubsystemBase implements Loggable {
         return result;
     }
 
+    @Log
+    public double getPivotCurrent() {
+        return m_pivotMotor.getOutputCurrent();
+    }
+
     public Command goToPositionC(ArmPosition position) {
         return new GoToPositionC(this, ()->position);
+    }
+
+    public Command goToPositionIndefiniteC(ArmPosition position) {
+        return new GoToPositionC(this, ()->position, false);
     }
 
     public Command holdPositionC(){
@@ -677,6 +692,9 @@ public class ArmS extends SubsystemBase implements Loggable {
     // }
     public Command stowC() {
         return new GoToPositionC(this, ()->STOW_POSITION);
+    }
+    public Command stowIndefiniteC() {
+        return new GoToPositionC(this, ()->STOW_POSITION, false);
     }
 
     public Command followJointSpaceTargetC() {

@@ -38,7 +38,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
   private final DoubleSolenoid doubleSolenoid = new DoubleSolenoid(PneumaticsModuleType.REVPH, 
     Constants.IntakeConstants.INTAKE_EXTEND, Constants.IntakeConstants.INTAKE_RETRACT);
   private Trigger cubeDebouncedBeamBreak = new Trigger(this::hitBeamBreak).debounce(0.06);
-  private Trigger coneDebouncedBeamBreak = new Trigger(this::hitBeamBreak).debounce(0.2);
+  private Trigger coneDebouncedBeamBreak = new Trigger(this::hitBeamBreak);//.debounce(0.0);
     /** Creates a new IntakeS. */
   public IntakeS() {
     m_beamBreak.enableLimitSwitch(false);
@@ -223,7 +223,8 @@ public class IntakeS extends SubsystemBase implements Loggable {
   public Command intakeUntilBeamBreakC() {
     return intakeC().until(()->{
       return doubleSolenoid.get() == Value.kForward ? 
-      cubeDebouncedBeamBreak.getAsBoolean() : coneDebouncedBeamBreak.getAsBoolean();});
+      cubeDebouncedBeamBreak.getAsBoolean() : coneDebouncedBeamBreak.getAsBoolean();})
+      .andThen(intakeC().withTimeout(0.3));
     
   }
 

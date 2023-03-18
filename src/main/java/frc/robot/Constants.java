@@ -197,7 +197,7 @@ public class Constants {
 
         public static final double ARM_MASS_KILOS = Units.lbsToKilograms(21.1);
 
-        public static final double ARM_MOI_SHRUNK = 0.5042181229;
+        public static final double ARM_MOI_SHRUNK = 0.7975;
         
         public static final int PIVOT_MOTOR_ID = 22;
         public static final int PIVOT_FOLLOWER_MOTOR_ID = 23;
@@ -206,7 +206,7 @@ public class Constants {
         public static final double ARM_PIVOT_KG_MAX_EXTEND = 1;//0.13 / Math.cos(0.707);//2.872 * (ARM_ROTATIONS_PER_MOTOR_ROTATION * 400) / 2 / Math.cos(Units.degreesToRadians(10.5));
 
         public static final double PIVOT_MAX_VELOCITY = 2.38; // rad/s
-        public static final double PIVOT_MAX_ACCEL = 5.0; //rad/s/s
+        public static final double PIVOT_MAX_ACCEL = 5; //rad/s/s
 
         /* WRIST/HAND */
 
@@ -240,7 +240,7 @@ public class Constants {
             Units.inchesToMeters(9.4));
         public static final ArmPosition STOW_POSITION = new ArmPosition(
             Units.degreesToRadians(66),
-            MIN_ARM_LENGTH + Units.inchesToMeters(0.125),
+            MIN_ARM_LENGTH + Units.inchesToMeters(1),
             WRIST_MAX_ANGLE - Units.degreesToRadians(5),
             Units.inchesToMeters(9.4));
         public static final ArmPosition GROUND_CUBE_INTAKE_POSITION = new ArmPosition(

@@ -132,13 +132,13 @@ public class RobotContainer {
         m_driverController.b().toggleOnTrue(
             Commands.sequence(
                 m_intakeS.outtakeC().withTimeout(0.5),
-                m_armS.stowC()
+                m_armS.stowIndefiniteC()
             )
             );
         //m_driverController.back().onTrue(m_intakeS.retractC());
         // OFFICIAL CALEB PREFERENCE
         m_driverController.y().toggleOnTrue(armIntakeCG(ArmConstants.OVERTOP_CONE_INTAKE_POSITION, false));
-        m_driverController.x().onTrue(m_armS.stowC());
+        m_driverController.x().onTrue(m_armS.stowIndefiniteC());
 
 
 
@@ -206,12 +206,14 @@ public class RobotContainer {
         Commands.sequence(
             Commands.deadline(
                 m_intakeS.setGamePieceC(()->isCube).andThen(m_intakeS.intakeUntilBeamBreakC()),
-                m_armS.goToPositionC(position).andThen(new HoldCurrentPositionC(m_armS))
+                m_armS.goToPositionIndefiniteC(position)
 
             ),
-            m_armS.stowC()
+            m_armS.stowIndefiniteC()
         );
     }
+
+    
 
     public Command armIntakeSelectedCG(ArmPosition cubePosition, ArmPosition conePosition, BooleanSupplier isCube) {
         return Commands.either(

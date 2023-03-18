@@ -27,6 +27,7 @@ public class GoToPositionC extends CommandBase {
   private Supplier<ArmPosition> m_positionSupplier;
   private double maxRotateLength = 0.64;
   private int currentTarget = 0;
+  private boolean m_shouldFinish = true;
   /** Creates a new GoToPositionC. */
   public GoToPositionC(ArmS armS, Supplier<ArmPosition> positionSupplier) {
     m_armS = armS;
@@ -35,6 +36,13 @@ public class GoToPositionC extends CommandBase {
     // addCommands(new FooCommand(), new BarCommand());
     addRequirements(m_armS);
   }
+
+  public GoToPositionC(ArmS armS, Supplier<ArmPosition> positionSupplier, boolean shouldEnd) {
+    this(armS, positionSupplier);
+    m_shouldFinish = shouldEnd;
+  }
+
+
 
   private double limitLength(double length) {
     return MathUtil.clamp(length, length, length);
@@ -126,7 +134,7 @@ public class GoToPositionC extends CommandBase {
       && Math.abs(m_targetPosition.pivotRadians - actualPosition.pivotRadians) < Units.degreesToRadians(1)
       && Math.abs(m_targetPosition.wristRadians - actualPosition.wristRadians) < Units.degreesToRadians(5)
     );
-    return atSetpoint;
+    return atSetpoint && m_shouldFinish;
   }
   private boolean isAtSetpoint (ArmPosition setpoint) {
     
