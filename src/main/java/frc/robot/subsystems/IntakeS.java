@@ -35,9 +35,11 @@ public class IntakeS extends SubsystemBase implements Loggable {
   private final CANSparkMax intakeMotor = new CANSparkMax(Constants.IntakeConstants.INTAKE_CAN_ID, MotorType.kBrushless);
   private final CANSparkMax intakeFollowerMotor = new CANSparkMax(Constants.IntakeConstants.INTAKE_FOLLOWER_CAN_ID, MotorType.kBrushless);
   private final SparkMaxLimitSwitch m_beamBreak = intakeFollowerMotor.getReverseLimitSwitch(Type.kNormallyClosed);
+  @Log
+  private boolean isExtended = false;
   private final DoubleSolenoid doubleSolenoid = new DoubleSolenoid(PneumaticsModuleType.REVPH, 
     Constants.IntakeConstants.INTAKE_EXTEND, Constants.IntakeConstants.INTAKE_RETRACT);
-  private Trigger cubeDebouncedBeamBreak = new Trigger(this::hitBeamBreak).debounce(0.06);
+  private Trigger cubeDebouncedBeamBreak = new Trigger(this::hitBeamBreak);//.debounce(0.06);
   private Trigger coneDebouncedBeamBreak = new Trigger(this::hitBeamBreak);//.debounce(0.0);
     /** Creates a new IntakeS. */
   public IntakeS() {
@@ -66,7 +68,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
   }
 
   public double getHandLength() {
-    if (doubleSolenoid.get() == Value.kForward) {
+    if (isExtended) {
       return Units.inchesToMeters(16);
     }
     else {
@@ -106,6 +108,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
 
   public void extend() {
     doubleSolenoid.set(Value.kForward);
+    isExtended = true;
   }
 
   /**
@@ -114,10 +117,12 @@ public class IntakeS extends SubsystemBase implements Loggable {
 
   public void retract() {
     doubleSolenoid.set(Value.kReverse);
+    isExtended = false;
   }
 
   public void setGamePiece(boolean isCube) {
     doubleSolenoid.set(isCube? Value.kForward : Value.kReverse);
+    isExtended = isCube;
   }
 
   /**
@@ -126,6 +131,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
 
   public void toggle() {
     doubleSolenoid.toggle();
+    isExtended = !isExtended;
   }
 
   /**
@@ -142,7 +148,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
   }
 
   public boolean isExtended() {
-    return doubleSolenoid.get() == Value.kForward;
+    return isExtended;
   }
 
   /**
@@ -222,9 +228,9 @@ public class IntakeS extends SubsystemBase implements Loggable {
 
   public Command intakeUntilBeamBreakC() {
     return intakeC().until(()->{
-      return doubleSolenoid.get() == Value.kForward ? 
+      return isExtended ? 
       cubeDebouncedBeamBreak.getAsBoolean() : coneDebouncedBeamBreak.getAsBoolean();})
-      .andThen(intakeC().withTimeout(0.3));
+      .andThen(intakeC().withTimeout(isExtended ? 0.1 : 0.3));
     
   }
 

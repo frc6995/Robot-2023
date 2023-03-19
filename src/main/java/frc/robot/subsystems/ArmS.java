@@ -70,7 +70,6 @@ import io.github.oblarg.oblog.annotations.Log;
 public class ArmS extends SubsystemBase implements Loggable {
     
     public final Field2d VISUALIZER = new Field2d();
-    public ArmConstraints constraints = new ArmConstraints(VISUALIZER);
     private Supplier<Double> handLengthSupplier;
     //public ArmConstraintsManager setpointManager = new ArmConstraintsManager(VISUALIZER);
     public ArmS(Supplier<Double> handLengthSupplier) {
@@ -101,10 +100,17 @@ public class ArmS extends SubsystemBase implements Loggable {
     }
 
     public double constrainLength(double length) {
-        return constraints.constrainLength(length, getContinuousRangeAngle());
+        return constrainLength(length, getContinuousRangeAngle());
     }
     public double constrainLength(double length, double angle) {
-        return constraints.constrainLength(length, angle);
+        return Math.max(getMinLength(angle), length);
+    }
+
+    public double getMinLength(double angle) {
+        if (angle < 0 || angle > Math.PI) {
+            return 0.610;
+        }
+        return MIN_ARM_LENGTH + Units.inchesToMeters(0.125);
     }
 
     public void periodic() {    

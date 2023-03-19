@@ -34,10 +34,11 @@ public class LightS {
     Disabled(LED_BOUNCE_GREEN), // set in robotPeriodic
     Error(LED_LIGHT_CHASE_RED),
     Climbing(LED_PARTY_MODE), // set through triggers in RobotContainer
-    RequestingCube(LED_SOLID_VIOLET),
-    RequestingCone(LED_SOLID_YELLOW),
     IntakedCone(LED_STROBE_GOLD),
     IntakedCube(LED_STROBE_GOLD),
+    RequestingCube(LED_SOLID_VIOLET),
+    RequestingCone(LED_SOLID_YELLOW),
+
     Scoring(LED_SINELON_OCEAN),
     Default(LED_SINELON_OCEAN);
 

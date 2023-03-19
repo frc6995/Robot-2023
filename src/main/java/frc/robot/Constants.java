@@ -230,13 +230,18 @@ public class Constants {
             Units.inchesToMeters(9.4));
         public static final ArmPosition SCORE_HIGH_CUBE_POSITION = new ArmPosition(
         0.658 - Units.degreesToRadians(10),
-        1.429,
-        (Math.PI/2)-0.7,
+        1.2,
+        (Math.PI/2)-1,
         Units.inchesToMeters(9.4));
         public static final ArmPosition SCORE_MID_CONE_POSITION = new ArmPosition(
             0.74,
             1.082,
             -0.74,
+            Units.inchesToMeters(9.4));
+        public static final ArmPosition SCORE_MID_CUBE_POSITION = new ArmPosition(
+            0.658 - Units.degreesToRadians(15),
+            0.75,
+            (Math.PI/2)-1,
             Units.inchesToMeters(9.4));
         public static final ArmPosition STOW_POSITION = new ArmPosition(
             Units.degreesToRadians(66),
@@ -286,21 +291,21 @@ public class Constants {
             Units.inchesToMeters(9.4)
         );
         public static final ArmPosition OVERTOP_CONE_INTAKE_POSITION = new ArmPosition(
-            3.50,
+            3.5,
             0.628,
             1.400,
             Units.inchesToMeters(9.4)
         );
-        public static final ArmPosition HYBRID_NODE_OUTTAKE_POSITION = new ArmPosition(
-            Units.degreesToRadians(66),
-            MIN_ARM_LENGTH + Units.inchesToMeters(0.125),
-            Units.degreesToRadians(0),
-            Units.inchesToMeters(9.4));
+        // public static final ArmPosition HYBRID_NODE_OUTTAKE_POSITION = new ArmPosition(
+        //     Units.degreesToRadians(66),
+        //     MIN_ARM_LENGTH + Units.inchesToMeters(0.125),
+        //     Units.degreesToRadians(-15),
+        //     Units.inchesToMeters(9.4));
 
         public static final ArmPosition SCORE_HYBRID_POSITION = new ArmPosition(
             Units.degreesToRadians(66),
             MIN_ARM_LENGTH + Units.inchesToMeters(0.125),
-            0,
+            Units.degreesToRadians(-50),
             Units.inchesToMeters(9.4));
 
         

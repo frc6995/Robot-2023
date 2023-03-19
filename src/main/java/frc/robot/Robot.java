@@ -29,9 +29,9 @@ public class Robot extends TimedRobot {
     @Override
     public void robotInit() {
         Robot.isSimulation = RobotBase.isSimulation();
-        DriverStation.silenceJoystickConnectionWarning(true);
-        DataLogManager.start();
-        DriverStation.startDataLog(DataLogManager.getLog());
+        // DriverStation.silenceJoystickConnectionWarning(true);
+        // DataLogManager.start();
+        // DriverStation.startDataLog(DataLogManager.getLog());
         LiveWindow.disableAllTelemetry();
         robotContainer = new RobotContainer();
         Logger.configureLoggingAndConfig(robotContainer, false);
@@ -70,8 +70,12 @@ public class Robot extends TimedRobot {
     }
 
     @Override
-    public void disabledPeriodic() {
+    public void disabledInit() {
         CommandScheduler.getInstance().cancelAll();
+    }
+    @Override
+    public void disabledPeriodic() {
+        
     }
 
     public static boolean isSimulation() {

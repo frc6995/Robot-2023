@@ -81,7 +81,7 @@ public class GoToPositionC extends CommandBase {
     {
       // Step 1, get within the safe length interval for rotating. If we can get to the target length, do it.
       double targetLength = m_targetPosition.armLength;
-      double minStartLength = m_armS.constraints.getMinLength(m_startPosition.pivotRadians);
+      double minStartLength = m_armS.getMinLength(m_startPosition.pivotRadians);
       double firstRetractLength = m_startPosition.armLength;
       // if (firstRetractLength > maxRotateLength) {
       //   firstRetractLength = maxRotateLength;

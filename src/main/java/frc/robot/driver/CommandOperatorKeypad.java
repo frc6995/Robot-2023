@@ -91,29 +91,35 @@ public class CommandOperatorKeypad {
         return key(Button.kEnterKey);
     }
 
-
+    public Command setpointCommand(int columnInGrid, int row) {
+        return setpointCommand(()->POIManager.ownCommunity().get(columnInGrid),
+        ()->{
+            if (row == 2 && columnInGrid %3 == 1) {
+                return Constants.ArmConstants.SCORE_HIGH_CUBE_POSITION;
+            }
+            else if (row == 2 && columnInGrid %3 != 1) {
+                return Constants.ArmConstants.SCORE_HIGH_CONE_POSITION;
+            }
+            else if (row == 1 && columnInGrid %3 == 1) {
+                return Constants.ArmConstants.SCORE_MID_CUBE_POSITION;
+            }
+            else if (row == 1 && columnInGrid %3 != 1) {
+                return Constants.ArmConstants.SCORE_MID_CONE_POSITION;
+            }
+            else {
+                return Constants.ArmConstants.SCORE_HYBRID_POSITION;
+            }
+        },
+        ()->{
+            return (row == 0 || columnInGrid % 3 == 1);
+        },
+            ((row) * 9) + columnInGrid
+        );
+    }
     private void setupTrigger(Trigger grid, Button position, int columnInGrid, int row) {
         grid.and(key(position)).onTrue(
-            setpointCommand(()->POIManager.ownCommunity().get(columnInGrid),
-            ()->{
-                if (row == 2 && columnInGrid %3 == 1) {
-                    return Constants.ArmConstants.SCORE_HIGH_CUBE_POSITION;
-                }
-                else if (row == 2 && columnInGrid %3 != 1) {
-                    return Constants.ArmConstants.SCORE_HIGH_CONE_POSITION;
-                }
-                else if (row == 1) {
-                    return Constants.ArmConstants.SCORE_MID_CONE_POSITION;
-                }
-                else {
-                    return Constants.ArmConstants.SCORE_HYBRID_POSITION;
-                }
-            },
-            ()->{
-                return (row == 0 || columnInGrid % 3 == 1);
-            },
-                ((row) * 9) + columnInGrid
-            ));
+            setpointCommand(columnInGrid, row));
+            
     }
     private Trigger key(Button key) {
         return m_hid.button(key.value, CommandScheduler.getInstance().getDefaultButtonLoop()).castTo(Trigger::new);

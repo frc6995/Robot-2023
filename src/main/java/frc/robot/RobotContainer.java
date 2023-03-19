@@ -54,7 +54,7 @@ public class RobotContainer {
      * Establishes the controls and subsystems of the robot
      */
     private final CommandXboxController m_driverController = new CommandXboxController(InputDevices.GAMEPAD_PORT);
-    private final CommandXboxController m_operatorController = new CommandXboxController(1);
+    //private final CommandXboxController m_operatorController = new CommandXboxController(1);
     private final CommandOperatorKeypad m_keypad;
     private final DrivebaseS m_drivebaseS = new DrivebaseS();
     
@@ -64,8 +64,8 @@ public class RobotContainer {
 
     @Log
     private final Field2d m_field = new Field2d();
-    @Log
-    private final Field3d m_field3d = new Field3d();
+    // @Log
+    // private final Field3d m_field3d = new Field3d();
     private final FieldObject2d m_target = m_field.getObject("target");
 
     private ArmPosition m_targetArmPosition = ArmConstants.STOW_POSITION;
@@ -79,6 +79,7 @@ public class RobotContainer {
             m_targetAlignmentPose = pose;
             m_field.getObject("Selection").setPose(pose);
         }, (position)->{m_targetArmPosition = position;}, (selectedCube)->{m_isCubeSelected = selectedCube;});
+        m_keypad.setpointCommand(0, 0).schedule();
         m_target.setPose(new Pose2d(1.909, 1.072, Rotation2d.fromRadians(Math.PI)));
         
         
@@ -156,7 +157,16 @@ public class RobotContainer {
 
         m_keypad.stow().onTrue(m_intakeS.intakeC().withTimeout(0.25));
         m_keypad.enter().toggleOnTrue(
-            new GoToPositionC(m_armS, ()->m_targetArmPosition)
+            sequence(
+                new GoToPositionC(m_armS, ()->m_targetArmPosition),
+                either(
+                    sequence(
+                        m_intakeS.outtakeC().withTimeout(0.4),
+                        m_armS.stowC()
+                    ),
+                none(), 
+                ()->m_isCubeSelected)
+            )
             .deadlineWith(Commands.run(()->LightS.getInstance().requestState(States.Scoring)))
         );
     
@@ -188,8 +198,8 @@ public class RobotContainer {
         /* Trace the loop duration and plot to shuffleboard */
         LightS.getInstance().periodic();
         m_drivebaseS.drawRobotOnField(m_field);
-        m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
-        m_field3d.setRobotPose(new Pose3d(m_drivebaseS.getPose().getX(), m_drivebaseS.getPose().getY(), 0, m_drivebaseS.getRotation3d()));
+        //m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
+        ///]m_field3d.setRobotPose(new Pose3d(m_drivebaseS.getPose().getX(), m_drivebaseS.getPose().getY(), 0, m_drivebaseS.getRotation3d()));
     }
 
     public void onEnabled(){
