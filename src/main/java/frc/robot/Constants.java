@@ -243,6 +243,11 @@ public class Constants {
             0.75,
             (Math.PI/2)-1,
             Units.inchesToMeters(9.4));
+        public static final ArmPosition RETRACTED_SCORE_CONE_POSITION = new ArmPosition(
+            0.658,
+            0.611,
+            0,
+            Units.inchesToMeters(9.4));
         public static final ArmPosition STOW_POSITION = new ArmPosition(
             Units.degreesToRadians(66),
             MIN_ARM_LENGTH + Units.inchesToMeters(1),

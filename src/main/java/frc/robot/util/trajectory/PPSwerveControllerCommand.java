@@ -246,11 +246,11 @@ public class PPSwerveControllerCommand extends CommandBase {
 
     SecondOrderChassisSpeeds targetChassisSpeeds = this.controller.calculate(currentPose, desiredState);
 
-    var alpha = ( 
-    ((PathPlannerState) this.trajectory.sample(currentTime + 0.01)).holonomicAngularVelocityRadPerSec
-    - desiredState.holonomicAngularVelocityRadPerSec) / 0.01;
+    // var alpha = ( 
+    // ((PathPlannerState) this.trajectory.sample(currentTime + 0.01)).holonomicAngularVelocityRadPerSec
+    // - desiredState.holonomicAngularVelocityRadPerSec) / 0.01;
 
-    targetChassisSpeeds.alphaRadiansPerSecondSq = alpha;
+    // targetChassisSpeeds.alphaRadiansPerSecondSq = alpha;
     if (this.useKinematics) {
       SecondOrderSwerveModuleState[] targetModuleStates =
           this.kinematics.toSwerveModuleStates(targetChassisSpeeds);

@@ -52,6 +52,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
 import frc.robot.subsystems.LightS.States;
+import frc.robot.POIManager;
 import frc.robot.Robot;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.VisionConstants;
@@ -137,8 +138,11 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         m_navx.reset();
         
         m_poseEstimator =
-        new SwerveDrivePoseEstimator(m_kinematics, getHeading(), getModulePositions(), new Pose2d());
-        m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(0.9, 0.9, 10));
+        new SwerveDrivePoseEstimator(
+            m_kinematics, getHeading(), getModulePositions(), new Pose2d(),
+            VecBuilder.fill(0.1, 0.1, 10),
+            VecBuilder.fill(0.9, 0.9, 0.9));
+        m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(0.9, 0.9, 0.01));
         m_thetaController.setTolerance(Units.degreesToRadians(2));
         m_thetaController.enableContinuousInput(-Math.PI, Math.PI);
         m_profiledThetaController.setTolerance(Units.degreesToRadians(2));
@@ -148,7 +152,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         m_camera1Wrapper = new PhotonCameraWrapper(VisionConstants.CAM_1_NAME, VisionConstants.robotToCam1);
         m_camera2Wrapper = new PhotonCameraWrapper(VisionConstants.CAM_2_NAME, VisionConstants.robotToCam2);
         
-        resetPose(new Pose2d(1.835, 1.072, Rotation2d.fromRadians(Math.PI)));
+        //resetPose(POIManager.mirrorPose(new Pose2d(1.835, 1.072, Rotation2d.fromRadians(Math.PI))));
     }
 
     public Rotation3d getRotation3d() {

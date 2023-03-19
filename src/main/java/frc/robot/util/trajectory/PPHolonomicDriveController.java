@@ -102,7 +102,7 @@ public class PPHolonomicDriveController {
     if (!this.isEnabled) {
       return 
       
-        SecondOrderChassisSpeeds.fromFieldRelativeSpeeds(xFF, yFF, rotationFF, xAccel, yAccel, 0, currentPose.getRotation());
+        SecondOrderChassisSpeeds.fromFieldRelativeSpeeds(xFF, yFF, rotationFF, 0, 0, /*xAccel, yAccel,*/ 0, currentPose.getRotation());
     }
 
     double xFeedback =
@@ -114,6 +114,6 @@ public class PPHolonomicDriveController {
             currentPose.getRotation().getRadians(), referenceState.holonomicRotation.getRadians());
 
     return SecondOrderChassisSpeeds.fromFieldRelativeSpeeds(
-        xFF + xFeedback, yFF + yFeedback, rotationFF + rotationFeedback, xAccel, yAccel, 0, currentPose.getRotation());
+        xFF + xFeedback, yFF + yFeedback, rotationFF + rotationFeedback, 0, 0, /*xAccel, yAccel,*/ 0, currentPose.getRotation());
   }
 }
