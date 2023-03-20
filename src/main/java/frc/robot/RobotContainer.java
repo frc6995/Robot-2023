@@ -248,11 +248,7 @@ public class RobotContainer {
             m_intakeS.outtakeC().withTimeout(0.4),
 
             m_armS.goToPositionC(ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT).asProxy(),
-            m_drivebaseS.chasePoseC(()->new Pose2d(
-                POIS.CHARGE_STATION.ownPose().getX(),
-                m_drivebaseS.getPose().getY(),
-                POIS.CHARGE_STATION.ownPose().getRotation())
-            )
+            m_drivebaseS.chargeStationAlignC()
             //m_drivebaseS.chargeStationBatteryFirstC()
         ).finallyDo((end)->m_drivebaseS.drive(new ChassisSpeeds()));
     }
@@ -415,7 +411,7 @@ public class RobotContainer {
                 m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
             ),
 
-            Commands.parallel(
+            Commands.deadline(
                 m_intakeS.intakeUntilBeamBreakC().withTimeout(3),
                 m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
             ),
@@ -423,22 +419,27 @@ public class RobotContainer {
 
             Commands.parallel(
                 m_intakeS.intakeC().withTimeout(0.1),
-                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
+                m_armS.goToPositionC(ArmConstants.RETRACTED_SCORE_CONE_POSITION).asProxy().withTimeout(3),
                 m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
             ),
 
-            Commands.parallel(
+            Commands.deadline(
+                m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
                 m_intakeS.intakeC().withTimeout(0.1),
-                m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3)
+                
+                m_drivebaseS.chasePoseC(()->POIManager.ownCommunity().get(AllianceWrapper.getAlliance() == Alliance.Red ? 2 : 6))
             ),
 
             m_intakeS.outtakeC().withTimeout(0.4),
 
             Commands.parallel(
-                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(3)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
-            )//,
-
+                m_armS.goToPositionC(ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT).asProxy().withTimeout(3),
+                sequence(
+                    m_drivebaseS.pathPlannerCommand(pathGroup.get(3)),
+                    m_drivebaseS.chargeStationAlignC()
+                )
+                
+            )
             //m_drivebaseS.chargeStationBatteryFirstC()
 
         );

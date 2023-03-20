@@ -10,11 +10,11 @@ import com.pathplanner.lib.PathPlannerTrajectory.PathPlannerState;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.DrivebaseS;
-import frc.robot.util.drive.SecondOrderChassisSpeeds;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -47,7 +47,7 @@ public class PPChasePoseCommand extends CommandBase implements Loggable {
     private PathPlannerTrajectory m_trajectory;
     private final Supplier<Pose2d> m_pose;
     private final PPHolonomicDriveController m_controller;
-    private final Consumer<SecondOrderChassisSpeeds> m_outputChassisSpeedsRobotRelative;
+    private final Consumer<ChassisSpeeds> m_outputChassisSpeedsRobotRelative;
     private final Consumer<PathPlannerTrajectory> m_outputTrajectory;
     private final BiFunction<Pose2d, Pose2d, PathPlannerTrajectory> m_trajectoryGenerator;
     private Pose2d m_lastRegenTarget;
@@ -67,7 +67,7 @@ public class PPChasePoseCommand extends CommandBase implements Loggable {
         Supplier<Pose2d> targetPose,
         Supplier<Pose2d> pose,
         PPHolonomicDriveController driveController,
-        Consumer<SecondOrderChassisSpeeds> outputChassisSpeedsFieldRelative,
+        Consumer<ChassisSpeeds> outputChassisSpeedsFieldRelative,
         Consumer<PathPlannerTrajectory> trajectoryDebugOutput,
         BiFunction<Pose2d, Pose2d, PathPlannerTrajectory> trajectoryGenerator,
         DrivebaseS drive) {
@@ -107,7 +107,7 @@ public class PPChasePoseCommand extends CommandBase implements Loggable {
         }
         
         PathPlannerState desiredState;
-        SecondOrderChassisSpeeds targetChassisSpeeds;
+        ChassisSpeeds targetChassisSpeeds;
         // Make sure the trajectory is not empty
         // Make sure it's still time to be following the trajectory.
         if (m_trajectory.getStates().size() != 0 && m_timer.get() < m_trajectory.getTotalTimeSeconds()) {
@@ -119,7 +119,7 @@ public class PPChasePoseCommand extends CommandBase implements Loggable {
             ((PathPlannerState) m_trajectory.sample(curTime + 0.01)).holonomicAngularVelocityRadPerSec
             - desiredState.holonomicAngularVelocityRadPerSec) / 0.01;
 
-            targetChassisSpeeds.alphaRadiansPerSecondSq = alpha;
+            //targetChassisSpeeds.alphaRadiansPerSecondSq = alpha;
         }
         // if the trajectory is empty, or the time is up, just use the holonomic drive controller to hold the pose.
         else {

@@ -9,6 +9,9 @@ import com.pathplanner.lib.server.PathPlannerServer;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -16,19 +19,16 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.util.NomadMathUtil;
-import frc.robot.util.drive.SecondOrderChassisSpeeds;
-import frc.robot.util.drive.SecondOrderSwerveDriveKinematics;
-import frc.robot.util.drive.SecondOrderSwerveModuleState;
 
 /** Custom PathPlanner version of SwerveControllerCommand */
 public class PPSwerveControllerCommand extends CommandBase {
   private final Timer timer = new Timer();
   private final PathPlannerTrajectory trajectory;
   private final Supplier<Pose2d> poseSupplier;
-  private final SecondOrderSwerveDriveKinematics kinematics;
+  private final SwerveDriveKinematics kinematics;
   private final PPHolonomicDriveController controller;
-  private final Consumer<SecondOrderSwerveModuleState[]> outputModuleStates;
-  private final Consumer<SecondOrderChassisSpeeds> outputChassisSpeeds;
+  private final Consumer<SwerveModuleState[]> outputModuleStates;
+  private final Consumer<ChassisSpeeds> outputChassisSpeeds;
   private final boolean useKinematics;
   private final boolean useAllianceColor;
   private final Field2d field = new Field2d();
@@ -59,7 +59,7 @@ public class PPSwerveControllerCommand extends CommandBase {
       PIDController xController,
       PIDController yController,
       PIDController rotationController,
-      Consumer<SecondOrderChassisSpeeds> outputChassisSpeeds,
+      Consumer<ChassisSpeeds> outputChassisSpeeds,
       boolean useAllianceColor,
       Subsystem... requirements) {
     this.trajectory = trajectory;
@@ -105,7 +105,7 @@ public class PPSwerveControllerCommand extends CommandBase {
       PIDController xController,
       PIDController yController,
       PIDController rotationController,
-      Consumer<SecondOrderChassisSpeeds> outputChassisSpeeds,
+      Consumer<ChassisSpeeds> outputChassisSpeeds,
       Subsystem... requirements) {
     this(
         trajectory,
@@ -142,11 +142,11 @@ public class PPSwerveControllerCommand extends CommandBase {
   public PPSwerveControllerCommand(
       PathPlannerTrajectory trajectory,
       Supplier<Pose2d> poseSupplier,
-      SecondOrderSwerveDriveKinematics kinematics,
+      SwerveDriveKinematics kinematics,
       PIDController xController,
       PIDController yController,
       PIDController rotationController,
-      Consumer<SecondOrderSwerveModuleState[]> outputModuleStates,
+      Consumer<SwerveModuleState[]> outputModuleStates,
       boolean useAllianceColor,
       Subsystem... requirements) {
     this.trajectory = trajectory;
@@ -190,11 +190,11 @@ public class PPSwerveControllerCommand extends CommandBase {
   public PPSwerveControllerCommand(
       PathPlannerTrajectory trajectory,
       Supplier<Pose2d> poseSupplier,
-      SecondOrderSwerveDriveKinematics kinematics,
+      SwerveDriveKinematics kinematics,
       PIDController xController,
       PIDController yController,
       PIDController rotationController,
-      Consumer<SecondOrderSwerveModuleState[]> outputModuleStates,
+      Consumer<SwerveModuleState[]> outputModuleStates,
       Subsystem... requirements) {
     this(
         trajectory,
@@ -244,7 +244,7 @@ public class PPSwerveControllerCommand extends CommandBase {
         "PPSwerveControllerCommand_rotationError",
         currentPose.getRotation().getRadians() - desiredState.holonomicRotation.getRadians());*/
 
-    SecondOrderChassisSpeeds targetChassisSpeeds = this.controller.calculate(currentPose, desiredState);
+    ChassisSpeeds targetChassisSpeeds = this.controller.calculate(currentPose, desiredState);
 
     // var alpha = ( 
     // ((PathPlannerState) this.trajectory.sample(currentTime + 0.01)).holonomicAngularVelocityRadPerSec
@@ -252,7 +252,7 @@ public class PPSwerveControllerCommand extends CommandBase {
 
     // targetChassisSpeeds.alphaRadiansPerSecondSq = alpha;
     if (this.useKinematics) {
-      SecondOrderSwerveModuleState[] targetModuleStates =
+      SwerveModuleState[] targetModuleStates =
           this.kinematics.toSwerveModuleStates(targetChassisSpeeds);
 
       this.outputModuleStates.accept(targetModuleStates);
@@ -268,9 +268,9 @@ public class PPSwerveControllerCommand extends CommandBase {
     if (interrupted) {
       if (useKinematics) {
         this.outputModuleStates.accept(
-            this.kinematics.toSwerveModuleStates(new SecondOrderChassisSpeeds()));
+            this.kinematics.toSwerveModuleStates(new ChassisSpeeds()));
       } else {
-        this.outputChassisSpeeds.accept(new SecondOrderChassisSpeeds());
+        this.outputChassisSpeeds.accept(new ChassisSpeeds());
       }
     }
   }
