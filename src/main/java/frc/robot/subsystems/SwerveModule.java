@@ -32,7 +32,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
 import frc.robot.util.TimingTracer;
-import frc.robot.util.drive.SecondOrderSwerveModuleState;
+
 import frc.robot.util.sim.SparkMaxAbsoluteEncoderWrapper;
 import frc.robot.util.sim.SparkMaxEncoderWrapper;
 import io.github.oblarg.oblog.Loggable;
@@ -244,20 +244,13 @@ public class SwerveModule extends SubsystemBase implements Loggable{
      * SwerveModuleState object that holds a desired linear and rotational setpoint
      * Uses PID and a feedforward to control the output
      */
+
+
     public void setDesiredStateClosedLoop(SwerveModuleState desiredState) {
 
         // Save the desired state for reference (Simulation assumes the modules always are at the desired state)
-        setDesiredStateClosedLoop(
-            new SecondOrderSwerveModuleState(
-                desiredState.speedMetersPerSecond, desiredState.angle,
-                0, 0));
-    }
-
-    public void setDesiredStateClosedLoop(SecondOrderSwerveModuleState desiredState) {
-
-        // Save the desired state for reference (Simulation assumes the modules always are at the desired state)
         
-        desiredState = SecondOrderSwerveModuleState.optimize(desiredState, getMagEncoderAngle());
+        desiredState = SwerveModuleState.optimize(desiredState, getMagEncoderAngle());
         
         double goal = desiredState.angle.getRadians();
         double measurement = getMagEncoderAngle().getRadians();
@@ -265,7 +258,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         double prevSpeedSetpoint = m_drivePIDController.getSetpoint();        
         double driveVolts = m_drivePIDController.calculate(getCurrentVelocityMetersPerSecond(), desiredState.speedMetersPerSecond)
         //+ m_driveFeedForward.calculate(prevSpeedSetpoint, desiredState.speedMetersPerSecond, TimingTracer.getLoopTime());
-        +  m_driveFeedForward.calculate(desiredState.speedMetersPerSecond, desiredState.accelerationMetersPerSecondSquared);
+        +  m_driveFeedForward.calculate(desiredState.speedMetersPerSecond);
 
         m_steerMotor.setVoltage(rotationVolts);
         m_driveMotor.setVoltage(driveVolts);

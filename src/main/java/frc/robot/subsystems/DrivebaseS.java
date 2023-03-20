@@ -51,6 +51,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
+import frc.robot.POIManager.POIS;
 import frc.robot.subsystems.LightS.States;
 import frc.robot.POIManager;
 import frc.robot.Robot;
@@ -58,9 +59,6 @@ import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.util.AllianceWrapper;
 import frc.robot.util.NomadMathUtil;
-import frc.robot.util.drive.SecondOrderChassisSpeeds;
-import frc.robot.util.drive.SecondOrderSwerveDriveKinematics;
-import frc.robot.util.drive.SecondOrderSwerveModuleState;
 import frc.robot.util.sim.SimGyroSensorModel;
 import frc.robot.util.sim.wpiClasses.QuadSwerveSim;
 import frc.robot.util.sim.wpiClasses.SwerveModuleSim;
@@ -87,7 +85,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         new ProfiledPIDController(3, 0, 0, new Constraints(2*Math.PI, 4*Math.PI));
     public final PPHolonomicDriveController m_holonomicDriveController = new PPHolonomicDriveController(m_xController, m_yController, m_thetaController);
 
-    private final SwerveDriveKinematics m_kinematics = new SecondOrderSwerveDriveKinematics(
+    private final SwerveDriveKinematics m_kinematics = new SwerveDriveKinematics(
         ModuleConstants.FL.centerOffset,
         ModuleConstants.FR.centerOffset,
         ModuleConstants.BL.centerOffset,
@@ -140,7 +138,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         m_poseEstimator =
         new SwerveDrivePoseEstimator(
             m_kinematics, getHeading(), getModulePositions(), new Pose2d(),
-            VecBuilder.fill(0.1, 0.1, 10),
+            VecBuilder.fill(0.1, 0.1, 0.1),
             VecBuilder.fill(0.9, 0.9, 0.9));
         m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(0.9, 0.9, 0.01));
         m_thetaController.setTolerance(Units.degreesToRadians(2));
@@ -188,12 +186,8 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         // update the odometry every 20ms
         m_poseEstimator.update(getHeading(), getModulePositions());
     }
-    
-    public void drive(ChassisSpeeds speeds) {
-        drive(new SecondOrderChassisSpeeds(speeds));
-    }
 
-    public void drive(SecondOrderChassisSpeeds speeds) {
+    public void drive(ChassisSpeeds speeds) {
         // use kinematics (wheel placements) to convert overall robot state to array of individual module states
         SwerveModuleState[] states;
 
@@ -289,12 +283,6 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      * Uses PID and feedforward control to control the linear and rotational values for the modules
      */
     public void setModuleStates(SwerveModuleState[] moduleStates) {
-        for (int i = 0; i < NUM_MODULES; i++) {
-            m_modules.get(i).setDesiredStateClosedLoop(moduleStates[i]);
-        }
-    }
-
-    public void setModuleStates(SecondOrderSwerveModuleState[] moduleStates) {
         for (int i = 0; i < NUM_MODULES; i++) {
             m_modules.get(i).setDesiredStateClosedLoop(moduleStates[i]);
         }
@@ -632,6 +620,12 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
             this);
     }
 
+    public Command chargeStationAlignC() {
+        return chasePoseC(()->new Pose2d(
+                POIS.CHARGE_STATION.ownPose().getX(),
+                getPose().getY(),
+                POIS.CHARGE_STATION.ownPose().getRotation()));
+    }
     public Command chargeStationBatteryFirstC() {
         return Commands.sequence(
             

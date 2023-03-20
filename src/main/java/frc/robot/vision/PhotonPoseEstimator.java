@@ -526,8 +526,9 @@ public class PhotonPoseEstimator {
             // Don't report errors for non-fiducial targets. This could also be resolved by
             // adding -1 to
             // the initial HashSet.
-            if (targetFiducialId == -1) continue;
-            if (target.getBestCameraToTarget().getTranslation().getNorm() > Units.feetToMeters(10)) {
+            if (targetFiducialId < 1 || targetFiducialId > 8) continue;
+        
+            if (target.getBestCameraToTarget().getTranslation().getNorm() > Units.feetToMeters(27)) {
                 continue;
             }
 

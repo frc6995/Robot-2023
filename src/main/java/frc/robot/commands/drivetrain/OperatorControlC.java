@@ -12,7 +12,6 @@ import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.DrivebaseS;
 import frc.robot.util.AllianceWrapper;
 import frc.robot.util.drive.AsymmetricSlewRateLimiter;
-import frc.robot.util.drive.SecondOrderChassisSpeeds;
 
 public class OperatorControlC extends CommandBase {
 
@@ -149,8 +148,8 @@ public class OperatorControlC extends CommandBase {
         if (AllianceWrapper.getAlliance() == Alliance.Red) {
             correctedHeading = correctedHeading.plus(Rotation2d.fromRadians(Math.PI));
         }
-        m_drive.drive(SecondOrderChassisSpeeds.fromFieldRelativeSpeeds(
-            fwdX, fwdY, rot, 0, 0, 0,
+        m_drive.drive(ChassisSpeeds.fromFieldRelativeSpeeds(
+            fwdX, fwdY, rot,
             //Fudge factor here
             correctedHeading
         ));

@@ -1,5 +1,8 @@
 package frc.robot;
 
+import java.io.IOException;
+
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -28,10 +31,17 @@ public class Robot extends TimedRobot {
     private NetworkTableEntry matchTimeEntry = NetworkTableInstance.getDefault().getEntry("/DriverDisplay/matchTime");
     @Override
     public void robotInit() {
+        try{
+            Constants.VisionConstants.TAG_FIELD_LAYOUT = AprilTagFields.k2023ChargedUp.loadAprilTagLayoutField();
+        }
+        catch (IOException e) {
+            
+        }
+        
         Robot.isSimulation = RobotBase.isSimulation();
         // DriverStation.silenceJoystickConnectionWarning(true);
-        // DataLogManager.start();
-        // DriverStation.startDataLog(DataLogManager.getLog());
+        DataLogManager.start();
+        DriverStation.startDataLog(DataLogManager.getLog());
         LiveWindow.disableAllTelemetry();
         robotContainer = new RobotContainer();
         Logger.configureLoggingAndConfig(robotContainer, false);
