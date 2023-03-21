@@ -30,6 +30,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.util.sim.DutyCycleEncoderSim;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
+import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
 import frc.robot.util.TimingTracer;
 
@@ -255,7 +256,8 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         double goal = desiredState.angle.getRadians();
         double measurement = getMagEncoderAngle().getRadians();
         double rotationVolts = m_steerPIDController.calculate(measurement, goal);
-        double prevSpeedSetpoint = m_drivePIDController.getSetpoint();        
+        rotationVolts += 1 * Math.signum(m_steerPIDController.getSetpoint().velocity);
+        double prevSpeedSetpoint = m_drivePIDController.getSetpoint();
         double driveVolts = m_drivePIDController.calculate(getCurrentVelocityMetersPerSecond(), desiredState.speedMetersPerSecond)
         //+ m_driveFeedForward.calculate(prevSpeedSetpoint, desiredState.speedMetersPerSecond, TimingTracer.getLoopTime());
         +  m_driveFeedForward.calculate(desiredState.speedMetersPerSecond);
@@ -306,6 +308,11 @@ public class SwerveModule extends SubsystemBase implements Loggable{
     @Log
     public double getSteerSetpoint() {
         return m_steerPIDController.getSetpoint().position;
+    }
+
+    @Log
+    public double getSteerGoal() {
+        return m_steerPIDController.getGoal().position;
     }
     @Log   
     public double getVelocitySetpoint() {
