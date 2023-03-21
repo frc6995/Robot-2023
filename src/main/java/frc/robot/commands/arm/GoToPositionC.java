@@ -64,9 +64,7 @@ public class GoToPositionC extends CommandBase {
     double rotateLength = 
     MathUtil.clamp(Math.min(m_startPosition.armLength, m_targetPosition.armLength), MIN_ARM_LENGTH, maxRotateLength);
 
-    if (Math.abs(m_startPosition.pivotRadians - m_targetPosition.pivotRadians) > Units.degreesToRadians(10)) {
-      needToRetract = true;
-    }
+
 
     if (Math.abs(m_startPosition.armLength - m_targetPosition.armLength) > Units.inchesToMeters(1)) {
       needToStraighten = true;
@@ -79,27 +77,31 @@ public class GoToPositionC extends CommandBase {
     m_waypoints = new LinkedList<ArmPosition>();
     m_waypoints.add(m_startPosition);
     {
-      // Step 1, get within the safe length interval for rotating. If we can get to the target length, do it.
       double targetLength = m_targetPosition.armLength;
-      double minStartLength = m_armS.getMinLength(m_startPosition.pivotRadians);
-      double firstRetractLength = m_startPosition.armLength;
-      // if (firstRetractLength > maxRotateLength) {
-      //   firstRetractLength = maxRotateLength;
-      // }
-      // if (targetLength < minStartLength) {
-      //   firstRetractLength = minStartLength;
-      // }
-      firstRetractLength = MathUtil.clamp(firstRetractLength, minStartLength, maxRotateLength);
-      targetLength = MathUtil.clamp(targetLength, minStartLength, maxRotateLength);
+      if (Math.abs(m_startPosition.pivotRadians - m_targetPosition.pivotRadians) > 0.15) {
+        needToRetract = true;
+
+      // Step 1, get within the safe length interval for rotating. If we can get to the target length, do it.
       
-
-      m_waypoints.add(new ArmPosition(
-        m_startPosition.pivotRadians,
-        firstRetractLength,
-        m_targetPosition.wristRadians,
-        m_startPosition.handLength
-      ));
-
+        double minStartLength = m_armS.getMinLength(m_startPosition.pivotRadians);
+        double firstRetractLength = m_startPosition.armLength;
+        // if (firstRetractLength > maxRotateLength) {
+        //   firstRetractLength = maxRotateLength;
+        // }
+        // if (targetLength < minStartLength) {
+        //   firstRetractLength = minStartLength;
+        // }
+        firstRetractLength = MathUtil.clamp(firstRetractLength, minStartLength, maxRotateLength);
+        targetLength = MathUtil.clamp(targetLength, minStartLength, maxRotateLength);
+        
+        m_waypoints.add(new ArmPosition(
+          m_startPosition.pivotRadians,
+          firstRetractLength,
+          m_targetPosition.wristRadians,
+          m_startPosition.handLength
+        ));
+      }
+      
       //step 2, move wrist and pivot to target position. 
       m_waypoints.add(new ArmPosition(
         m_targetPosition.pivotRadians,
