@@ -442,7 +442,9 @@ public class ArmS extends SubsystemBase implements Loggable {
     }
 
     public void resetPivot() {
-        m_pivotController.reset(getContinuousRangeAngle());
+        double angle =getContinuousRangeAngle();
+        m_pivotController.reset(angle);
+        m_pivotController.setGoal(angle);
     }
     /**
      * updates the pivot plant
@@ -607,7 +609,9 @@ public class ArmS extends SubsystemBase implements Loggable {
     }
 
     public void resetWrist() {
-        m_wristController.reset(getContinuousWristAngle());
+        double angle = getContinuousWristAngle();
+        m_wristController.reset(angle);
+        m_wristController.setGoal(angle);
     }
 
     /**
