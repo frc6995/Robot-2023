@@ -3,6 +3,7 @@ package frc.robot.commands.drivetrain;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -158,8 +159,7 @@ public class OperatorControlC extends CommandBase {
     // method to deadband inputs to eliminate tiny unwanted values from the joysticks
     public double deadbandInputs(double input) {
 
-        if (Math.abs(input) < 0.2) return 0.0;
-        return input;
+        return MathUtil.applyDeadband(input, 0.2);
 
     }
 
