@@ -141,12 +141,12 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
             VecBuilder.fill(0.1, 0.1, 0.1),
             VecBuilder.fill(0.9, 0.9, 0.9));
         m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(0.9, 0.9, 0.01));
-        m_thetaController.setTolerance(Units.degreesToRadians(2));
+        m_thetaController.setTolerance(Units.degreesToRadians(0.5));
         m_thetaController.enableContinuousInput(-Math.PI, Math.PI);
-        m_profiledThetaController.setTolerance(Units.degreesToRadians(2));
+        m_profiledThetaController.setTolerance(Units.degreesToRadians(0.5));
         m_profiledThetaController.enableContinuousInput(-Math.PI, Math.PI);
-        m_xController.setTolerance(0.05);
-        m_yController.setTolerance(0.05);
+        m_xController.setTolerance(0.01);
+        m_yController.setTolerance(0.01);
         m_camera1Wrapper = new PhotonCameraWrapper(VisionConstants.CAM_1_NAME, VisionConstants.robotToCam1);
         m_camera2Wrapper = new PhotonCameraWrapper(VisionConstants.CAM_2_NAME, VisionConstants.robotToCam2);
         
@@ -195,7 +195,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         // By default it would point all modules forward when stopped. Here, we override this.
         if(Math.abs(speeds.vxMetersPerSecond) < 0.01
             && Math.abs(speeds.vyMetersPerSecond) < 0.01
-            && Math.abs(speeds.omegaRadiansPerSecond) < 0.01) {
+            && Math.abs(speeds.omegaRadiansPerSecond) < 0.0001) {
                 states = getStoppedStates();
         } else {
             // make sure the wheels don't try to spin faster than the maximum speed possible
