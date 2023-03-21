@@ -12,9 +12,12 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.DrivebaseS;
+import frc.robot.subsystems.LightS;
+import frc.robot.subsystems.LightS.States;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -128,11 +131,17 @@ public class PPChasePoseCommand extends CommandBase implements Loggable {
             desiredState.poseMeters = m_targetPose.get();
             desiredState.holonomicAngularVelocityRadPerSec = 0;
             targetChassisSpeeds = m_controller.calculate(m_pose.get(), desiredState);
+            if (m_pose.get().getTranslation().getDistance(m_targetPose.get().getTranslation()) < Units.inchesToMeters(0.5)){
+                targetChassisSpeeds.vxMetersPerSecond = 0;
+                targetChassisSpeeds.vyMetersPerSecond = 0;
+            }
+
         }
             // By passing in the desired state velocity and, we allow the controller to 
             
     
             m_outputChassisSpeedsRobotRelative.accept(targetChassisSpeeds);
+        LightS.getInstance().requestState(States.Climbing);
     }
 
     @Override
@@ -142,6 +151,7 @@ public class PPChasePoseCommand extends CommandBase implements Loggable {
 
     @Override
     public boolean isFinished() {
-        return false;
+        return m_pose.get().getTranslation().getDistance(m_targetPose.get().getTranslation()) < Units.inchesToMeters(1)
+        && Math.abs(m_pose.get().getRotation().getDegrees() - m_targetPose.get().getRotation().getDegrees()) < 0.5;
     }
 }
