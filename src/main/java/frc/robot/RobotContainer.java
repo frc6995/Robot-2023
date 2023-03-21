@@ -167,7 +167,7 @@ public class RobotContainer {
                         m_armS.stowC()
                     ),
                 none(), 
-                ()->m_isCubeSelected)
+                ()->true)
             )
             .deadlineWith(Commands.run(()->LightS.getInstance().requestState(States.Scoring)))
         );
@@ -261,7 +261,7 @@ public class RobotContainer {
 
     public Command fifteenPointAuto(){
         
-        var pathGroup = PathPlanner.loadPathGroup("15 Point", new PathConstraints(2, 2), new PathConstraints(1, 1), new PathConstraints(2, 2));
+        var pathGroup = PathPlanner.loadPathGroup("27 Point", new PathConstraints(2, 2));
         return Commands.sequence(
             m_intakeS.retractC(),
 
@@ -269,28 +269,28 @@ public class RobotContainer {
             m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
             m_intakeS.outtakeC().withTimeout(0.4),
 
-            Commands.parallel(
-                m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION).asProxy().withTimeout(6),
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
-                //m_drivebaseS.pathPlannerCommand(singlePath)
-            ),
-            
             Commands.deadline(
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds()))), 
-                m_intakeS.intakeUntilBeamBreakC()),
-
+                Commands.race(
+                    m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds()))),
+                    m_intakeS.intakeUntilBeamBreakC()
+                ),
+                m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION).asProxy().withTimeout(5)  
+            ),
             Commands.parallel(
                 m_intakeS.intakeC().withTimeout(0.1),
-                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
+                m_armS.goToPositionC(ArmConstants.RETRACTED_SCORE_CONE_POSITION).asProxy().withTimeout(3),
                 m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
             ),
 
-            Commands.parallel(
+            Commands.deadline(
+                m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
                 m_intakeS.intakeC().withTimeout(0.1),
-                m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3)
+                
+                m_drivebaseS.chasePoseC(()->POIManager.ownCommunity().get(AllianceWrapper.getAlliance() == Alliance.Red ? 2 : 6))
             ),
 
-            m_intakeS.outtakeC().withTimeout(0.4)
+            m_intakeS.outtakeC().withTimeout(0.4),
+            m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3)
         );
     }
 
@@ -398,7 +398,7 @@ public class RobotContainer {
 
     public Command twentysevenPointAuto(){
 
-        var pathGroup = PathPlanner.loadPathGroup("27 Point", new PathConstraints(2, 2),  new PathConstraints(0.5, 0.5), new PathConstraints(2, 2));
+        var pathGroup = PathPlanner.loadPathGroup("27 Point", new PathConstraints(2, 2));
         return Commands.sequence(
             m_intakeS.retractC(),
 
@@ -406,17 +406,13 @@ public class RobotContainer {
             m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
             m_intakeS.outtakeC().withTimeout(0.4),
 
-            Commands.parallel(
-                m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION).asProxy().withTimeout(5),
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
-            ),
-
             Commands.deadline(
-                m_intakeS.intakeUntilBeamBreakC().withTimeout(3),
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
+                Commands.race(
+                    m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds()))),
+                    m_intakeS.intakeUntilBeamBreakC()
+                ),
+                m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION).asProxy().withTimeout(5)  
             ),
-
-
             Commands.parallel(
                 m_intakeS.intakeC().withTimeout(0.1),
                 m_armS.goToPositionC(ArmConstants.RETRACTED_SCORE_CONE_POSITION).asProxy().withTimeout(3),
@@ -435,7 +431,7 @@ public class RobotContainer {
             Commands.parallel(
                 m_armS.goToPositionC(ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT).asProxy().withTimeout(3),
                 sequence(
-                    m_drivebaseS.pathPlannerCommand(pathGroup.get(3)),
+                    m_drivebaseS.pathPlannerCommand(pathGroup.get(2)),
                     m_drivebaseS.chargeStationAlignC()
                 )
                 
