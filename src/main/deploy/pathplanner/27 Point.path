@@ -128,13 +128,13 @@
         "y": 3.3620246413103376
       },
       "prevControl": {
-        "x": 1.8549646229107006,
-        "y": 3.6136047165104306
+        "x": 1.8092227910561378,
+        "y": 3.270540977601213
       },
       "nextControl": null,
       "holonomicAngle": 179.3772443127937,
       "isReversal": false,
-      "velOverride": null,
+      "velOverride": 2.0,
       "isLocked": false,
       "isStopPoint": false,
       "stopEvent": {

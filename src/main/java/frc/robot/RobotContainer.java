@@ -12,6 +12,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
@@ -109,14 +110,15 @@ public class RobotContainer {
         // m_driverController.back().whileTrue(m_drivebaseS.chargeStationFrontFirstC());
 
         //Autonomous Option Selections:
-        m_autoSelector.setDefaultOption("18 Point", eighteenPointAuto());
+        m_autoSelector.setDefaultOption("1 Cone Balance-Bump", eighteenPointAutoBumpSide());
+        m_autoSelector.setDefaultOption("1 Cone Balance-HP", eighteenPointAutoHPSide());
         //No Bump:
-        m_autoSelector.addOption("15 Point", fifteenPointAuto());
-        m_autoSelector.addOption("21 Point No 2nd", twentyonePointAutoNo2nd());
-        m_autoSelector.addOption("21 Point With 2nd", twentyonePointAutoWith2nd());
-        m_autoSelector.addOption("27 Point", twentysevenPointAuto());
-        m_autoSelector.addOption("27 Point (Cone Cube)", twentysevenPointConeCubeAuto());
-        m_autoSelector.addOption("27 Point (2 Cone)", twentysevenPointConeConeAuto());
+        m_autoSelector.addOption("2 Cone", fifteenPointAuto());
+        m_autoSelector.addOption("2 Cone Balance", twentysevenPointAuto());
+        // m_autoSelector.addOption("21 Point No 2nd", twentyonePointAutoNo2nd());
+        // m_autoSelector.addOption("21 Point With 2nd", twentyonePointAutoWith2nd());
+        // m_autoSelector.addOption("27 Point (Cone Cube)", twentysevenPointConeCubeAuto());
+        // m_autoSelector.addOption("27 Point (2 Cone)", twentysevenPointConeConeAuto());
 
 
         m_field.getObject("bluePoses").setPoses(POIManager.BLUE_COMMUNITY);
@@ -126,14 +128,18 @@ public class RobotContainer {
     }
 
     public void configureButtonBindings() {
-        m_driverController.a().toggleOnTrue(m_drivebaseS.chasePoseC(()->m_targetAlignmentPose));
+        m_driverController.a().toggleOnTrue(
+            m_drivebaseS.chasePoseC(
+                ()->m_targetAlignmentPose.transformBy(m_isCubeSelected ? new Transform2d() : m_intakeS.getConeCenterOffset()
+                )
+            ).asProxy().andThen(autoScoreSequenceCG().asProxy())
+            );
         m_driverController.b().toggleOnTrue(
             Commands.sequence(
                 m_intakeS.outtakeC().withTimeout(0.5),
                 m_armS.stowIndefiniteC()
             )
             );
-        //m_driverController.back().onTrue(m_intakeS.retractC());
         // OFFICIAL CALEB PREFERENCE
         m_driverController.y().toggleOnTrue(armIntakeCG(ArmConstants.OVERTOP_CONE_INTAKE_POSITION, false));
         m_driverController.x().onTrue(m_armS.stowIndefiniteC());
@@ -151,7 +157,7 @@ public class RobotContainer {
         m_driverController.leftBumper().toggleOnTrue(armIntakeSelectedCG(
             ArmConstants.PLATFORM_CUBE_INTAKE_POSITION, 
             ArmConstants.PLATFORM_CONE_INTAKE_POSITION, ()->m_isCubeSelected));
-        
+        m_driverController.leftTrigger().onTrue(m_armS.goToPositionIndefiniteC(ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT));
         // m_driverController.leftTrigger().whileTrue(new ConditionalCommand(
         //     m_drivebaseS.chasePoseC(()->POIManager.ownPOI(POIS.CUBE_RAMP)),
         //     m_drivebaseS.chasePoseC(()->POIManager.ownPOI(POIS.CONE_RAMP)),
@@ -159,17 +165,7 @@ public class RobotContainer {
 
         m_keypad.stow().onTrue(m_intakeS.intakeC().withTimeout(0.25));
         m_keypad.enter().toggleOnTrue(
-            sequence(
-                new GoToPositionC(m_armS, ()->m_targetArmPosition),
-                either(
-                    sequence(
-                        m_intakeS.outtakeC().withTimeout(0.4),
-                        m_armS.stowC()
-                    ),
-                none(), 
-                ()->true)
-            )
-            .deadlineWith(Commands.run(()->LightS.getInstance().requestState(States.Scoring)))
+            autoScoreSequenceCG()
         );
     
 
@@ -217,6 +213,7 @@ public class RobotContainer {
 
             ),
             Commands.parallel(
+                Commands.waitSeconds(0.75).andThen(m_intakeS.intakeC().withTimeout(0.75)),
                 m_armS.stowIndefiniteC(), 
                 Commands.run(()->LightS.getInstance().requestState(isCube ? States.IntakedCube : States.IntakedCone)).asProxy().withTimeout(0.75)
             )
@@ -229,13 +226,44 @@ public class RobotContainer {
         return Commands.either(
             armIntakeCG(cubePosition, true), armIntakeCG(conePosition, false), isCube);
     }
+    public Command autoScoreSequenceCG() {
+        return sequence(
+                new GoToPositionC(m_armS, ()->m_targetArmPosition),
+                either(
+                    sequence(
+                        m_intakeS.outtakeC().withTimeout(0.4),
+                        m_armS.stowC()
+                    ),
+                none(), 
+                ()->true)
+            )
+            .deadlineWith(Commands.run(()->LightS.getInstance().requestState(States.Scoring)));
 
+    }
 
     //Autonomous Commands:
     
 
-    public Command eighteenPointAuto(){
+    public Command eighteenPointAutoHPSide(){
         
+        return Commands.sequence(
+            m_intakeS.retractC(),
+
+            Commands.runOnce(
+                ()->m_drivebaseS.resetPose(
+                    NomadMathUtil.mirrorPose(POIManager.BLUE_COMMUNITY.get(5), AllianceWrapper.getAlliance())
+                )),
+            m_drivebaseS.stopC(),
+            m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).withTimeout(3).asProxy(),
+            m_intakeS.outtakeC().withTimeout(0.4),
+
+            m_armS.goToPositionC(ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT).asProxy(),
+            m_drivebaseS.chargeStationAlignC()
+            //m_drivebaseS.chargeStationBatteryFirstC()
+        ).finallyDo((end)->m_drivebaseS.drive(new ChassisSpeeds()));
+    }
+
+    public Command eighteenPointAutoBumpSide(){
         return Commands.sequence(
             m_intakeS.retractC(),
 
@@ -259,8 +287,7 @@ public class RobotContainer {
 
     //No Bump
 
-    public Command fifteenPointAuto(){
-        
+    private Command twoConeAuto() {
         var pathGroup = PathPlanner.loadPathGroup("27 Point", new PathConstraints(2, 2));
         return Commands.sequence(
             m_intakeS.retractC(),
@@ -279,154 +306,34 @@ public class RobotContainer {
             Commands.parallel(
                 m_intakeS.intakeC().withTimeout(0.1),
                 m_armS.goToPositionC(ArmConstants.RETRACTED_SCORE_CONE_POSITION).asProxy().withTimeout(3),
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
+                m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
             ),
 
             Commands.deadline(
                 m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
                 m_intakeS.intakeC().withTimeout(0.1),
                 
-                m_drivebaseS.chasePoseC(()->POIManager.ownCommunity().get(AllianceWrapper.getAlliance() == Alliance.Red ? 2 : 6))
+                m_drivebaseS.chasePoseC(
+                    ()->POIManager.ownCommunity().get(AllianceWrapper.getAlliance() == Alliance.Red ? 2 : 6)
+                    .transformBy(m_intakeS.getConeCenterOffset())
+                )
             ),
+            m_drivebaseS.stopC(),
+            m_intakeS.outtakeC().withTimeout(0.4)
+        );
+    }
 
-            m_intakeS.outtakeC().withTimeout(0.4),
+    public Command fifteenPointAuto(){
+        
+        return twoConeAuto().andThen(
             m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3)
         );
     }
 
-    public Command twentysevenPointConeCubeAuto() {
-        var pathGroup = PathPlanner.loadPathGroup("27 Point Cone Cube", new PathConstraints(2, 2));
-        return Commands.sequence(
-            m_intakeS.retractC(),
-
-            m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
-            m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
-            m_intakeS.outtakeC().withTimeout(0.4),
-            m_armS.goToPositionC(ArmConstants.RETRACTED_SCORE_CONE_POSITION).asProxy().withTimeout(6),
-            m_intakeS.extendC(),
-            
-            m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))/*,
-            deadline(
-                m_intakeS.intakeUntilBeamBreakC().withTimeout(3),
-                m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION).asProxy().withTimeout(3)
-            ),
-            parallel(
-                m_armS.goToPositionC(ArmConstants.RETRACTED_SCORE_CONE_POSITION).asProxy().withTimeout(6),
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
-            ),
-            m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CUBE_POSITION).asProxy().withTimeout(6),
-            m_intakeS.outtakeC().withTimeout(0.4)
-*/
-        );
-    }
-
-    public Command twentysevenPointConeConeAuto() {
-        var pathGroup = PathPlanner.loadPathGroup("27 Point Cone Cone", new PathConstraints(2, 2));
-        return Commands.sequence(
-            m_intakeS.retractC(),
-
-            m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
-            m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
-            m_intakeS.outtakeC().withTimeout(0.4),
-            m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION).asProxy().withTimeout(6),
-            
-            parallel(
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds()))),
-                m_intakeS.intakeUntilBeamBreakC()
-                )/*,
-            deadline(
-                m_intakeS.intakeUntilBeamBreakC().withTimeout(3),
-                m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION).asProxy().withTimeout(3)
-            ),
-            parallel(
-                m_armS.goToPositionC(ArmConstants.RETRACTED_SCORE_CONE_POSITION).asProxy().withTimeout(6),
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
-            ),
-            m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CUBE_POSITION).asProxy().withTimeout(6),
-            m_intakeS.outtakeC().withTimeout(0.4)
-*/
-        );
-    }
-
-    public Command twentyonePointAutoNo2nd(){
-        
-        var singlePath = PathPlanner.loadPath("21 Point No 2nd", new PathConstraints(2, 2));
-        return Commands.sequence(
-            m_intakeS.retractC(),
-
-            m_drivebaseS.resetPoseToBeginningC(singlePath),
-            m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
-            m_intakeS.outtakeC().withTimeout(0.4),
-            Commands.parallel(
-                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
-                m_drivebaseS.pathPlannerCommand(singlePath)
-            ),
-            m_drivebaseS.chargeStationFrontFirstC()
-        );
-    }
-
-    public Command twentyonePointAutoWith2nd(){
-
-        var pathGroup = PathPlanner.loadPathGroup("21 Point With 2nd", new PathConstraints(2, 2),  new PathConstraints(0.5, 0.5), new PathConstraints(2, 2));
-        return Commands.sequence(
-            m_intakeS.retractC(),
-
-            m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
-            m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
-            m_intakeS.outtakeC().withTimeout(0.4),
-
-            Commands.parallel(
-                m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION).asProxy().withTimeout(5),
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
-            ),
-
-            //m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION).asProxy().withTimeout(3),
-            Commands.deadline(
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds()))),
-                m_intakeS.intakeUntilBeamBreakC()
-            ),
-
-            Commands.parallel(
-                m_intakeS.intakeC().withTimeout(0.1),
-                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
-            ),
-
-            m_drivebaseS.chargeStationFrontFirstC()
-        );
-    }
 
     public Command twentysevenPointAuto(){
-
         var pathGroup = PathPlanner.loadPathGroup("27 Point", new PathConstraints(2, 2));
-        return Commands.sequence(
-            m_intakeS.retractC(),
-
-            m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
-            m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
-            m_intakeS.outtakeC().withTimeout(0.4),
-
-            Commands.deadline(
-                Commands.race(
-                    m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds()))),
-                    m_intakeS.intakeUntilBeamBreakC()
-                ),
-                m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION).asProxy().withTimeout(5)  
-            ),
-            Commands.parallel(
-                m_intakeS.intakeC().withTimeout(0.1),
-                m_armS.goToPositionC(ArmConstants.RETRACTED_SCORE_CONE_POSITION).asProxy().withTimeout(3),
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.runOnce(()->m_drivebaseS.drive(new ChassisSpeeds())))
-            ),
-
-            Commands.deadline(
-                m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
-                m_intakeS.intakeC().withTimeout(0.1),
-                
-                m_drivebaseS.chasePoseC(()->POIManager.ownCommunity().get(AllianceWrapper.getAlliance() == Alliance.Red ? 2 : 6))
-            ),
-
-            m_intakeS.outtakeC().withTimeout(0.4),
+        return twoConeAuto().andThen(
 
             Commands.parallel(
                 m_armS.goToPositionC(ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT).asProxy().withTimeout(3),
@@ -436,8 +343,6 @@ public class RobotContainer {
                 )
                 
             )
-            //m_drivebaseS.chargeStationBatteryFirstC()
-
         );
     }
 }

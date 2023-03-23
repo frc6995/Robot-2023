@@ -1,6 +1,7 @@
 package frc.robot.util.sim;
 
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
 
 import edu.wpi.first.wpilibj.RobotBase;
@@ -8,7 +9,9 @@ import frc.robot.Robot;
 
 public class SparkMaxEncoderWrapper {
  
+    private final CANSparkMax sparkMax;
     private final RelativeEncoder sparkMaxEncoder;
+    private double lastPosition = 0.0;
     private double simPosition = 0.0;
     private double simVelocity = 0.0;
   
@@ -16,6 +19,7 @@ public class SparkMaxEncoderWrapper {
      * Creates a new SparkMaxDerivedVelocityController using a default set of parameters.
      */
     public SparkMaxEncoderWrapper(CANSparkMax sparkMax) {
+        this.sparkMax = sparkMax;
       this.sparkMaxEncoder = sparkMax.getEncoder();
     }
 
@@ -25,7 +29,12 @@ public class SparkMaxEncoderWrapper {
      */
     public double getPosition() {
         if(Robot.isReal()) {
-            return sparkMaxEncoder.getPosition();
+            double position = sparkMaxEncoder.getPosition();
+            if (sparkMax.getLastError().equals(REVLibError.kTimeout)) {
+                return lastPosition;
+            }
+            lastPosition = position;
+            return position;
         }
         else {
             return simPosition;

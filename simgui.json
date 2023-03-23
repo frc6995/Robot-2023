@@ -47,6 +47,22 @@
       }
     }
   },
+  "NetworkTables": {
+    "transitory": {
+      "Shuffleboard": {
+        "IntakeS": {
+          "open": true
+        },
+        "open": true
+      },
+      "SmartDashboard": {
+        "SendableChooser[0]": {
+          "open": true
+        },
+        "open": true
+      }
+    }
+  },
   "Plot": {
     "Plot <0>": {
       "plots": [

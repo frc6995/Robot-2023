@@ -159,7 +159,7 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     private final ProfiledPIDController m_extendController =
         new ProfiledPIDController(8,0,0,
-            new Constraints(1.5, 1.5),
+            new Constraints(1.3, 1.5),
             0.02
         );
 
@@ -185,6 +185,11 @@ public class ArmS extends SubsystemBase implements Loggable {
         m_extendMotor.burnFlash();
         m_extendEncoderWrapper.setPosition(MIN_ARM_LENGTH);
         m_extendController.reset(MIN_ARM_LENGTH);
+        m_extendMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
+        m_extendMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
+        m_extendMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
+        m_extendMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
+        m_extendMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
         
         Command homingCommand = new InstantCommand(()->{
             m_extendEncoderWrapper.setPosition(MIN_ARM_LENGTH);
@@ -268,7 +273,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         setExtendVelocity(
             m_extendController.calculate(getLengthMeters(), lengthMeters)
             
-            +m_extendController.getSetpoint().velocity
+            + m_extendController.getSetpoint().velocity
         );
     }
 
@@ -338,9 +343,23 @@ public class ArmS extends SubsystemBase implements Loggable {
         // m_pivotMotor.setSoftLimit(SoftLimitDirection.kReverse, (float) MIN_ARM_ANGLE);
         m_pivotMotor.setInverted(true);
         m_pivotFollowerMotor.follow(m_pivotMotor, true);
-        m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 10);
-        m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 10);
+
         m_pivotEncoderWrapper.setSimPosition(PIVOT_ENCODER_OFFSET / (2 * Math.PI));
+        m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
+        m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 50);
+        m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 50);
+        m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
+        m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
+        m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
+        m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 20);
+        m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 45);
+        m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
+        m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
+
+        m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
+        m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
+        m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
+        m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
 
         m_pivotController.reset(getContinuousRangeAngle());
         m_pivotController.setTolerance(0.05, 0.05);
@@ -556,8 +575,10 @@ public class ArmS extends SubsystemBase implements Loggable {
         m_wristMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setPositionConversionFactor(2 * Math.PI);
         m_wristMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setVelocityConversionFactor(2 * Math.PI/ 60);
         m_wristMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setInverted(true);
-        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 10);
-        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 10);
+        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
+        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 20);
+        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
+        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
         // m_wristMotor.setSoftLimit(SoftLimitDirection.kForward, (float) WRIST_MAX_ANGLE);
         // m_wristMotor.setSoftLimit(SoftLimitDirection.kReverse, (float) WRIST_MIN_ANGLE);
         m_wristMotor.setInverted(true);

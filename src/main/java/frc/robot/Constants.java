@@ -26,7 +26,7 @@ public class Constants {
     public static final class DriveConstants {
         static public final double WHEEL_BASE_WIDTH_M = Units.inchesToMeters(18.25);
         static public final double WHEEL_RADIUS_M = 0.0508; //Units.inchesToMeters(4.0/2.0); //four inch (diameter) wheels
-        static public final double ROBOT_MASS_kg = Units.lbsToKilograms(35);
+        static public final double ROBOT_MASS_kg = Units.lbsToKilograms(150);
         static public final double ROBOT_MOI_KGM2 = 1.0/12.0 * ROBOT_MASS_kg * Math.pow((WHEEL_BASE_WIDTH_M*1.1),2) * 2; //Model moment of intertia as a square slab slightly bigger than wheelbase with axis through center
         // Drivetrain Performance Mechanical limits
         static public final double MAX_FWD_REV_SPEED_MPS = Units.feetToMeters(19.0);
@@ -86,7 +86,7 @@ public class Constants {
         public static final double STEER_P = 5;
         public static final double STEER_D = 0.0;
     
-        public static final double DRIVE_P = 0.75;//9;
+        public static final double DRIVE_P = 2;//9;
         public static final double DRIVE_D = 0.0;
 
 
@@ -187,7 +187,7 @@ public class Constants {
         public static final double EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION = 1.0/16.0;
         public static final double EXTEND_METERS_PER_DRUM_ROTATION = Math.PI * 2 * EXTEND_DRUM_RADIUS * 2; // 2x distance
 
-        public static final double ARM_EXTEND_KG_VERTICAL = 0.4;
+        public static final double ARM_EXTEND_KG_VERTICAL = 0.3;
         public static final double ARM_EXTEND_KS = 0.1;
         public static final double ARM_EXTEND_KV = 1.31/0.15;//12 /*v*//(5676 /*rpm */ * EXTEND_METERS_PER_DRUM_ROTATION * EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION / 60);
         /* PIVOT */
@@ -228,7 +228,7 @@ public class Constants {
         public static final ArmPosition SCORE_HIGH_CONE_POSITION = new ArmPosition(
             0.658,
             1.429,
-            0,
+            -Units.degreesToRadians(10),
             Units.inchesToMeters(9.4));
         public static final ArmPosition SCORE_HIGH_CUBE_POSITION = new ArmPosition(
         0.658 - Units.degreesToRadians(10),
@@ -325,7 +325,7 @@ public class Constants {
         public static final int INTAKE_EXTEND = 0;
         public static final int INTAKE_RETRACT= 1;
         public static final int INTAKE_FOLLOWER_CAN_ID = 31 ;
-        public static final int INTAKE_TOF_CAN_ID = 32;
+        public static final int INTAKE_TOF_CAN_ID = 0;
     }
 
     public static final class LightConstants {

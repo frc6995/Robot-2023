@@ -12,6 +12,7 @@ import static frc.robot.Constants.DriveConstants.WHEEL_ENC_COUNTS_PER_WHEEL_REV;
 import static frc.robot.Constants.DriveConstants.WHEEL_RADIUS_M;
 
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.MotorFeedbackSensor;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
@@ -74,8 +75,20 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         m_steerMotor.restoreFactoryDefaults(false);
         m_driveMotor.setSmartCurrentLimit(35);
         m_steerMotor.setSmartCurrentLimit(25);
-        m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 10);
-        m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 10);
+        //m_driveMotor.setCANTimeout(0);
+        m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
+        m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
+        m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
+        m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
+        m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
+        //m_steerMotor.setCANTimeout(0);
+        m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 40);
+        m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
+        m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
+        m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
+        m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
+        m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
+        m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
         //set the output of the drive encoder to be in meters (instead of motor rots) for linear measurement
         // wheel diam * pi = wheel circumference (meters/wheel rot) *
         // 1/6.86 wheel rots per motor rot *
@@ -115,7 +128,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setPositionConversionFactor(Math.PI*2);
         m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setVelocityConversionFactor(Math.PI*2 * 60);
         m_magEncoder = new SparkMaxAbsoluteEncoderWrapper(m_steerMotor, m_magEncoderOffset);
-
+        //m_steerMotor.getPIDController().setFeedbackDevice(m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle));
         //Config the mag encoder, which is directly on the module rotation shaft.
         //m_magEncoder = new DutyCycleEncoder(moduleConstants.magEncoderID);
         //magEncoder.setDistancePerRotation(2*Math.PI);

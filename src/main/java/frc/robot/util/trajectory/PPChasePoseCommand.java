@@ -15,6 +15,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.DrivebaseS;
 import frc.robot.subsystems.LightS;
 import frc.robot.subsystems.LightS.States;
@@ -55,7 +56,7 @@ public class PPChasePoseCommand extends CommandBase implements Loggable {
     private final BiFunction<Pose2d, Pose2d, PathPlannerTrajectory> m_trajectoryGenerator;
     private Pose2d m_lastRegenTarget;
     private DrivebaseS m_drive;
-
+    private Trigger m_finishTrigger;
     /**
      * Constructs a command to follow a moving target pose. Uses PathPlanner trajectories when the target is more than 0.2 m away.
      * @param targetPose A Supplier for the target pose.
@@ -84,6 +85,9 @@ public class PPChasePoseCommand extends CommandBase implements Loggable {
         m_trajectoryGenerator = trajectoryGenerator;
         m_outputChassisSpeedsRobotRelative = outputChassisSpeedsFieldRelative;
         m_drive = drive;
+        m_finishTrigger = new Trigger(()->m_pose.get().getTranslation().getDistance(m_targetPose.get().getTranslation()) < Units.inchesToMeters(1)
+    && Math.abs(m_pose.get().getRotation().getDegrees() - m_targetPose.get().getRotation().getDegrees()) < 0.75)
+    .debounce(0.05);
         addRequirements(m_drive);
         }
 
@@ -146,12 +150,12 @@ public class PPChasePoseCommand extends CommandBase implements Loggable {
 
     @Override
     public void end(boolean interrupted) {
+        m_outputChassisSpeedsRobotRelative.accept(new ChassisSpeeds());
         m_timer.stop();
     }
 
     @Override
     public boolean isFinished() {
-        return m_pose.get().getTranslation().getDistance(m_targetPose.get().getTranslation()) < Units.inchesToMeters(1)
-        && Math.abs(m_pose.get().getRotation().getDegrees() - m_targetPose.get().getRotation().getDegrees()) < 0.5;
+        return m_finishTrigger.getAsBoolean();
     }
 }
