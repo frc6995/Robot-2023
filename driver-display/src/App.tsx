@@ -32,7 +32,7 @@ function Row(props:RowProps) {
           backgroundColor = 'yellow';
         }
         content.push(
-          <div style={{
+          <div key={id} style={{
             background: backgroundColor,
             height:"100%",
             flexGrow:1,
@@ -58,19 +58,22 @@ function Grid(props:Props) {
   )
 }
   
-type AppState = {selection:number, time:number, autoSelection: string, autoOptions: string[]};
+type AppState = {selection:number, time:number, autoSelection: string, autoOptions: string[], connected:boolean};
 
 class App extends Component{
-  state: AppState = {selection:-1, time:0, autoSelection: '', autoOptions: ['']};
-  ntcore = NetworkTables.createInstanceByURI("10.69.95.2");
+  state: AppState = {selection:-1, time:0, autoSelection: '', autoOptions: [''], connected: false};
+  ntcore = NetworkTables.createInstanceByURI("127.0.0.1");
   selectionSubscriberUID=0;
   matchTimeUID = 0;
   autoActiveUID = 0;
   autoOptionsUID = 0;
+  removeConnectionListener = ()=>{};
 
   selectionTopic = this.ntcore.createTopic<number>('/DriverDisplay/selection', NetworkTableTypeInfos.kInteger);
   matchTimeTopic = this.ntcore.createTopic<number>('/DriverDisplay/matchTime', NetworkTableTypeInfos.kDouble);
-  autoActiveTopic = this.ntcore.createTopic<string>('/SmartDashboard/SendableChooser[0]/selected', NetworkTableTypeInfos.kString);
+  autoSelectedTopic = this.ntcore.createTopic<string>('/SmartDashboard/SendableChooser[0]/selected', NetworkTableTypeInfos.kString);
+  autoActiveTopic = this.ntcore.createTopic<string>('/SmartDashboard/SendableChooser[0]/active', NetworkTableTypeInfos.kString);
+
   autoOptionsTopic = this.ntcore.createTopic<string[]>('/SmartDashboard/SendableChooser[0]/options', NetworkTableTypeInfos.kStringArray);
   
   constructor(props: any) {
@@ -79,9 +82,12 @@ class App extends Component{
     this.matchTimeUID = this.matchTimeTopic!.subscribe((value)=>{
       this.setState({time: (value ===null ? -1 : Math.ceil(value))});});
     this.autoActiveUID = this.autoActiveTopic!.subscribe((value)=>this.setState({autoSelection: value === null ? 'Disconnected' : value}))
-    this.autoActiveTopic!.publish({retained:true});
+
+
+    this.autoSelectedTopic!.publish({retained:true});
     this.autoOptionsUID = this.autoOptionsTopic!.subscribe((value)=>this.setState({autoOptions: value === null ? '' : value}))
     this.state.autoOptions = this.autoOptionsTopic.getValue() || ['Disconnected'];
+    this.removeConnectionListener = this.ntcore.addRobotConnectionListener((connected)=>this.state.connected = connected, true);
     //console.log(this.selectionSubscriberUID)
   }
   
@@ -89,9 +95,9 @@ class App extends Component{
     this.selectionTopic.unsubscribe(this.selectionSubscriberUID, true);
     this.matchTimeTopic.unsubscribe(this.matchTimeUID, true);
     this.autoActiveTopic.unsubscribe(this.autoActiveUID, true);
-    this.autoActiveTopic.unpublish();
+    this.autoSelectedTopic.unpublish();
     this.autoOptionsTopic.unsubscribe(this.autoOptionsUID, true);
-    
+    this.removeConnectionListener();
   }
   render() {
     // /console.log(this.state.autoOptions);
@@ -101,11 +107,14 @@ class App extends Component{
 
 
         <div style={{color:"white", fontSize: "10vw", display:"flex", justifyContent:"space-evenly"}}>
-        <select style={{width:"50%"}} onChange={(event)=>this.autoActiveTopic.setValue(event.target.value)}>
-          {this.state.autoOptions.map((value)=>(<option value={value}>{value}</option>))}
-        </select>
-        <button onClick={()=>window.open("http://10.69.95.11:1182/stream.mjpg")}>Camera</button>
-        <span style={{width:"50%"}}>
+          <select style={{width:"45%"}} value={this.state.autoSelection} onChange={(event)=>this.autoSelectedTopic.setValue(event.target.value)}>
+            {this.state.autoOptions.map((value)=>(<option value={value} key={value}>{value}</option>))}
+          </select>
+        <div style={{width:"10%", display:"flex", flexDirection:"column"}}>
+          <button style={{width:"100%", height:"50%"}} onClick={()=>window.open("http://10.69.95.11:1182/stream.mjpg")}>Camera</button>
+          <span style={{width:"100%", height:"50%", backgroundColor:this.state.connected ? "green" : "red"}}></span>
+        </div>
+        <span style={{width:"45%"}}>
           {this.state.time}
         </span>
           {/*{this.state.time/*this.state.time === -1 ? "--": `${Math.floor(this.state.time / 60).toFixed(0)}:${(this.state.time % 60).toString().padStart(2, '0')}`*/}

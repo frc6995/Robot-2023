@@ -39,4 +39,10 @@
 }
 select {
   font-size: 3vw;
+  background-color: transparent;
+  color:white;
+}
+
+select > option, select::backdrop{
+  background-color: black;
 }
