@@ -81,13 +81,13 @@ public class Constants {
 
         //kv: (12 volts * 60 s/min * 1/5.14 WRevs/MRevs * wheel rad * 2pi  / (6000 MRPM *
         /** ks, kv, ka */ 
-        public static final double[] DRIVE_FF_CONST = {0.11452 * 1.25, 1.9844 * 50 / 46.0, 0.57};
+        public static final double[] DRIVE_FF_CONST = {0.14315, 2.1567, 0.57};
 
         public static final double STEER_P = 5;
         public static final double STEER_D = 0.0;
     
         public static final double DRIVE_P = 2;//9;
-        public static final double DRIVE_D = 0.0;
+        public static final double DRIVE_D = 0.05;
 
 
         public static final double MAX_MODULE_SPEED_FPS = 19;

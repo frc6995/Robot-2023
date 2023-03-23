@@ -25,13 +25,13 @@
         "image": "C:\\Users\\jashu\\git\\Robot-2023\\resources\\2023-field.png",
         "left": 46,
         "modules": {
-          "arrows": false,
           "length": 0.4000000059604645,
-          "style": "Box/Image",
+          "selectable": false,
+          "style": "Hidden",
           "width": 0.4000000059604645
         },
         "redPoses": {
-          "style": "Box/Image"
+          "style": "Hidden"
         },
         "right": 1088,
         "top": 36,
@@ -48,9 +48,23 @@
     }
   },
   "NetworkTables": {
+    "retained": {
+      "SmartDashboard": {
+        "SendableChooser[0]": {
+          "open": true
+        },
+        "open": true
+      }
+    },
     "transitory": {
       "Shuffleboard": {
+        "ArmS": {
+          "open": true
+        },
         "IntakeS": {
+          "open": true
+        },
+        "RobotContainer": {
           "open": true
         },
         "open": true
@@ -67,12 +81,66 @@
     "Plot <0>": {
       "plots": [
         {
-          "height": 76
+          "axis": [
+            {
+              "autoFit": true
+            }
+          ],
+          "height": 570,
+          "series": [
+            {
+              "color": [
+                0.2980392277240753,
+                0.44705885648727417,
+                0.6901960968971252,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/getPivotVolts"
+            },
+            {
+              "color": [
+                0.8666667342185974,
+                0.5176470875740051,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/getExtendVolts"
+            },
+            {
+              "color": [
+                0.3333333432674408,
+                0.658823549747467,
+                0.4078431725502014,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/getLengthMeters"
+            }
+          ]
         }
-      ],
-      "window": {
-        "visible": false
-      }
+      ]
+    },
+    "Plot <1>": {
+      "plots": [
+        {
+          "axis": [
+            {
+              "autoFit": true
+            }
+          ],
+          "height": 332,
+          "series": [
+            {
+              "color": [
+                0.2980392277240753,
+                0.44705885648727417,
+                0.6901960968971252,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/RobotContainer/loopTime"
+            }
+          ]
+        }
+      ]
     }
   }
 }

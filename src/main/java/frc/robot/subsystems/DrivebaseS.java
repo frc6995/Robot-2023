@@ -425,7 +425,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         } else {
             for(int idx = 0; idx < QuadSwerveSim.NUM_MODULES; idx++){
                 double azmthVolts = m_modules.get(idx).getAppliedRotationVoltage();
-                double wheelVolts = NomadMathUtil.subtractkS(m_modules.get(idx).getAppliedDriveVoltage(), DriveConstants.DRIVE_FF_CONST[0]) * 1.44;
+                double wheelVolts = NomadMathUtil.subtractkS(m_modules.get(idx).getAppliedDriveVoltage(), 0) * 1.44;
                 m_moduleSims.get(idx).setInputVoltages(wheelVolts, azmthVolts);
             }
         }
@@ -532,8 +532,12 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         });
     }
 
-    public Command stopC() {
+    public Command stopOnceC() {
         return runOnce(()->this.drive(new ChassisSpeeds()));
+    }
+
+    public Command stopC() {
+        return run(()->this.drive(new ChassisSpeeds()));
     }
     public Command pathPlannerCommand(PathPlannerTrajectory path) {
         PPSwerveControllerCommand command = new PPSwerveControllerCommand(

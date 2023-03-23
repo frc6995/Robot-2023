@@ -13,6 +13,7 @@ import static frc.robot.Constants.LightConstants.*;
 public class LightS {
 
   private static LightS m_instance = new LightS();
+
   private Spark spark = new Spark(PWM_PORT_LED);
 
   /** Creates a new LedS. */
@@ -24,7 +25,9 @@ public class LightS {
   }
 
   private TreeSet<States> m_states = new TreeSet<>();
-
+  public double getSpeed() {
+    return spark.get();
+  }
 
   /**
    * Different states of the robot, with an integer that determines the priority

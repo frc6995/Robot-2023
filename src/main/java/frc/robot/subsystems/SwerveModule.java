@@ -63,7 +63,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
     private final PIDController m_drivePIDController;
     private final String m_loggingName;
     private final SimpleMotorFeedforward m_driveFeedForward = new SimpleMotorFeedforward(
-        DRIVE_FF_CONST[0],
+        Robot.isReal() ? DRIVE_FF_CONST[0]: 0,
         DRIVE_FF_CONST[1],
         DRIVE_FF_CONST[2]);        
 
@@ -272,8 +272,8 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         rotationVolts += 1 * Math.signum(m_steerPIDController.getSetpoint().velocity);
         double prevSpeedSetpoint = m_drivePIDController.getSetpoint();
         double driveVolts = m_drivePIDController.calculate(getCurrentVelocityMetersPerSecond(), desiredState.speedMetersPerSecond)
-        //+ m_driveFeedForward.calculate(prevSpeedSetpoint, desiredState.speedMetersPerSecond, TimingTracer.getLoopTime());
-        +  m_driveFeedForward.calculate(desiredState.speedMetersPerSecond);
+        + m_driveFeedForward.calculate(prevSpeedSetpoint, desiredState.speedMetersPerSecond, TimingTracer.getLoopTime());
+        //+  m_driveFeedForward.calculate(desiredState.speedMetersPerSecond);
 
         m_steerMotor.setVoltage(rotationVolts);
         m_driveMotor.setVoltage(driveVolts);

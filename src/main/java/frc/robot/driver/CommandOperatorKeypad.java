@@ -7,13 +7,16 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 import frc.robot.POIManager;
 import frc.robot.subsystems.ArmS.ArmPosition;
+import frc.robot.util.AllianceWrapper;
 
 public class CommandOperatorKeypad {
     private GenericHID m_hid;
@@ -89,6 +92,11 @@ public class CommandOperatorKeypad {
     }
     public Trigger enter() {
         return key(Button.kEnterKey);
+    }
+
+    public Command blueSetpointCommand(int columnInGrid, int row) {
+        return Commands.either(
+            setpointCommand(8-columnInGrid, row), setpointCommand(columnInGrid, row), AllianceWrapper::isRed);
     }
 
     public Command setpointCommand(int columnInGrid, int row) {
