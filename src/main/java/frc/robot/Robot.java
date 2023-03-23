@@ -40,8 +40,11 @@ public class Robot extends TimedRobot {
         
         Robot.isSimulation = RobotBase.isSimulation();
         // DriverStation.silenceJoystickConnectionWarning(true);
-        DataLogManager.start();
-        DriverStation.startDataLog(DataLogManager.getLog());
+        if (!isSimulation) {
+            DataLogManager.start();
+            DriverStation.startDataLog(DataLogManager.getLog());
+        }
+
         LiveWindow.disableAllTelemetry();
         robotContainer = new RobotContainer();
         Logger.configureLoggingAndConfig(robotContainer, false);
