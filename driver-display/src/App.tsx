@@ -58,35 +58,57 @@ function Grid(props:Props) {
   )
 }
   
-type AppState = {selection:number, time:number};
+type AppState = {selection:number, time:number, autoSelection: string, autoOptions: string[]};
 
 class App extends Component{
-  state: AppState = {selection:-1, time:0};
+  state: AppState = {selection:-1, time:0, autoSelection: '', autoOptions: ['']};
   ntcore = NetworkTables.createInstanceByURI("10.69.95.2");
   selectionSubscriberUID=0;
   matchTimeUID = 0;
+  autoActiveUID = 0;
+  autoOptionsUID = 0;
 
   selectionTopic = this.ntcore.createTopic<number>('/DriverDisplay/selection', NetworkTableTypeInfos.kInteger);
   matchTimeTopic = this.ntcore.createTopic<number>('/DriverDisplay/matchTime', NetworkTableTypeInfos.kDouble);
+  autoActiveTopic = this.ntcore.createTopic<string>('/SmartDashboard/SendableChooser[0]/selected', NetworkTableTypeInfos.kString);
+  autoOptionsTopic = this.ntcore.createTopic<string[]>('/SmartDashboard/SendableChooser[0]/options', NetworkTableTypeInfos.kStringArray);
   
   constructor(props: any) {
     super(props);
     this.selectionSubscriberUID = this.selectionTopic!.subscribe((value)=>{this.setState({selection: (value ===null ? -1 : value)}); console.log(value); });
     this.matchTimeUID = this.matchTimeTopic!.subscribe((value)=>{
       this.setState({time: (value ===null ? -1 : Math.ceil(value))});});
-    console.log(this.selectionSubscriberUID)
+    this.autoActiveUID = this.autoActiveTopic!.subscribe((value)=>this.setState({autoSelection: value === null ? 'Disconnected' : value}))
+    this.autoActiveTopic!.publish({retained:true});
+    this.autoOptionsUID = this.autoOptionsTopic!.subscribe((value)=>this.setState({autoOptions: value === null ? '' : value}))
+    this.state.autoOptions = this.autoOptionsTopic.getValue() || ['Disconnected'];
+    //console.log(this.selectionSubscriberUID)
   }
   
   componentWillUnmount(): void {
     this.selectionTopic.unsubscribe(this.selectionSubscriberUID, true);
     this.matchTimeTopic.unsubscribe(this.matchTimeUID, true);
+    this.autoActiveTopic.unsubscribe(this.autoActiveUID, true);
+    this.autoActiveTopic.unpublish();
+    this.autoOptionsTopic.unsubscribe(this.autoOptionsUID, true);
+    
   }
   render() {
+    // /console.log(this.state.autoOptions);
     return (
       <div className="App">
         <Grid selection={this.state.selection}></Grid>
-        <div style={{color:"white", fontSize: "10vw"}}>
-          {this.state.time/*this.state.time === -1 ? "--": `${Math.floor(this.state.time / 60).toFixed(0)}:${(this.state.time % 60).toString().padStart(2, '0')}`*/}
+
+
+        <div style={{color:"white", fontSize: "10vw", display:"flex", justifyContent:"space-evenly"}}>
+        <select style={{width:"50%"}} onChange={(event)=>this.autoActiveTopic.setValue(event.target.value)}>
+          {this.state.autoOptions.map((value)=>(<option value={value}>{value}</option>))}
+        </select>
+        <button onClick={()=>window.open("http://10.69.95.11:1182/stream.mjpg")}>Camera</button>
+        <span style={{width:"50%"}}>
+          {this.state.time}
+        </span>
+          {/*{this.state.time/*this.state.time === -1 ? "--": `${Math.floor(this.state.time / 60).toFixed(0)}:${(this.state.time % 60).toString().padStart(2, '0')}`*/}
         </div>
       </div>
     );

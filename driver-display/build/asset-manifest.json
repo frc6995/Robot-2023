@@ -1,0 +1,16 @@
+{
+  "files": {
+    "main.css": "/Robot-2023/static/css/main.c192ad38.css",
+    "main.js": "/Robot-2023/static/js/main.4c3d1f00.js",
+    "static/js/787.29e2f571.chunk.js": "/Robot-2023/static/js/787.29e2f571.chunk.js",
+    "service-worker.js": "/Robot-2023/service-worker.js",
+    "index.html": "/Robot-2023/index.html",
+    "main.c192ad38.css.map": "/Robot-2023/static/css/main.c192ad38.css.map",
+    "main.4c3d1f00.js.map": "/Robot-2023/static/js/main.4c3d1f00.js.map",
+    "787.29e2f571.chunk.js.map": "/Robot-2023/static/js/787.29e2f571.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.c192ad38.css",
+    "static/js/main.4c3d1f00.js"
+  ]
+}
