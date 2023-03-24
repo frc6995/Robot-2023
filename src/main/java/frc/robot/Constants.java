@@ -83,7 +83,7 @@ public class Constants {
         /** ks, kv, ka */ 
         public static final double[] DRIVE_FF_CONST = {0.14315, 2.1567, 0.57};
 
-        public static final double STEER_P = 5;
+        public static final double STEER_P = 2.5;
         public static final double STEER_D = 0.0;
     
         public static final double DRIVE_P = 2;//9;

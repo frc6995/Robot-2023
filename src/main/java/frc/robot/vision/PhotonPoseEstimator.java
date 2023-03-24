@@ -394,7 +394,7 @@ public class PhotonPoseEstimator {
     private Optional<EstimatedRobotPose> lowestAmbiguityStrategy(PhotonPipelineResult result) {
         PhotonTrackedTarget lowestAmbiguityTarget = null;
 
-        double lowestAmbiguityScore = 0.2;
+        double lowestAmbiguityScore = 0.1;
 
         for (PhotonTrackedTarget target : result.targets) {
             double targetPoseAmbiguity = target.getPoseAmbiguity();
