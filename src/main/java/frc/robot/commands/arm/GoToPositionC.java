@@ -133,7 +133,7 @@ public class GoToPositionC extends CommandBase {
 
     var actualPosition = m_armS.getArmPosition();
     var atSetpoint = (Math.abs(m_armS.constrainLength(m_targetPosition.armLength) - actualPosition.armLength) < Units.inchesToMeters(0.5)
-      && Math.abs(m_targetPosition.pivotRadians - actualPosition.pivotRadians) < Units.degreesToRadians(1)
+      && Math.abs(m_targetPosition.pivotRadians - actualPosition.pivotRadians) < Units.degreesToRadians(2)
       && Math.abs(m_targetPosition.wristRadians - actualPosition.wristRadians) < Units.degreesToRadians(5)
     );
     return atSetpoint && m_shouldFinish;

@@ -216,7 +216,7 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     public void setExtendVolts(double volts) {
         //SmartDashboard.putNumber("armExtendVolts", volts);
-        m_extendMotor.setVoltage(volts);
+        m_extendMotor.setVoltage(MathUtil.clamp(volts, -12, 12));
     }
 
 
@@ -802,9 +802,9 @@ public class ArmS extends SubsystemBase implements Loggable {
      */
 
     private void initSimulation() {
-        m_pivotSim.setState(VecBuilder.fill(getContinuousRangeAngle(),0));
-        m_extendSim.setState(VecBuilder.fill(getLengthMeters(), 0));
-        m_wristSim.setState(VecBuilder.fill(0,0));
+        m_pivotSim.setState(VecBuilder.fill(STOW_POSITION.pivotRadians,0));
+        m_extendSim.setState(VecBuilder.fill(STOW_POSITION.armLength, 0));
+        m_wristSim.setState(VecBuilder.fill(STOW_POSITION.wristRadians,0));
         //as the arm raises from 0 to pi/2, the gravity on the wrist goes from -pi/2 to -pi
         m_wristSim.setGravityAngle(-Math.PI/2 - getAngle().getRadians());
     }

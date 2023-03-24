@@ -33,6 +33,7 @@ import java.util.function.BooleanSupplier;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
+import frc.robot.Constants.IntakeConstants;
 import frc.robot.util.color.PicoColorSensor;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
@@ -84,7 +85,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
 
   public Transform2d getConeCenterOffset() {
     
-    double distanceToCone =  (152 - distanceSensor.getRange()) / 1000.0;
+    double distanceToCone = getConeCenterOffsetDistance();
     if (Math.abs(distanceToCone) > 0.1) {
       return new Transform2d();
     }
@@ -94,6 +95,10 @@ public class IntakeS extends SubsystemBase implements Loggable {
     return new Transform2d(new Translation2d(0, offsetMeters), new Rotation2d());
   }
 
+  @Log
+  public double getConeCenterOffsetDistance() {
+     return (IntakeConstants.INTAKE_CENTERED_CONE_DISTANCE - distanceSensor.getRange()) / 1000.0;
+  }
   @Log
   public double getIntakeVolts() {
     return intakeMotor.getAppliedOutput() * 12;

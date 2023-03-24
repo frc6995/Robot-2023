@@ -2,7 +2,7 @@
   "name": "driver-display",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://frc6995.github.io/Robot-2023",
+  "homepage": "https://frc6995.github.io",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",

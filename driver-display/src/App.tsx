@@ -62,7 +62,7 @@ type AppState = {selection:number, time:number, autoSelection: string, autoOptio
 
 class App extends Component{
   state: AppState = {selection:-1, time:0, autoSelection: '', autoOptions: [''], connected: false};
-  ntcore = NetworkTables.createInstanceByURI("127.0.0.1");
+  ntcore = NetworkTables.createInstanceByURI("10.69.95.2");
   selectionSubscriberUID=0;
   matchTimeUID = 0;
   autoActiveUID = 0;

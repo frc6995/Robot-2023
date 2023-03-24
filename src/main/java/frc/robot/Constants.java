@@ -47,10 +47,10 @@ public class Constants {
         static private double HW = WHEEL_BASE_WIDTH_M/2.0;
 
         public enum ModuleConstants {
-            FL("FL", 18, 17, 6, 5.651346, HW, HW),
-            FR("FR", 12, 11, 7, 3.762759, HW, -HW),
-            BL("BL", 16, 15, 8, 1.823007, -HW, HW),
-            BR("BR", 14, 13, 9, 5.614791, -HW, -HW);
+            FL("FL", 18, 17, 6, 5.651346 + 0.005, HW, HW),
+            FR("FR", 12, 11, 7, 3.762759 - 0.003, HW, -HW),
+            BL("BL", 16, 15, 8, 1.823007 + 0.01, -HW, HW),
+            BR("BR", 14, 13, 9, 5.614791 - 0.008, -HW, -HW);
     
             public final String name;
             public final int driveMotorID;
@@ -247,7 +247,7 @@ public class Constants {
             Units.inchesToMeters(9.4));
         public static final ArmPosition RETRACTED_SCORE_CONE_POSITION = new ArmPosition(
             0.658,
-            0.611,
+            0.75,
             0,
             Units.inchesToMeters(9.4));
         public static final ArmPosition STOW_POSITION = new ArmPosition(
@@ -326,6 +326,7 @@ public class Constants {
         public static final int INTAKE_RETRACT= 1;
         public static final int INTAKE_FOLLOWER_CAN_ID = 31 ;
         public static final int INTAKE_TOF_CAN_ID = 0;
+        public static final double INTAKE_CENTERED_CONE_DISTANCE = 130.0;
     }
 
     public static final class LightConstants {

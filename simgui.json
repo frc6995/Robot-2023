@@ -48,6 +48,9 @@
     }
   },
   "NetworkTables": {
+    "Persistent Values": {
+      "open": false
+    },
     "retained": {
       "SmartDashboard": {
         "SendableChooser[0]": {
@@ -59,6 +62,9 @@
     "transitory": {
       "Shuffleboard": {
         "ArmS": {
+          "VISUALIZER": {
+            "open": true
+          },
           "open": true
         },
         "IntakeS": {
@@ -81,11 +87,6 @@
     "Plot <0>": {
       "plots": [
         {
-          "axis": [
-            {
-              "autoFit": true
-            }
-          ],
           "height": 570,
           "series": [
             {
@@ -114,6 +115,15 @@
                 1.0
               ],
               "id": "NT:/Shuffleboard/ArmS/getLengthMeters"
+            },
+            {
+              "color": [
+                0.7686275243759155,
+                0.30588236451148987,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/IntakeS/getIntakeVolts"
             }
           ]
         }
