@@ -150,7 +150,7 @@ public class RobotContainer {
         // OFFICIAL CALEB PREFERENCE
         m_driverController.y().toggleOnTrue(armIntakeCG(ArmConstants.OVERTOP_CONE_INTAKE_POSITION, false));
         m_driverController.x().onTrue(m_armS.stowIndefiniteC());
-
+        m_driverController.back().onTrue(m_intakeS.runOnce(m_intakeS::toggle));
 
 
         m_driverController.rightBumper().toggleOnTrue(armIntakeSelectedCG(
