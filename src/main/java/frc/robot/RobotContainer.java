@@ -114,11 +114,12 @@ public class RobotContainer {
         // m_driverController.back().whileTrue(m_drivebaseS.chargeStationFrontFirstC());
 
         //Autonomous Option Selections:
-        m_autoSelector.setDefaultOption("1 Cone Balance-Bump", eighteenPointAuto(3));
-        m_autoSelector.setDefaultOption("1 Cone Balance-HP", eighteenPointAuto(5));
+        m_autoSelector.setDefaultOption("1 Cone Balance-Center/Bump", eighteenPointAuto(3));
+        m_autoSelector.setDefaultOption("1 Cone Balance-Center/HP", eighteenPointAuto(5));
         //No Bump:
         m_autoSelector.addOption("2 Cone", fifteenPointAuto());
         m_autoSelector.addOption("2 Cone Balance", twentysevenPointAuto());
+        m_autoSelector.addOption("Do Nothing", Commands.none());
         // m_autoSelector.addOption("21 Point No 2nd", twentyonePointAutoNo2nd());
         // m_autoSelector.addOption("21 Point With 2nd", twentyonePointAutoWith2nd());
         // m_autoSelector.addOption("27 Point (Cone Cube)", twentysevenPointConeCubeAuto());

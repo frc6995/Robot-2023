@@ -394,10 +394,16 @@ public class PhotonPoseEstimator {
     private Optional<EstimatedRobotPose> lowestAmbiguityStrategy(PhotonPipelineResult result) {
         PhotonTrackedTarget lowestAmbiguityTarget = null;
 
-        double lowestAmbiguityScore = 0.1;
+        double lowestAmbiguityScore = 0.2;
 
         for (PhotonTrackedTarget target : result.targets) {
             double targetPoseAmbiguity = target.getPoseAmbiguity();
+
+            if (target.getFiducialId() < 1 || target.getFiducialId() > 8) continue;
+        
+            if (target.getBestCameraToTarget().getTranslation().getNorm() > 3.5) {
+                continue;
+            }
             // Make sure the target is a Fiducial target.
             if (targetPoseAmbiguity != -1 && targetPoseAmbiguity < lowestAmbiguityScore) {
                 lowestAmbiguityScore = targetPoseAmbiguity;
