@@ -565,7 +565,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      * @param currentSpeedVectorMPS a Translation2d where x and y are the robot's x and y field-relative speeds in m/s.
      * @return a PathPlannerTrajectory to the target pose.
      */
-    public static PathPlannerTrajectory generateTrajectoryToPose(Pose2d robotPose, Pose2d target, Translation2d currentSpeedVectorMPS) {
+    public static PathPlannerTrajectory generateTrajectoryToPose(Pose2d robotPose, Pose2d target, Translation2d currentSpeedVectorMPS, PathConstraints constraints) {
 
                 
                 // Robot velocity calculated from module states.
@@ -584,7 +584,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
                     robotToTargetTranslation.getNorm() > 0.1
                 ) {
                     PathPlannerTrajectory pathPlannerTrajectory = PathPlanner.generatePath(
-                        new PathConstraints(2, 2), 
+                        constraints, 
                         //Start point. At the position of the robot, initial travel direction toward the target,
                         // robot rotation as the holonomic rotation, and putting in the (possibly 0) velocity override.
                         new PathPoint(
@@ -619,15 +619,23 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
             m_holonomicDriveController,
             this::drive,
             (PathPlannerTrajectory traj) -> {}, // empty output for current trajectory.
-            (startPose, endPose)->DrivebaseS.generateTrajectoryToPose(startPose, endPose, getFieldRelativeLinearSpeedsMPS()),
+            (startPose, endPose)->DrivebaseS.generateTrajectoryToPose(startPose, endPose, getFieldRelativeLinearSpeedsMPS(), new PathConstraints(2, 2)),
             this);
     }
 
     public Command chargeStationAlignC() {
-        return chasePoseC(()->new Pose2d(
+        return new PPChasePoseCommand(
+            ()->new Pose2d(
                 POIS.CHARGE_STATION.ownPose().getX(),
                 getPose().getY(),
-                POIS.CHARGE_STATION.ownPose().getRotation()));
+                POIS.CHARGE_STATION.ownPose().getRotation()),
+            this::getPose,
+            m_holonomicDriveController,
+            this::drive,
+            (PathPlannerTrajectory traj) -> {}, // empty output for current trajectory.
+            (startPose, endPose)->DrivebaseS.generateTrajectoryToPose(startPose, endPose, getFieldRelativeLinearSpeedsMPS(),
+                new PathConstraints(2, 3)),
+            this);
     }
     public Command chargeStationBatteryFirstC() {
         return Commands.sequence(
