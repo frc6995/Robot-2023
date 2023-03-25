@@ -140,7 +140,6 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
             m_kinematics, getHeading(), getModulePositions(), new Pose2d(),
             VecBuilder.fill(0.1, 0.1, 0.1),
             VecBuilder.fill(0.9, 0.9, 0.9));
-        m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(0.9, 0.9, 1000));
         m_thetaController.setTolerance(Units.degreesToRadians(0.5));
         m_thetaController.enableContinuousInput(-Math.PI, Math.PI);
         m_profiledThetaController.setTolerance(Units.degreesToRadians(0.5));

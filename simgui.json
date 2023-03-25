@@ -17,6 +17,10 @@
         "Robot": {
           "style": "Box/Image"
         },
+        "bluePoses": {
+          "length": 0.7900000214576721,
+          "width": 0.7900000214576721
+        },
         "bottom": 544,
         "driveTarget": {
           "style": "Box/Image"
