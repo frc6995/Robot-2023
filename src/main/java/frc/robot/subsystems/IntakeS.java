@@ -151,6 +151,10 @@ public class IntakeS extends SubsystemBase implements Loggable {
     intake(Constants.IntakeConstants.INTAKE_VOLTAGE * (isExtended() ? 1.5 : 3));
   }
 
+  public Command autoStagedIntakeC() {
+    return runEnd(()->intake(Constants.IntakeConstants.INTAKE_VOLTAGE * 3 * 2.9/3.4), this::stop);
+  }
+
   /**
    * Spins intake motor in reverse at specified voltage
    */
@@ -289,11 +293,17 @@ public class IntakeS extends SubsystemBase implements Loggable {
   }
 
   public Command intakeUntilBeamBreakC() {
-    return intakeC().until(()->{
+    return intakeUntilBeamBreakC(intakeC());
+  }
+
+  public Command intakeUntilBeamBreakC(Command intakeCommand) {
+    return intakeCommand.until(()->{
       return isExtended ? 
       cubeDebouncedBeamBreak.getAsBoolean() : coneDebouncedBeamBreak.getAsBoolean();})
       .andThen(intakeC().withTimeout(isExtended ? 0.1 : 0.1));
     
   }
+
+
 
 }

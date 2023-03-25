@@ -119,6 +119,7 @@ public class RobotContainer {
         //No Bump:
         m_autoSelector.addOption("2 Cone", fifteenPointAuto());
         m_autoSelector.addOption("2 Cone Bal.", twentysevenPointAuto());
+        m_autoSelector.addOption("2 Cone Over Bump", bumpTwoConeAuto());
         m_autoSelector.addOption("Cone+Over Bump [UNTESTED]", ninePointAuto());
         m_autoSelector.addOption("Do Nothing", Commands.none());
         // m_autoSelector.addOption("21 Point No 2nd", twentyonePointAutoNo2nd());
@@ -324,7 +325,7 @@ public class RobotContainer {
             Commands.deadline(
                 Commands.race(
                     m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.stopOnceC()).asProxy(),
-                    m_intakeS.intakeUntilBeamBreakC().asProxy()
+                    m_intakeS.intakeUntilBeamBreakC(m_intakeS.autoStagedIntakeC()).asProxy()
                 ),
                 m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION).asProxy().withTimeout(5)  
             ),
@@ -344,6 +345,48 @@ public class RobotContainer {
 
         );
     }
+
+
+    private Command bumpTwoConeAuto() {
+        var pathGroup = PathPlanner.loadPathGroup("Bump 27 Point", new PathConstraints(2, 2));
+        return Commands.sequence(
+            m_intakeS.retractC().asProxy(),
+            m_keypad.blueSetpointCommand(0, 2),
+            m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
+            Commands.deadline(
+                m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
+                alignToSelectedScoring().asProxy()
+            ),
+            m_intakeS.outtakeC().withTimeout(0.3).asProxy(),
+            
+            m_keypad.blueSetpointCommand(2, 2),
+
+            Commands.deadline(
+                Commands.race(
+                    m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.stopOnceC()).asProxy(),
+                    m_intakeS.intakeUntilBeamBreakC(m_intakeS.autoStagedIntakeC()).asProxy()
+                ),
+                m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION).asProxy().withTimeout(5)  
+            ),
+            Commands.parallel(
+                
+                m_intakeS.intakeC().withTimeout(0.1).asProxy(),
+                m_armS.goToPositionC(ArmConstants.RETRACTED_SCORE_CONE_POSITION).asProxy().withTimeout(3),
+                m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).asProxy()
+            ),
+            Commands.deadline(
+                sequence(
+                    m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy(),
+                    m_intakeS.outtakeC().withTimeout(0.3).asProxy()
+                ),
+                alignToSelectedScoring().asProxy()
+            )
+
+        );
+    }
+
+
+
 
     public Command fifteenPointAuto(){
         

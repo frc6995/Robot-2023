@@ -71,6 +71,12 @@
           },
           "open": true
         },
+        "DrivebaseS": {
+          "SwerveModule-BR-[14,13]": {
+            "open": true
+          },
+          "open": true
+        },
         "IntakeS": {
           "open": true
         },
@@ -151,6 +157,24 @@
                 1.0
               ],
               "id": "NT:/Shuffleboard/RobotContainer/loopTime"
+            }
+          ]
+        }
+      ]
+    },
+    "Plot <2>": {
+      "plots": [
+        {
+          "height": 332,
+          "series": [
+            {
+              "color": [
+                0.2980392277240753,
+                0.44705885648727417,
+                0.6901960968971252,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/DrivebaseS/SwerveModule-BR-[14,13]/getVelocitySetpoint"
             }
           ]
         }
