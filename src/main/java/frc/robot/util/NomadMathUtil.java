@@ -1,5 +1,8 @@
 package frc.robot.util;
+import java.util.function.Supplier;
+
 import com.pathplanner.lib.PathPlannerTrajectory.PathPlannerState;
+import com.revrobotics.REVLibError;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -98,6 +101,18 @@ public class NomadMathUtil {
         }
         return mirrorPose(bluePose);
         
+    }
+
+    public static REVLibError retryRev(Supplier<REVLibError> command) {
+        REVLibError error = REVLibError.kOk;
+        for (int i = 0; i < 5; i++) {
+            error = command.get();
+            if (error == REVLibError.kOk) {
+                return error;
+            }
+        }
+        DriverStation.reportError(error.toString(), true);
+        return error;
     }
 
     

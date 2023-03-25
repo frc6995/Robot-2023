@@ -39,7 +39,7 @@ public class OperatorControlC extends CommandBase {
 
     private boolean lastHoldHeading = false;
 
-    private final double MAX_LINEAR_SPEED = Units.feetToMeters(13);
+    private final double MAX_LINEAR_SPEED = Units.feetToMeters(14);
 
     public static final double MAX_TURN_SPEED = Units.degreesToRadians(360);
 

@@ -196,8 +196,15 @@ public class IntakeS extends SubsystemBase implements Loggable {
    */
 
   public void toggle() {
-    doubleSolenoid.toggle();
-    isExtended = !isExtended;
+    if (doubleSolenoid.get() == Value.kOff) {
+      extend();
+      isExtended = true;
+    }
+    else {
+      doubleSolenoid.toggle();
+      isExtended = !isExtended;
+    }
+
   }
 
   /**

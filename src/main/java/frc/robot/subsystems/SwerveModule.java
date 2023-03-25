@@ -25,10 +25,13 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.util.sim.DutyCycleEncoderSim;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.Constants.DriveConstants;
@@ -71,24 +74,66 @@ public class SwerveModule extends SubsystemBase implements Loggable{
     public SwerveModule( ModuleConstants moduleConstants) {
         m_driveMotor = new CANSparkMax(moduleConstants.driveMotorID, MotorType.kBrushless);
         m_steerMotor = new CANSparkMax(moduleConstants.rotationMotorID, MotorType.kBrushless);
-        m_driveMotor.restoreFactoryDefaults(false);
-        m_steerMotor.restoreFactoryDefaults(false);
-        m_driveMotor.setSmartCurrentLimit(35);
+        // m_driveMotor.restoreFactoryDefaults(false);
+        // m_steerMotor.restoreFactoryDefaults(false);
+        
+        // CommandScheduler.getInstance().schedule(
+        //     Commands.waitSeconds(moduleConstants.driveMotorID * 0.01).andThen(
+        //         ()->{
+        //             m_driveMotor.setSmartCurrentLimit(35);
+        //             //m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
+        //             m_driveMotor.getEncoder().setPositionConversionFactor(
+        //                 Math.PI * (WHEEL_RADIUS_M * 2) // meters/ wheel rev
+        //                 / WHEEL_ENC_COUNTS_PER_WHEEL_REV // 1/ (enc revs / wheel rev) = wheel rev/enc rev
+        //             );
+            
+        //             //set the output of the drive encoder to be in meters per second (instead of motor rpm) for velocity measurement
+        //             // wheel diam * pi = wheel circumference (meters/wheel rot) *
+        //             // 1/60 minutes per sec *
+        //             // 1/5.14 wheel rots per motor rot *
+        //             // motor rpm = wheel speed, m/s
+        //             m_driveMotor.getEncoder().setVelocityConversionFactor(
+        //                 (WHEEL_RADIUS_M * 2) * Math.PI / 60 / WHEEL_ENC_COUNTS_PER_WHEEL_REV
+        //             );
+
+        //             m_driveMotor.setIdleMode(IdleMode.kBrake);
+        //             m_driveMotor.burnFlash();
+        //         }
+        //     ).ignoringDisable(true)
+        // );
+
+        // CommandScheduler.getInstance().schedule(
+        //     Commands.waitSeconds(moduleConstants.rotationMotorID * 0.01).andThen(
+        //         Commands.runOnce(
+        //         ()->{
+        //             m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 40);
+        //             m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
+        //             m_steerMotor.getEncoder().setPositionConversionFactor(2.0 * Math.PI * AZMTH_REVS_PER_ENC_REV);
+        //             m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setPositionConversionFactor(Math.PI*2);
+        //             m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setVelocityConversionFactor(Math.PI*2 * 60);
+        //             m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setZeroOffset(moduleConstants.magEncoderOffset);
+        //             m_steerMotor.burnFlash();
+        //             DriverStation.reportWarning(" config'd steer" + moduleConstants.rotationMotorID, false);
+        //         })
+        //     ).ignoringDisable(true)
+        // );
+        //m_driveMotor.setSmartCurrentLimit(35);
         m_steerMotor.setSmartCurrentLimit(25);
         //m_driveMotor.setCANTimeout(0);
+
         m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
-        m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
-        m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
-        m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
-        m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
+        // m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
+        // m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
+        // m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
+        // m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
         //m_steerMotor.setCANTimeout(0);
         m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 40);
-        m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
-        m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
-        m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
-        m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
+        // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
+        // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
+        // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
+        // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
         m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
-        m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
+        // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
         //set the output of the drive encoder to be in meters (instead of motor rots) for linear measurement
         // wheel diam * pi = wheel circumference (meters/wheel rot) *
         // 1/6.86 wheel rots per motor rot *
@@ -171,8 +216,8 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         // Give this module a unique name on the dashboard so we have four separate sub-tabs.
         m_loggingName = "SwerveModule-" + moduleConstants.name + "-[" + m_driveMotor.getDeviceId() + ',' + m_steerMotor.getDeviceId() + ']';
         resetDistance();
-        m_driveMotor.burnFlash();
-        m_steerMotor.burnFlash();
+        
+        
     }
 
     /**
