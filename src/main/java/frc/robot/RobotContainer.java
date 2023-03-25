@@ -114,11 +114,12 @@ public class RobotContainer {
         // m_driverController.back().whileTrue(m_drivebaseS.chargeStationFrontFirstC());
 
         //Autonomous Option Selections:
-        m_autoSelector.setDefaultOption("1 Cone Balance-Center/Bump", eighteenPointAuto(3));
-        m_autoSelector.setDefaultOption("1 Cone Balance-Center/HP", eighteenPointAuto(5));
+        m_autoSelector.setDefaultOption("Cone Bal.-Bump Side", eighteenPointAuto(3));
+        m_autoSelector.setDefaultOption("Cone Bal.-HP Side", eighteenPointAuto(5));
         //No Bump:
         m_autoSelector.addOption("2 Cone", fifteenPointAuto());
-        m_autoSelector.addOption("2 Cone Balance", twentysevenPointAuto());
+        m_autoSelector.addOption("2 Cone Bal.", twentysevenPointAuto());
+        m_autoSelector.addOption("Cone+Over Bump [UNTESTED]", ninePointAuto());
         m_autoSelector.addOption("Do Nothing", Commands.none());
         // m_autoSelector.addOption("21 Point No 2nd", twentyonePointAutoNo2nd());
         // m_autoSelector.addOption("21 Point With 2nd", twentyonePointAutoWith2nd());
@@ -231,8 +232,6 @@ public class RobotContainer {
         );
     }
 
-    
-
     public Command armIntakeSelectedCG(ArmPosition cubePosition, ArmPosition conePosition, BooleanSupplier isCube) {
         return Commands.either(
             armIntakeCG(cubePosition, true), armIntakeCG(conePosition, false), isCube);
@@ -276,6 +275,32 @@ public class RobotContainer {
 
             m_armS.goToPositionC(ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT).asProxy(),
             m_drivebaseS.chargeStationAlignC().asProxy()
+            //m_drivebaseS.chargeStationBatteryFirstC()
+        ).finallyDo((end)->m_drivebaseS.drive(new ChassisSpeeds()));
+    }
+
+    public Command ninePointAuto(){
+        
+        return Commands.sequence(
+            m_intakeS.retractC().asProxy(),
+
+            Commands.runOnce(
+                ()->m_drivebaseS.resetPose(
+                    NomadMathUtil.mirrorPose(POIManager.BLUE_COMMUNITY.get(0), AllianceWrapper.getAlliance())
+                )),
+            
+            m_keypad.blueSetpointCommand(0, 2),
+            Commands.deadline(
+                Commands.sequence(
+                    m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).withTimeout(3).asProxy(),
+                    m_intakeS.outtakeC().withTimeout(0.4).asProxy()
+                ),
+                alignToSelectedScoring().asProxy()
+            ),
+            m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy(),
+            m_drivebaseS.chasePoseC(
+                ()->NomadMathUtil.mirrorPose(new Pose2d(6, 0.87, Rotation2d.fromRadians(Math.PI)), AllianceWrapper.getAlliance()))
+            .asProxy()
             //m_drivebaseS.chargeStationBatteryFirstC()
         ).finallyDo((end)->m_drivebaseS.drive(new ChassisSpeeds()));
     }
