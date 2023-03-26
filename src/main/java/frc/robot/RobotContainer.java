@@ -216,6 +216,9 @@ public class RobotContainer {
     public void onEnabled(){
         m_drivebaseS.resetRelativeRotationEncoders();
     }
+    public void onDisabled() {
+        m_drivebaseS.scheduleConfigCommands();
+    }
 
     public Command armIntakeCG(ArmPosition position, boolean isCube) {
         return 

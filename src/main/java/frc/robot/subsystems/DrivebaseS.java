@@ -682,4 +682,8 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         );
     }
 
+    public void scheduleConfigCommands() {
+        m_modules.forEach(SwerveModule::scheduleConfigCommands);
+    }
+
 }

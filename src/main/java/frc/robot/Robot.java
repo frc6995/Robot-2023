@@ -39,7 +39,7 @@ public class Robot extends TimedRobot {
         }
         
         Robot.isSimulation = RobotBase.isSimulation();
-        // DriverStation.silenceJoystickConnectionWarning(true);
+        DriverStation.silenceJoystickConnectionWarning(true);
         if (!isSimulation) {
             DataLogManager.start();
             DriverStation.startDataLog(DataLogManager.getLog());
@@ -85,6 +85,7 @@ public class Robot extends TimedRobot {
     @Override
     public void disabledInit() {
         CommandScheduler.getInstance().cancelAll();
+        robotContainer.onDisabled();
     }
     @Override
     public void disabledPeriodic() {
