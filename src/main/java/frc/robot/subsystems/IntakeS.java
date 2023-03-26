@@ -52,7 +52,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
   private Trigger coneDebouncedBeamBreak = new Trigger(this::hitBeamBreak);//.debounce(0.0);
     /** Creates a new IntakeS. */
   public IntakeS() {
-    m_beamBreak.enableLimitSwitch(false);
+
     intakeMotor.restoreFactoryDefaults();
     intakeFollowerMotor.restoreFactoryDefaults();
     intakeMotor.setIdleMode(IdleMode.kBrake);
@@ -72,6 +72,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
     intakeFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
     intakeFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
     intakeFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
+    m_beamBreak.enableLimitSwitch(false);
     
     intakeMotor.setSmartCurrentLimit(10, 10);
     intakeFollowerMotor.follow(intakeMotor, false);
