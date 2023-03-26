@@ -392,9 +392,15 @@ public class RobotContainer {
 
 
     public Command fifteenPointAuto(){
+        var backOutPath = PathPlanner.loadPath("15 Point Back Out", new PathConstraints(4, 3));
         
         return twoConeAuto().andThen(
-            m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3)
+            Commands.parallel(
+                m_keypad.blueSetpointCommand(7, 2),
+                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
+                m_drivebaseS.pathPlannerCommand(backOutPath).asProxy()
+            )
+            
         );
     }
 
