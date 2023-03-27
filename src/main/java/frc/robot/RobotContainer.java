@@ -209,7 +209,7 @@ public class RobotContainer {
         /* Trace the loop duration and plot to shuffleboard */
         LightS.getInstance().periodic();
         m_drivebaseS.drawRobotOnField(m_field);
-        //m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
+        m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
         ///]m_field3d.setRobotPose(new Pose3d(m_drivebaseS.getPose().getX(), m_drivebaseS.getPose().getY(), 0, m_drivebaseS.getRotation3d()));
     }
 
