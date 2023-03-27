@@ -5,6 +5,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.simulation.SimDeviceSim;
+import frc.robot.Robot;
+import frc.robot.util.TimingTracer;
 
 public class SimGyroSensorModel{
 
@@ -14,7 +16,7 @@ public class SimGyroSensorModel{
     double m_gyroPosReading_deg;
 
     public SimGyroSensorModel(){
-        if (RobotBase.isSimulation()){
+        if (Robot.isSimulation()){
             m_gyroSim = new SimDeviceSim("navX-Sensor[0]");
             m_rateSimDouble = m_gyroSim.getDouble("Rate");
             m_yawSimDouble = m_gyroSim.getDouble("Yaw");
@@ -23,16 +25,16 @@ public class SimGyroSensorModel{
     }
 
     public void resetToPose(Pose2d resetPose){
-        if (RobotBase.isSimulation()){
+        if (Robot.isSimulation()){
             m_yawSimDouble.set(resetPose.getRotation().getDegrees() * -1.0);
         }
         
     }
 
     public void update(Pose2d curRobotPose, Pose2d prevRobotPose){
-        if (RobotBase.isSimulation()){
+        if (Robot.isSimulation()){
             double delta = curRobotPose.getRotation().minus(prevRobotPose.getRotation()).getDegrees();
-            double gyroRate = (delta)/0.02; //Gyro reads backward from sim reference frames.
+            double gyroRate = (delta)/TimingTracer.getLoopTime(); //Gyro reads backward from sim reference frames.
             // Pass our model of what the sensor would be measuring back into the simGyro object
             // for the embedded code to interact with.
             m_rateSimDouble.set(gyroRate);
@@ -43,7 +45,7 @@ public class SimGyroSensorModel{
     }
 
     public Rotation2d getRotation2d() {
-        if(RobotBase.isSimulation()){
+        if(Robot.isSimulation()){
             return Rotation2d.fromDegrees(m_yawSimDouble.get());
         }
         return new Rotation2d();

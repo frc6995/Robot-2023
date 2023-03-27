@@ -10,11 +10,15 @@ import com.pathplanner.lib.PathPlannerTrajectory.PathPlannerState;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.DrivebaseS;
-import frc.robot.util.drive.SecondOrderChassisSpeeds;
+import frc.robot.subsystems.LightS;
+import frc.robot.subsystems.LightS.States;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -47,12 +51,12 @@ public class PPChasePoseCommand extends CommandBase implements Loggable {
     private PathPlannerTrajectory m_trajectory;
     private final Supplier<Pose2d> m_pose;
     private final PPHolonomicDriveController m_controller;
-    private final Consumer<SecondOrderChassisSpeeds> m_outputChassisSpeedsRobotRelative;
+    private final Consumer<ChassisSpeeds> m_outputChassisSpeedsRobotRelative;
     private final Consumer<PathPlannerTrajectory> m_outputTrajectory;
     private final BiFunction<Pose2d, Pose2d, PathPlannerTrajectory> m_trajectoryGenerator;
     private Pose2d m_lastRegenTarget;
     private DrivebaseS m_drive;
-
+    private Trigger m_finishTrigger;
     /**
      * Constructs a command to follow a moving target pose. Uses PathPlanner trajectories when the target is more than 0.2 m away.
      * @param targetPose A Supplier for the target pose.
@@ -67,7 +71,7 @@ public class PPChasePoseCommand extends CommandBase implements Loggable {
         Supplier<Pose2d> targetPose,
         Supplier<Pose2d> pose,
         PPHolonomicDriveController driveController,
-        Consumer<SecondOrderChassisSpeeds> outputChassisSpeedsFieldRelative,
+        Consumer<ChassisSpeeds> outputChassisSpeedsFieldRelative,
         Consumer<PathPlannerTrajectory> trajectoryDebugOutput,
         BiFunction<Pose2d, Pose2d, PathPlannerTrajectory> trajectoryGenerator,
         DrivebaseS drive) {
@@ -81,6 +85,9 @@ public class PPChasePoseCommand extends CommandBase implements Loggable {
         m_trajectoryGenerator = trajectoryGenerator;
         m_outputChassisSpeedsRobotRelative = outputChassisSpeedsFieldRelative;
         m_drive = drive;
+        m_finishTrigger = new Trigger(()->m_pose.get().getTranslation().getDistance(m_targetPose.get().getTranslation()) < Units.inchesToMeters(1)
+    && Math.abs(m_pose.get().getRotation().getDegrees() - m_targetPose.get().getRotation().getDegrees()) < 0.75)
+    .debounce(0.05);
         addRequirements(m_drive);
         }
 
@@ -107,7 +114,7 @@ public class PPChasePoseCommand extends CommandBase implements Loggable {
         }
         
         PathPlannerState desiredState;
-        SecondOrderChassisSpeeds targetChassisSpeeds;
+        ChassisSpeeds targetChassisSpeeds;
         // Make sure the trajectory is not empty
         // Make sure it's still time to be following the trajectory.
         if (m_trajectory.getStates().size() != 0 && m_timer.get() < m_trajectory.getTotalTimeSeconds()) {
@@ -119,7 +126,7 @@ public class PPChasePoseCommand extends CommandBase implements Loggable {
             ((PathPlannerState) m_trajectory.sample(curTime + 0.01)).holonomicAngularVelocityRadPerSec
             - desiredState.holonomicAngularVelocityRadPerSec) / 0.01;
 
-            targetChassisSpeeds.alphaRadiansPerSecondSq = alpha;
+            //targetChassisSpeeds.alphaRadiansPerSecondSq = alpha;
         }
         // if the trajectory is empty, or the time is up, just use the holonomic drive controller to hold the pose.
         else {
@@ -128,20 +135,27 @@ public class PPChasePoseCommand extends CommandBase implements Loggable {
             desiredState.poseMeters = m_targetPose.get();
             desiredState.holonomicAngularVelocityRadPerSec = 0;
             targetChassisSpeeds = m_controller.calculate(m_pose.get(), desiredState);
+            if (m_pose.get().getTranslation().getDistance(m_targetPose.get().getTranslation()) < Units.inchesToMeters(0.5)){
+                targetChassisSpeeds.vxMetersPerSecond = 0;
+                targetChassisSpeeds.vyMetersPerSecond = 0;
+            }
+
         }
             // By passing in the desired state velocity and, we allow the controller to 
             
     
             m_outputChassisSpeedsRobotRelative.accept(targetChassisSpeeds);
+        LightS.getInstance().requestState(States.Climbing);
     }
 
     @Override
     public void end(boolean interrupted) {
+        m_outputChassisSpeedsRobotRelative.accept(new ChassisSpeeds());
         m_timer.stop();
     }
 
     @Override
     public boolean isFinished() {
-        return false;
+        return m_finishTrigger.getAsBoolean();
     }
 }

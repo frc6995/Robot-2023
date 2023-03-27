@@ -1,0 +1,439 @@
+{
+  "NetworkTables": {
+    "LiveWindow": {
+      "open": true
+    },
+    "Shuffleboard": {
+      "ClimberS": {
+        "open": true
+      },
+      "IntakeS": {
+        "open": true
+      },
+      "LimelightS": {
+        "open": true
+      },
+      "RobotContainer": {
+        "autoChooser": {
+          "open": true
+        },
+        "field": {
+          "open": true
+        },
+        "open": true,
+        "pdp": {
+          "open": true
+        }
+      },
+      "ShooterS": {
+        "open": true
+      },
+      "SuperClimberS": {
+        "LinearClimberS": {
+          "open": true
+        },
+        "ThriftyClimberS": {
+          "open": true
+        }
+      },
+      "open": true
+    },
+    "SmartDashboard": {
+      "Field": {
+        "open": true
+      },
+      "InstantCommand": {
+        "open": true
+      },
+      "Shuffleboard": {
+        "DrivebaseS": {
+          "open": true
+        },
+        "open": true
+      },
+      "open": true,
+      "pdp": {
+        "open": true
+      },
+      "stick": {
+        "open": true,
+        "root": {
+          "actual": {
+            "open": true
+          },
+          "limited": {
+            "open": true
+          },
+          "open": true
+        }
+      }
+    },
+    "photonvision": {
+      "gloworm": {
+        "open": true
+      },
+      "open": true
+    },
+    "transitory": {
+      "Shuffleboard": {
+        "ArmS": {
+          "open": true
+        },
+        "DrivebaseS": {
+          "SwerveModule-FR-[12,11]": {
+            "open": true
+          },
+          "open": true
+        },
+        "RobotContainer": {
+          "m_field": {
+            "open": true
+          },
+          "open": true
+        },
+        "open": true
+      },
+      "photonvision": {
+        "OV9281": {
+          "open": true
+        },
+        "open": true
+      }
+    },
+    "types": {
+      "/FMSInfo": "FMSInfo",
+      "/LiveWindow/SwerveModule": "Subsystem",
+      "/LiveWindow/Ungrouped/DigitalInput[6]": "Digital Input",
+      "/LiveWindow/Ungrouped/DigitalInput[7]": "Digital Input",
+      "/LiveWindow/Ungrouped/DigitalInput[8]": "Digital Input",
+      "/LiveWindow/Ungrouped/DigitalInput[9]": "Digital Input",
+      "/LiveWindow/Ungrouped/PIDController[1]": "PIDController",
+      "/LiveWindow/Ungrouped/PIDController[2]": "PIDController",
+      "/LiveWindow/Ungrouped/PIDController[3]": "PIDController",
+      "/LiveWindow/Ungrouped/Scheduler": "Scheduler",
+      "/LiveWindow/Ungrouped/navX-Sensor[4]": "Gyro",
+      "/Shuffleboard/ArmS/MECH_VISUALIZER": "Mechanism2d",
+      "/Shuffleboard/ArmS/VISUALIZER": "Field2d",
+      "/Shuffleboard/ClimberS/resetBackToExtended": "Command",
+      "/Shuffleboard/ClimberS/resetBackToRetracted": "Command",
+      "/Shuffleboard/DrivebaseS/bl": "Subsystem",
+      "/Shuffleboard/DrivebaseS/br": "Subsystem",
+      "/Shuffleboard/DrivebaseS/drivebaseTilt": "Mechanism2d",
+      "/Shuffleboard/DrivebaseS/fl": "Subsystem",
+      "/Shuffleboard/DrivebaseS/fr": "Subsystem",
+      "/Shuffleboard/DrivebaseS/m_thetaController": "PIDController",
+      "/Shuffleboard/DrivebaseS/navX": "Gyro",
+      "/Shuffleboard/DrivebaseS/thetaController": "PIDController",
+      "/Shuffleboard/RobotContainer/Spinup Method": "String Chooser",
+      "/Shuffleboard/RobotContainer/autoChooser": "String Chooser",
+      "/Shuffleboard/RobotContainer/autoSelector": "String Chooser",
+      "/Shuffleboard/RobotContainer/drivebaseS": "Subsystem",
+      "/Shuffleboard/RobotContainer/field": "Field2d",
+      "/Shuffleboard/RobotContainer/m_autoSelector": "String Chooser",
+      "/Shuffleboard/RobotContainer/m_drivebaseS": "Subsystem",
+      "/Shuffleboard/RobotContainer/m_field": "Field2d",
+      "/Shuffleboard/RobotContainer/midtakeS": "Subsystem",
+      "/Shuffleboard/RobotContainer/shooterS": "Subsystem",
+      "/Shuffleboard/RobotContainer/shooterTestC": "Command",
+      "/Shuffleboard/RobotContainer/turretFrictionTestC": "Command",
+      "/Shuffleboard/RobotContainer/turretS": "Subsystem",
+      "/SmartDashboard/Field": "Field2d",
+      "/SmartDashboard/InstantCommand": "Command",
+      "/SmartDashboard/PPSwerveControllerCommand_field": "Field2d",
+      "/SmartDashboard/SendableChooser[0]": "String Chooser",
+      "/SmartDashboard/Turret Reset": "Command",
+      "/SmartDashboard/stick": "Mechanism2d"
+    },
+    "windows": {
+      "/Shuffleboard/ArmS/VISUALIZER": {
+        "0_Pivot": {
+          "length": 0.20000000298023224,
+          "selectable": false,
+          "style": "Box/Image",
+          "width": 0.20000000298023224
+        },
+        "1_Arm": {
+          "arrows": false,
+          "style": "Line"
+        },
+        "bottom": 206,
+        "height": 1.2192000150680542,
+        "image": "C:\\Users\\jashu\\PathWeaver\\Games\\3mx3m\\FTC_Field_1.png",
+        "left": 206,
+        "right": 423,
+        "top": 12,
+        "width": 1.2192000150680542
+      },
+      "/Shuffleboard/RobotContainer/field": {
+        "1mid-terminal": {
+          "arrows": false,
+          "style": "Track"
+        },
+        "5balladd1": {
+          "arrows": false,
+          "style": "Line"
+        },
+        "5balladd2": {
+          "arrows": false,
+          "style": "Line"
+        },
+        "Robot": {
+          "length": 0.7874000072479248,
+          "width": 0.7874000072479248
+        },
+        "Trajectory": {
+          "arrows": false,
+          "style": "Line"
+        },
+        "Trajectory2": {
+          "style": "Line"
+        },
+        "Turret": {
+          "length": 0.4000000059604645,
+          "width": 0.30000001192092896
+        },
+        "backLeft": {
+          "length": 0.20000000298023224,
+          "width": 0.20000000298023224
+        },
+        "backRight": {
+          "length": 0.20000000298023224,
+          "width": 0.20000000298023224
+        },
+        "bottom": 903,
+        "cupid": {
+          "arrows": false,
+          "style": "Line"
+        },
+        "cupidNext": {
+          "arrows": false,
+          "style": "Line"
+        },
+        "cupidStart": {
+          "arrows": false,
+          "style": "Box/Image"
+        },
+        "estRobot": {
+          "color": [
+            0.0,
+            0.10126590728759766,
+            1.0,
+            255.0
+          ],
+          "length": 0.8999999761581421,
+          "width": 0.8999999761581421
+        },
+        "estTurret": {
+          "color": [
+            0.6329113841056824,
+            0.37921273708343506,
+            0.37921273708343506,
+            255.0
+          ],
+          "length": 15.0,
+          "width": 0.30000001192092896
+        },
+        "frontLeft": {
+          "length": 0.20000000298023224,
+          "width": 0.20000000298023224
+        },
+        "frontRight": {
+          "length": 0.20000000298023224,
+          "width": 0.20000000298023224
+        },
+        "height": 8.229599952697754,
+        "image": "C:\\Users\\jashu\\PathWeaver\\Games\\2022 Rapid React\\2022-field.png",
+        "left": 74,
+        "mid-terminal": {
+          "arrows": false,
+          "style": "Track"
+        },
+        "right": 1781,
+        "target": {
+          "arrows": false,
+          "style": "Line"
+        },
+        "top": 45,
+        "turret": {
+          "length": 10.0
+        },
+        "turretSetpt": {
+          "length": 14.0
+        },
+        "units": "meters",
+        "width": 16.459199905395508
+      },
+      "/Shuffleboard/RobotContainer/m_autoSelector": {
+        "window": {
+          "visible": true
+        }
+      },
+      "/Shuffleboard/RobotContainer/m_field": {
+        "bottom": 544,
+        "height": 8.013679504394531,
+        "image": "C:\\Users\\jashu\\PathWeaver\\Games\\2023 Charged Up\\2023-field.png",
+        "left": 46,
+        "modules": {
+          "length": 0.4000000059604645,
+          "style": "Box/Image",
+          "width": 0.4000000059604645
+        },
+        "right": 1088,
+        "scurve": {
+          "arrows": false,
+          "style": "Hidden"
+        },
+        "target": {
+          "length": 0.7870000004768372,
+          "width": 0.7874000072479248
+        },
+        "top": 36,
+        "traj": {
+          "arrowSize": 25,
+          "arrows": false,
+          "style": "Line"
+        },
+        "width": 16.541748046875
+      },
+      "/SmartDashboard/Field": {
+        "backLeft": {
+          "length": 0.20000000298023224,
+          "width": 0.20000000298023224
+        },
+        "backRight": {
+          "length": 0.20000000298023224,
+          "width": 0.20000000298023224
+        },
+        "cupid": {
+          "arrows": false,
+          "style": "Line"
+        },
+        "frontLeft": {
+          "length": 0.20000000298023224,
+          "width": 0.20000000298023224
+        },
+        "frontRight": {
+          "length": 0.20000000298023224,
+          "width": 0.20000000298023224
+        }
+      },
+      "/SmartDashboard/stick": {
+        "image": "C:\\Users\\jashu\\PathWeaver\\Games\\polar\\polargrid.png"
+      }
+    }
+  },
+  "NetworkTables Info": {
+    "Clients": {
+      "open": true
+    },
+    "NT3@10.69.95.203:55624": {
+      "Publishers": {
+        "open": true
+      },
+      "Subscribers": {
+        "open": true
+      },
+      "open": true
+    },
+    "Server": {
+      "open": true
+    }
+  },
+  "NetworkTables Settings": {
+    "clientName": "glass1",
+    "listenAddress": "127.0.0.1",
+    "mode": "Client (NT4)",
+    "serverTeam": "localhost"
+  },
+  "Plots": {
+    "Plot <0>": {
+      "plots": [
+        {
+          "axis": [
+            {
+              "autoFit": true
+            }
+          ],
+          "height": 179,
+          "series": [
+            {
+              "color": [
+                0.2980392277240753,
+                0.44705885648727417,
+                0.6901960968971252,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/IntakeS/inputVolts"
+            },
+            {
+              "color": [
+                0.8666667342185974,
+                0.5176470875740051,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/SmartDashboard/intake"
+            },
+            {
+              "color": [
+                0.3333333432674408,
+                0.658823549747467,
+                0.4078431725502014,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/IntakeS/followerVolts"
+            },
+            {
+              "color": [
+                0.7686275243759155,
+                0.30588236451148987,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/IntakeS/followerAmps"
+            }
+          ],
+          "viewTime": 30.0
+        }
+      ],
+      "window": {
+        "visible": false
+      }
+    },
+    "Plot <1>": {
+      "plots": [
+        {
+          "axis": [
+            {
+              "autoFit": true
+            }
+          ],
+          "height": 647,
+          "series": [
+            {
+              "color": [
+                0.2980392277240753,
+                0.44705885648727417,
+                0.6901960968971252,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/DrivebaseS/SwerveModule-FR-[12,11]/getCurrentVelocityMetersPerSecond"
+            },
+            {
+              "color": [
+                0.8666667342185974,
+                0.5176470875740051,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/DrivebaseS/SwerveModule-FR-[12,11]/getVelocitySetpoint"
+            }
+          ]
+        }
+      ],
+      "window": {
+        "visible": false
+      }
+    }
+  }
+}

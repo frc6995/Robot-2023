@@ -8,16 +8,12 @@
     {
       "axisConfig": [
         {
-          "decKey": 87,
-          "decayRate": 1.0,
-          "incKey": 83,
-          "keyRate": 1.0
+          "decKey": 65,
+          "incKey": 68
         },
         {
-          "decKey": 68,
-          "decayRate": 1.0,
-          "incKey": 65,
-          "keyRate": 1.0
+          "decKey": 87,
+          "incKey": 83
         },
         {
           "decKey": 69,
@@ -25,33 +21,29 @@
           "incKey": 82,
           "keyRate": 0.009999999776482582
         },
-        {},
+        {
+          "incKey": 91
+        },
         {
           "decKey": 74,
-          "decayRate": 1.0,
-          "incKey": 76,
-          "keyRate": 1.0
+          "incKey": 76
+        },
+        {
+          "incKey": 93
         }
       ],
-      "axisCount": 5,
-      "buttonCount": 4,
+      "axisCount": 6,
+      "buttonCount": 9,
       "buttonKeys": [
         90,
         88,
         67,
-        86
-      ],
-      "povConfig": [
-        {
-          "key0": 265,
-          "key135": 323,
-          "key180": 264,
-          "key225": 321,
-          "key270": 262,
-          "key315": 327,
-          "key45": 329,
-          "key90": 263
-        }
+        86,
+        66,
+        78,
+        77,
+        44,
+        46
       ],
       "povCount": 1
     },
@@ -66,23 +58,37 @@
       "axisCount": 2,
       "buttonCount": 4,
       "buttonKeys": [
-        77,
-        44,
-        46,
-        47
+        49,
+        50,
+        51,
+        52
       ],
       "povCount": 0
     },
     {
+      "axisConfig": [
+        {
+          "decKey": 263,
+          "incKey": 262
+        }
+      ],
       "axisCount": 2,
-      "buttonCount": 6,
+      "buttonCount": 14,
       "buttonKeys": [
-        260,
-        268,
+        -1,
+        -1,
         266,
-        261,
-        269,
-        267
+        264,
+        -1,
+        -1,
+        265,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        48,
+        45
       ],
       "povCount": 0
     },
@@ -95,6 +101,12 @@
   "robotJoysticks": [
     {
       "guid": "Keyboard0"
+    },
+    {
+      "guid": "Keyboard1"
+    },
+    {
+      "guid": "Keyboard2"
     }
   ]
 }

@@ -22,13 +22,17 @@ import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.PathPoint;
-import com.pathplanner.lib.commands.PPSwerveControllerCommand;
+import frc.robot.util.trajectory.PPSwerveControllerCommand;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Quaternion;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -36,19 +40,25 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
+import frc.robot.POIManager.POIS;
+import frc.robot.subsystems.LightS.States;
+import frc.robot.POIManager;
+import frc.robot.Robot;
+import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.VisionConstants;
+import frc.robot.util.AllianceWrapper;
 import frc.robot.util.NomadMathUtil;
-import frc.robot.util.drive.SecondOrderChassisSpeeds;
-import frc.robot.util.drive.SecondOrderSwerveDriveKinematics;
-import frc.robot.util.drive.SecondOrderSwerveModuleState;
 import frc.robot.util.sim.SimGyroSensorModel;
 import frc.robot.util.sim.wpiClasses.QuadSwerveSim;
 import frc.robot.util.sim.wpiClasses.SwerveModuleSim;
@@ -70,9 +80,12 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
     public final PIDController m_xController = new PIDController(3, 0, 0);
     public final PIDController m_yController = new PIDController(3, 0, 0);
     public final PIDController m_thetaController = new PIDController(3, 0, 0);
+    // constraints determined from OperatorControlC slew settings.
+    public final ProfiledPIDController m_profiledThetaController = 
+        new ProfiledPIDController(3, 0, 0, new Constraints(2*Math.PI, 4*Math.PI));
     public final PPHolonomicDriveController m_holonomicDriveController = new PPHolonomicDriveController(m_xController, m_yController, m_thetaController);
 
-    private final SwerveDriveKinematics m_kinematics = new SecondOrderSwerveDriveKinematics(
+    private final SwerveDriveKinematics m_kinematics = new SwerveDriveKinematics(
         ModuleConstants.FL.centerOffset,
         ModuleConstants.FR.centerOffset,
         ModuleConstants.BL.centerOffset,
@@ -84,7 +97,8 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      * Takes in kinematics and robot angle for parameters
      */
     private final SwerveDrivePoseEstimator m_poseEstimator;
-    private final PhotonCameraWrapper m_cameraWrapper;
+    private final PhotonCameraWrapper m_camera1Wrapper;
+    private final PhotonCameraWrapper m_camera2Wrapper;
 
     private final List<SwerveModuleSim> m_moduleSims = List.of(
         DrivebaseS.swerveSimModuleFactory(),
@@ -110,36 +124,69 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         m_fl, m_fr, m_bl, m_br
     );
 
+    private SwerveModuleState[] currentStates = new SwerveModuleState[] {new SwerveModuleState(), new SwerveModuleState(), new SwerveModuleState(), new SwerveModuleState()};
+    private SwerveModulePosition[] currentPositions = new SwerveModulePosition[] {
+        new SwerveModulePosition(),
+        new SwerveModulePosition(),
+        new SwerveModulePosition(),
+        new SwerveModulePosition()
+    };
+
     public DrivebaseS() {
         m_navx.reset();
         
         m_poseEstimator =
-        new SwerveDrivePoseEstimator(m_kinematics, getHeading(), getModulePositions(), new Pose2d());
-        m_thetaController.setTolerance(Units.degreesToRadians(2));
-        m_xController.setTolerance(0.05);
-        m_yController.setTolerance(0.05);
-        m_cameraWrapper = new PhotonCameraWrapper("OV9281", VisionConstants.robotToCam);
-        resetPose(new Pose2d(1.835, 1.072, Rotation2d.fromRadians(Math.PI)));
+        new SwerveDrivePoseEstimator(
+            m_kinematics, getHeading(), getModulePositions(), new Pose2d(),
+            VecBuilder.fill(0.1, 0.1, 0.1),
+            VecBuilder.fill(0.9, 0.9, 0.9));
+        m_thetaController.setTolerance(Units.degreesToRadians(0.5));
+        m_thetaController.enableContinuousInput(-Math.PI, Math.PI);
+        m_profiledThetaController.setTolerance(Units.degreesToRadians(0.5));
+        m_profiledThetaController.enableContinuousInput(-Math.PI, Math.PI);
+        m_xController.setTolerance(0.01);
+        m_yController.setTolerance(0.01);
+        m_camera1Wrapper = new PhotonCameraWrapper(VisionConstants.CAM_1_NAME, VisionConstants.robotToCam1);
+        m_camera2Wrapper = new PhotonCameraWrapper(VisionConstants.CAM_2_NAME, VisionConstants.robotToCam2);
+        
+        //resetPose(POIManager.mirrorPose(new Pose2d(1.835, 1.072, Rotation2d.fromRadians(Math.PI))));
+    }
+
+    public Rotation3d getRotation3d() {
+        return new Rotation3d(new Quaternion(
+            m_navx.getQuaternionW(),
+            m_navx.getQuaternionX(),
+            m_navx.getQuaternionY(),
+            m_navx.getQuaternionZ()
+        ));
+    }
+
+    @Log
+    public double getPitch() {
+        return Units.degreesToRadians(m_navx.getPitch());
     }
 
     @Override
     public void periodic() {
-        var cam1Pose = m_cameraWrapper.getEstimatedGlobalPose(getPose());
+        var cam1Pose = m_camera1Wrapper.getEstimatedGlobalPose(getPose());
         if (cam1Pose.getFirst() != null) {
             var pose = cam1Pose.getFirst();
             var timestamp = cam1Pose.getSecond();
             m_poseEstimator.addVisionMeasurement(pose, timestamp);
         }
 
+        var cam2Pose = m_camera2Wrapper.getEstimatedGlobalPose(getPose());
+        if (cam2Pose.getFirst() != null) {
+            var pose = cam2Pose.getFirst();
+            var timestamp = cam2Pose.getSecond();
+            m_poseEstimator.addVisionMeasurement(pose, timestamp);
+        }
+
         // update the odometry every 20ms
         m_poseEstimator.update(getHeading(), getModulePositions());
     }
-    
-    public void drive(ChassisSpeeds speeds) {
-        drive(new SecondOrderChassisSpeeds(speeds));
-    }
 
-    public void drive(SecondOrderChassisSpeeds speeds) {
+    public void drive(ChassisSpeeds speeds) {
         // use kinematics (wheel placements) to convert overall robot state to array of individual module states
         SwerveModuleState[] states;
 
@@ -147,7 +194,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         // By default it would point all modules forward when stopped. Here, we override this.
         if(Math.abs(speeds.vxMetersPerSecond) < 0.01
             && Math.abs(speeds.vyMetersPerSecond) < 0.01
-            && Math.abs(speeds.omegaRadiansPerSecond) < 0.01) {
+            && Math.abs(speeds.omegaRadiansPerSecond) < 0.0001) {
                 states = getStoppedStates();
         } else {
             // make sure the wheels don't try to spin faster than the maximum speed possible
@@ -163,6 +210,15 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
 
     public void driveFieldRelative(ChassisSpeeds fieldRelativeSpeeds) {
         drive(ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds, getPoseHeading()));
+    }
+
+    public void driveAllianceRelative(ChassisSpeeds fieldRelativeSpeeds) {
+        if (AllianceWrapper.getAlliance() == Alliance.Red) {
+            drive(ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds, getPoseHeading().plus(Rotation2d.fromRadians(Math.PI))));
+        }
+        else {
+            drive(ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds, getPoseHeading()));
+        }
     }
 
     public void driveFieldRelativeHeading(ChassisSpeeds speeds) {
@@ -215,10 +271,8 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
     private SwerveModuleState[] getStoppedStates() {
         SwerveModuleState[] states = new SwerveModuleState[4];
         for (int i = 0; i < NUM_MODULES; i++) {
-            states[i] = new SwerveModuleState(
-                0,
-                new Rotation2d(MathUtil.angleModulus(m_modules.get(i).getCanEncoderAngle().getRadians())));
-                
+            states[i] = m_modules.get(i).getCurrentState();
+            states[i].speedMetersPerSecond = 0;
         }
         return states;
     }
@@ -233,25 +287,17 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         }
     }
 
-    public void setModuleStates(SecondOrderSwerveModuleState[] moduleStates) {
-        for (int i = 0; i < NUM_MODULES; i++) {
-            m_modules.get(i).setDesiredStateClosedLoop(moduleStates[i]);
-        }
-    }
-
     /*
      *  returns an array of SwerveModuleStates. 
      *  Front(left, right), Rear(left, right)
      *  This order is important to remain consistent across the codebase, or commands can get swapped around.
      */
     public SwerveModuleState[] getModuleStates() {
-        SwerveModuleState[] states = new SwerveModuleState[4];
+        
         for (int i = 0; i < NUM_MODULES; i++) {
-            states[i] = new SwerveModuleState(
-                m_modules.get(i).getCurrentVelocityMetersPerSecond(),
-                m_modules.get(i).getCanEncoderAngle());
+            currentStates[i] = m_modules.get(i).getCurrentState();
         }
-        return states;
+        return currentStates;
     }
 
     /**
@@ -259,13 +305,10 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      * @return an array of 4 SwerveModulePosition objects
      */
     public SwerveModulePosition[] getModulePositions() {
-        SwerveModulePosition[] states = new SwerveModulePosition[4];
         for (int i = 0; i < NUM_MODULES; i++) {
-            states[i] = new SwerveModulePosition(
-                m_modules.get(i).getDriveDistanceMeters(),
-                m_modules.get(i).getCanEncoderAngle());
+            currentPositions[i] = m_modules.get(i).getCurrentPosition();
         }
-        return states;
+        return currentPositions;
     }
 
     /**
@@ -282,12 +325,22 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      * @return
      */
     public Pose2d getSimPose() {
-        if(RobotBase.isSimulation()) {
+        if(Robot.isSimulation()) {
             return m_quadSwerveSim.getCurPose();
         }
         else {
             return new Pose2d();
         }
+    }
+
+    public Command resetPoseToBeginningC(PathPlannerTrajectory trajectory) {
+        return Commands.runOnce(()->resetPose(NomadMathUtil.mirrorPose(
+            new Pose2d(
+                trajectory.getInitialState().poseMeters.getTranslation(),
+                trajectory.getInitialState().holonomicRotation
+            ), AllianceWrapper.getAlliance()
+            )
+        ));
     }
 
     /**
@@ -309,7 +362,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      */
     @Log(methodName = "getRadians")
     public Rotation2d getHeading() {
-        if(RobotBase.isSimulation()) {
+        if(Robot.isSimulation()) {
             return m_simNavx.getRotation2d();
         }
         return m_navx.getRotation2d();
@@ -328,7 +381,10 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      */
     public void resetImu() {
         m_navx.reset();
-        m_simNavx.resetToPose(new Pose2d());
+        if (Robot.isSimulation()) {
+            m_simNavx.resetToPose(new Pose2d());
+        }
+
     }
  
     public void setRotationState(double radians) {
@@ -368,7 +424,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         } else {
             for(int idx = 0; idx < QuadSwerveSim.NUM_MODULES; idx++){
                 double azmthVolts = m_modules.get(idx).getAppliedRotationVoltage();
-                double wheelVolts = m_modules.get(idx).getAppliedDriveVoltage() * 1.44;
+                double wheelVolts = NomadMathUtil.subtractkS(m_modules.get(idx).getAppliedDriveVoltage(), 0) * 1.44;
                 m_moduleSims.get(idx).setInputVoltages(wheelVolts, azmthVolts);
             }
         }
@@ -376,8 +432,8 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         Pose2d prevRobotPose = m_quadSwerveSim.getCurPose();
 
         // Update model (several small steps)
-        for (int i = 0; i< 20; i++) {
-            m_quadSwerveSim.update(0.001);
+        for (int i = 0; i< 40; i++) {
+            m_quadSwerveSim.update(0.0005);
         }
         
 
@@ -447,6 +503,10 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         m_thetaController.reset();
     }
 
+    public Pose2d getTargetPose() {
+        return new Pose2d(m_xController.getSetpoint(), m_yController.getSetpoint(), new Rotation2d(m_thetaController.getSetpoint()));
+    }
+
     /****COMMANDS */
     public Command driveTime(double speed, double time) {
         return run(
@@ -471,6 +531,13 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         });
     }
 
+    public Command stopOnceC() {
+        return runOnce(()->this.drive(new ChassisSpeeds()));
+    }
+
+    public Command stopC() {
+        return run(()->this.drive(new ChassisSpeeds()));
+    }
     public Command pathPlannerCommand(PathPlannerTrajectory path) {
         PPSwerveControllerCommand command = new PPSwerveControllerCommand(
             path,
@@ -480,7 +547,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
             m_thetaController,
             
             this::drive,
-            false,
+            true,
             this
         );
         return command;
@@ -498,7 +565,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      * @param currentSpeedVectorMPS a Translation2d where x and y are the robot's x and y field-relative speeds in m/s.
      * @return a PathPlannerTrajectory to the target pose.
      */
-    public static PathPlannerTrajectory generateTrajectoryToPose(Pose2d robotPose, Pose2d target, Translation2d currentSpeedVectorMPS) {
+    public static PathPlannerTrajectory generateTrajectoryToPose(Pose2d robotPose, Pose2d target, Translation2d currentSpeedVectorMPS, PathConstraints constraints) {
 
                 
                 // Robot velocity calculated from module states.
@@ -517,7 +584,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
                     robotToTargetTranslation.getNorm() > 0.1
                 ) {
                     PathPlannerTrajectory pathPlannerTrajectory = PathPlanner.generatePath(
-                        new PathConstraints(2, 2), 
+                        constraints, 
                         //Start point. At the position of the robot, initial travel direction toward the target,
                         // robot rotation as the holonomic rotation, and putting in the (possibly 0) velocity override.
                         new PathPoint(
@@ -552,8 +619,71 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
             m_holonomicDriveController,
             this::drive,
             (PathPlannerTrajectory traj) -> {}, // empty output for current trajectory.
-            (startPose, endPose)->DrivebaseS.generateTrajectoryToPose(startPose, endPose, getFieldRelativeLinearSpeedsMPS()),
+            (startPose, endPose)->DrivebaseS.generateTrajectoryToPose(startPose, endPose, getFieldRelativeLinearSpeedsMPS(), new PathConstraints(2, 2)),
             this);
+    }
+
+    public Command chargeStationAlignC() {
+        return new PPChasePoseCommand(
+            ()->new Pose2d(
+                POIS.CHARGE_STATION.ownPose().getX(),
+                getPose().getY(),
+                POIS.CHARGE_STATION.ownPose().getRotation()),
+            this::getPose,
+            m_holonomicDriveController,
+            this::drive,
+            (PathPlannerTrajectory traj) -> {}, // empty output for current trajectory.
+            (startPose, endPose)->DrivebaseS.generateTrajectoryToPose(startPose, endPose, getFieldRelativeLinearSpeedsMPS(),
+                new PathConstraints(2, 3)),
+            this);
+    }
+    public Command chargeStationBatteryFirstC() {
+        return Commands.sequence(
+            
+            // high speed to push down the ramp (until a tilt is detected)
+            run(()->this.driveAllianceRelative(new ChassisSpeeds(2, 0, 0)))
+            .until(()->Math.abs(this.getPitch()) > 0.13).withTimeout(3),
+            Commands.either(
+                Commands.sequence(
+                                // higher speed to get all the way on the ramp (for time)
+                run(()->this.driveAllianceRelative(new ChassisSpeeds(1.5, 0, 0))).withTimeout(0.7),
+                // slow speed to move past the tipping point (until it tips bac)
+                run(()->this.driveAllianceRelative(new ChassisSpeeds(0.7, 0, 0)))
+                    .alongWith(Commands.run(()->LightS.getInstance().requestState(States.Climbing)))
+                    .until(()-> Math.abs(this.getPitch()) < 0.15),
+                // short burst of backwards speed to cancel forward momentul
+                run(()->this.driveAllianceRelative(new ChassisSpeeds(-0.6, 0, 0))).withTimeout(1),
+                // put wheels in circle formation to prevent sliding
+                run(()->this.driveAllianceRelative(new ChassisSpeeds(0, 0, 0.1))).withTimeout(0.2))
+                , Commands.none(), ()->Math.abs(this.getPitch()) > 0.05)
+
+        );
+    }
+
+    public Command chargeStationFrontFirstC() {
+        return Commands.sequence(
+            // high speed to push down the ramp (until a tilt is detected)
+            run(()->this.drive(new ChassisSpeeds(1.3, 0, 0)))
+            .until(()->Math.abs(this.getPitch()) > 0.13).withTimeout(3),
+            Commands.either(
+                Commands.sequence(
+                                // higher speed to get all the way on the ramp (for time)
+                run(()->this.drive(new ChassisSpeeds(1.5, 0, 0))).withTimeout(0.7),
+                // slow speed to move past the tipping point (until it tips bac)
+                run(()->this.drive(new ChassisSpeeds(0.7, 0, 0)))
+                    .alongWith(Commands.run(()->LightS.getInstance().requestState(States.Climbing)))
+                    .until(()-> Math.abs(this.getPitch()) < 0.15),
+                // short burst of backwards speed to cancel forward momentul
+                run(()->this.drive(new ChassisSpeeds(-0.6, 0, 0))).withTimeout(0.6),
+                // put wheels in circle formation to prevent sliding
+                run(()->this.drive(new ChassisSpeeds(0, 0, 0.1))).withTimeout(0.2))
+                , Commands.none(), ()->Math.abs(this.getPitch()) > 0.05)
+
+        );
+    }
+
+    public void scheduleConfigCommands() {
+        m_modules.forEach(SwerveModule::scheduleConfigCommands);
     }
 
 }

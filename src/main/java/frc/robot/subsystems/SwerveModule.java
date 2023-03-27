@@ -12,20 +12,33 @@ import static frc.robot.Constants.DriveConstants.WHEEL_ENC_COUNTS_PER_WHEEL_REV;
 import static frc.robot.Constants.DriveConstants.WHEEL_RADIUS_M;
 
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.MotorFeedbackSensor;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.util.sim.DutyCycleEncoderSim;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Robot;
+import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
-import frc.robot.util.drive.SecondOrderSwerveModuleState;
+import frc.robot.util.TimingTracer;
+
 import frc.robot.util.sim.SparkMaxAbsoluteEncoderWrapper;
 import frc.robot.util.sim.SparkMaxEncoderWrapper;
 import io.github.oblarg.oblog.Loggable;
@@ -41,8 +54,13 @@ public class SwerveModule extends SubsystemBase implements Loggable{
     private final SparkMaxEncoderWrapper m_driveEncoderWrapper;
     private final SparkMaxEncoderWrapper m_steerEncoderWrapper;
 
+    //private final DutyCycleEncoder m_magEncoder;
+    //private final DutyCycleEncoderSim m_magEncoderSim;
+
     private final SparkMaxAbsoluteEncoderWrapper m_magEncoder;
     private final double m_magEncoderOffset;
+
+    private final ModuleConstants m_moduleConstants;
 
     //absolute offset for the CANCoder so that the wheels can be aligned when the robot is turned on
 
@@ -51,17 +69,36 @@ public class SwerveModule extends SubsystemBase implements Loggable{
     private final PIDController m_drivePIDController;
     private final String m_loggingName;
     private final SimpleMotorFeedforward m_driveFeedForward = new SimpleMotorFeedforward(
-        DRIVE_FF_CONST[0],
+        Robot.isReal() ? DRIVE_FF_CONST[0]: 0,
         DRIVE_FF_CONST[1],
         DRIVE_FF_CONST[2]);        
 
 
     public SwerveModule( ModuleConstants moduleConstants) {
+        m_moduleConstants = moduleConstants;
         m_driveMotor = new CANSparkMax(moduleConstants.driveMotorID, MotorType.kBrushless);
         m_steerMotor = new CANSparkMax(moduleConstants.rotationMotorID, MotorType.kBrushless);
         m_driveMotor.restoreFactoryDefaults(false);
         m_steerMotor.restoreFactoryDefaults(false);
+        
 
+        //m_driveMotor.setSmartCurrentLimit(35);
+        m_steerMotor.setSmartCurrentLimit(25);
+        //m_driveMotor.setCANTimeout(0);
+
+        m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
+        // m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
+        // m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
+        // m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
+        // m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
+        //m_steerMotor.setCANTimeout(0);
+        m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 40);
+        // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
+        // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
+        // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
+        // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
+        m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
+        // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
         //set the output of the drive encoder to be in meters (instead of motor rots) for linear measurement
         // wheel diam * pi = wheel circumference (meters/wheel rot) *
         // 1/6.86 wheel rots per motor rot *
@@ -88,19 +125,37 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         // Create the encoder wrappers after setting conversion factors so that the wrapper reads the conversions.
         m_driveEncoderWrapper = new SparkMaxEncoderWrapper(m_driveMotor);
         m_steerEncoderWrapper = new SparkMaxEncoderWrapper(m_steerMotor);
+
+        
         m_magEncoderOffset = moduleConstants.magEncoderOffset;
-        // absolute encoder reports in rotations and rpm, so we convert to radians and rad/s
-        m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setPositionConversionFactor(2.0 * Math.PI);
-        m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setVelocityConversionFactor(2.0 * Math.PI / 60);
+        // // absolute encoder reports in rotations and rpm, so we convert to radians and rad/s
+        // m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setPositionConversionFactor(2.0 * Math.PI);
+        // m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setVelocityConversionFactor(2.0 * Math.PI / 60);
+        // //Config the mag encoder, which is directly on the module rotation shaft.
+        // // The magnet in the module is not aligned straight down the direction the wheel points, but it is fixed in place.
+        // // This means we can subtract a fixed position offset from the encoder reading,
+        // // I.E. if the module is at 0 but the magnet points at 30 degrees, we can subtract 30 degrees from all readings
+        m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setPositionConversionFactor(Math.PI*2);
+        m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setVelocityConversionFactor(Math.PI*2 * 60);
+        m_magEncoder = new SparkMaxAbsoluteEncoderWrapper(m_steerMotor, m_magEncoderOffset);
+        //m_steerMotor.getPIDController().setFeedbackDevice(m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle));
         //Config the mag encoder, which is directly on the module rotation shaft.
+        //m_magEncoder = new DutyCycleEncoder(moduleConstants.magEncoderID);
+        //magEncoder.setDistancePerRotation(2*Math.PI);
+        //m_magEncoder.setDutyCycleRange(1.0/4098.0, 4096.0/4098.0); //min and max pulse width from the mag encoder datasheet
+        //magEncoder.setPositionOffset(measuredOffsetRadians/(2*Math.PI));
         // The magnet in the module is not aligned straight down the direction the wheel points, but it is fixed in place.
         // This means we can subtract a fixed position offset from the encoder reading,
         // I.E. if the module is at 0 but the magnet points at 30 degrees, we can subtract 30 degrees from all readings
-        m_magEncoder = new SparkMaxAbsoluteEncoderWrapper(m_steerMotor, m_magEncoderOffset);
-
+        //magEncoder.setPositionOffset(measuredOffsetRadians/(2*Math.PI));
+        
+        //Allows us to set what the mag encoder reads in sim.
+        // Start with what it would read if the module is forward.
+        //m_magEncoderSim = new DutyCycleEncoderSim(m_magEncoder);
+        //m_magEncoderSim.setAbsolutePosition(m_magEncoderOffset/ (2*Math.PI));
         //Drive motors should brake, rotation motors should coast (to allow module realignment)
         m_driveMotor.setIdleMode(IdleMode.kBrake);
-        m_steerMotor.setIdleMode(IdleMode.kCoast);
+        m_steerMotor.setIdleMode(IdleMode.kBrake);
 
         // Config the pid controllers
 
@@ -126,6 +181,53 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         // Give this module a unique name on the dashboard so we have four separate sub-tabs.
         m_loggingName = "SwerveModule-" + moduleConstants.name + "-[" + m_driveMotor.getDeviceId() + ',' + m_steerMotor.getDeviceId() + ']';
         resetDistance();
+        
+        
+    }
+
+    public void scheduleConfigCommands() {
+        CommandScheduler.getInstance().schedule(
+            Commands.waitSeconds(m_moduleConstants.driveMotorID * 0.015).ignoringDisable(true).andThen(
+                ()->{
+                    m_driveMotor.setSmartCurrentLimit(35);
+                    //m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
+                    m_driveMotor.getEncoder().setPositionConversionFactor(
+                        Math.PI * (WHEEL_RADIUS_M * 2) // meters/ wheel rev
+                        / WHEEL_ENC_COUNTS_PER_WHEEL_REV // 1/ (enc revs / wheel rev) = wheel rev/enc rev
+                    );
+            
+                    //set the output of the drive encoder to be in meters per second (instead of motor rpm) for velocity measurement
+                    // wheel diam * pi = wheel circumference (meters/wheel rot) *
+                    // 1/60 minutes per sec *
+                    // 1/5.14 wheel rots per motor rot *
+                    // motor rpm = wheel speed, m/s
+                    m_driveMotor.getEncoder().setVelocityConversionFactor(
+                        (WHEEL_RADIUS_M * 2) * Math.PI / 60 / WHEEL_ENC_COUNTS_PER_WHEEL_REV
+                    );
+
+                    m_driveMotor.setIdleMode(IdleMode.kBrake);
+                    m_driveMotor.burnFlash();
+                }
+            ).ignoringDisable(true)
+        );
+
+        CommandScheduler.getInstance().schedule(Commands.waitSeconds(10).andThen(Commands.print("print test")).ignoringDisable(true));
+        CommandScheduler.getInstance().schedule(
+            Commands.waitSeconds(m_moduleConstants.rotationMotorID * 0.015).ignoringDisable(true).andThen(
+                Commands.runOnce(
+                ()->{
+                    m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 40);
+                    m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
+                    m_steerMotor.getEncoder().setPositionConversionFactor(2.0 * Math.PI * AZMTH_REVS_PER_ENC_REV);
+                    m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setPositionConversionFactor(Math.PI*2);
+                    m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setVelocityConversionFactor(Math.PI*2 * 60);
+                    m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setZeroOffset(m_moduleConstants.magEncoderOffset);
+                    m_steerMotor.setIdleMode(IdleMode.kBrake);
+                    m_steerMotor.burnFlash();
+                    DriverStation.reportWarning(" config'd steer" + m_moduleConstants.rotationMotorID, false);
+                })
+            ).ignoringDisable(true)
+        );
     }
 
     /**
@@ -156,6 +258,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
      */
     @Log(methodName = "getRadians")
     public Rotation2d getMagEncoderAngle() {
+        //double unsignedAngle = m_magEncoder.getAbsolutePosition() * 2*Math.PI - m_magEncoderOffset;
         double unsignedAngle = m_magEncoder.getPosition();
         return new Rotation2d(unsignedAngle);
     }
@@ -166,7 +269,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
      * current angle is always desired angle.
      * @return a Rotation2d, where 0 is forward and pi/-pi is backward.
      */
-    @Log(methodName = "getRadians")
+    @Log( methodName = "getRadians")
     public Rotation2d getCanEncoderAngle() {
         return new Rotation2d(m_steerEncoderWrapper.getPosition());
     }
@@ -182,10 +285,12 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         return m_driveEncoderWrapper.getVelocity();
     }
 
+    @Log
     public double getAppliedDriveVoltage() {
         return m_driveMotor.getAppliedOutput();
     }
 
+    @Log
     public double getAppliedRotationVoltage() {
         return m_steerMotor.getAppliedOutput();
     }
@@ -198,6 +303,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
      * the module offset from forward.
     */
     public void initRotationOffset() {
+        m_steerPIDController.reset(getMagEncoderAngle().getRadians());
         m_steerEncoderWrapper.setPosition(getMagEncoderAngle().getRadians());
     }
 
@@ -207,42 +313,41 @@ public class SwerveModule extends SubsystemBase implements Loggable{
      * SwerveModuleState object that holds a desired linear and rotational setpoint
      * Uses PID and a feedforward to control the output
      */
+
+
     public void setDesiredStateClosedLoop(SwerveModuleState desiredState) {
 
         // Save the desired state for reference (Simulation assumes the modules always are at the desired state)
-        setDesiredStateClosedLoop(
-            new SecondOrderSwerveModuleState(
-                desiredState.speedMetersPerSecond, desiredState.angle,
-                0, 0));
-    }
-
-    public void setDesiredStateClosedLoop(SecondOrderSwerveModuleState desiredState) {
-
-        // Save the desired state for reference (Simulation assumes the modules always are at the desired state)
         
-        desiredState = SecondOrderSwerveModuleState.optimize(desiredState, getCanEncoderAngle());
+        desiredState = SwerveModuleState.optimize(desiredState, getMagEncoderAngle());
         
         double goal = desiredState.angle.getRadians();
-        double measurement = getCanEncoderAngle().getRadians();
+        double measurement = getMagEncoderAngle().getRadians();
         double rotationVolts = m_steerPIDController.calculate(measurement, goal);
-        if (RobotBase.isReal()) {
-            rotationVolts += 0.1;
-            rotationVolts += 0.5 * desiredState.omegaRadiansPerSecond;
-        }
+        rotationVolts += 1 * Math.signum(m_steerPIDController.getSetpoint().velocity);
+        double prevSpeedSetpoint = m_drivePIDController.getSetpoint();
         double driveVolts = m_drivePIDController.calculate(getCurrentVelocityMetersPerSecond(), desiredState.speedMetersPerSecond)
-            + m_driveFeedForward.calculate(desiredState.speedMetersPerSecond, desiredState.accelerationMetersPerSecondSquared);
-            //(this.desiredState.speedMetersPerSecond - previousState.speedMetersPerSecond) / 0.02);
+        //+ m_driveFeedForward.calculate(prevSpeedSetpoint, desiredState.speedMetersPerSecond, TimingTracer.getLoopTime());
+        +  m_driveFeedForward.calculate(desiredState.speedMetersPerSecond);
+
         m_steerMotor.setVoltage(rotationVolts);
         m_driveMotor.setVoltage(driveVolts);
     }
 
     public void periodic() {
+        //SmartDashboard.putNumber(m_loggingName, getMagEncoderAngle().getRadians());
     }
 
     public SwerveModuleState getCurrentState() {
         return new SwerveModuleState(
                 getCurrentVelocityMetersPerSecond(),
-                getCanEncoderAngle());
+                getMagEncoderAngle());
+    }
+    
+    public SwerveModulePosition getCurrentPosition() {
+        return new SwerveModulePosition(
+                getDriveDistanceMeters(),
+                getMagEncoderAngle());
     }
     
 
@@ -264,7 +369,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         m_steerEncoderWrapper.setSimPosition(angle_rad);
         m_driveEncoderWrapper.setSimPosition(wheelPos_m);
         m_driveEncoderWrapper.setSimVelocity(wheelVel_mps);
-
+        //m_magEncoderSim.setAbsolutePosition((angle_rad +m_magEncoderOffset)/ (2*Math.PI));
         m_magEncoder.setSimPosition(angle_rad);
     }
 
@@ -274,6 +379,10 @@ public class SwerveModule extends SubsystemBase implements Loggable{
     }
 
     @Log
+    public double getSteerGoal() {
+        return m_steerPIDController.getGoal().position;
+    }
+    @Log   
     public double getVelocitySetpoint() {
         return m_drivePIDController.getSetpoint();
     }

@@ -6,7 +6,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import frc.robot.util.drive.SecondOrderChassisSpeeds;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 
 /**
  * Custom version of a @HolonomicDriveController specifically for following PathPlanner paths
@@ -83,7 +83,7 @@ public class PPHolonomicDriveController {
    * @param referenceState The desired trajectory state
    * @return The next output of the holonomic drive controller
    */
-  public SecondOrderChassisSpeeds calculate(Pose2d currentPose, PathPlannerState referenceState) {
+  public ChassisSpeeds calculate(Pose2d currentPose, PathPlannerState referenceState) {
     double xFF =
         referenceState.velocityMetersPerSecond * referenceState.poseMeters.getRotation().getCos();
     double yFF =
@@ -102,7 +102,7 @@ public class PPHolonomicDriveController {
     if (!this.isEnabled) {
       return 
       
-        SecondOrderChassisSpeeds.fromFieldRelativeSpeeds(xFF, yFF, rotationFF, xAccel, yAccel, 0, currentPose.getRotation());
+        ChassisSpeeds.fromFieldRelativeSpeeds(xFF, yFF, rotationFF, currentPose.getRotation());
     }
 
     double xFeedback =
@@ -113,7 +113,7 @@ public class PPHolonomicDriveController {
         this.rotationController.calculate(
             currentPose.getRotation().getRadians(), referenceState.holonomicRotation.getRadians());
 
-    return SecondOrderChassisSpeeds.fromFieldRelativeSpeeds(
-        xFF + xFeedback, yFF + yFeedback, rotationFF + rotationFeedback, xAccel, yAccel, 0, currentPose.getRotation());
+    return ChassisSpeeds.fromFieldRelativeSpeeds(
+        xFF + xFeedback, yFF + yFeedback, rotationFF + rotationFeedback, currentPose.getRotation());
   }
 }

@@ -1,39 +1,72 @@
 package frc.robot;
 
+import java.io.IOException;
+
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.util.datalog.DataLog;
+import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.util.AllianceWrapper;
 import io.github.oblarg.oblog.Logger;
 
 public class Robot extends TimedRobot {
+
+    private static boolean isSimulation = false;
     
     private RobotContainer robotContainer;
 
     private Command autonomousCommand;
 
+    private NetworkTableEntry matchTimeEntry = NetworkTableInstance.getDefault().getEntry("/DriverDisplay/matchTime");
     @Override
     public void robotInit() {
+        try{
+            Constants.VisionConstants.TAG_FIELD_LAYOUT = AprilTagFields.k2023ChargedUp.loadAprilTagLayoutField();
+        }
+        catch (IOException e) {
+            
+        }
+        
+        Robot.isSimulation = RobotBase.isSimulation();
+        DriverStation.silenceJoystickConnectionWarning(true);
+        if (!isSimulation) {
+            DataLogManager.start();
+            DriverStation.startDataLog(DataLogManager.getLog());
+        }
 
         LiveWindow.disableAllTelemetry();
         robotContainer = new RobotContainer();
         Logger.configureLoggingAndConfig(robotContainer, false);
-        SmartDashboard.putNumber("vel", new SwerveModuleState().speedMetersPerSecond);
+        // new Trigger(DriverStation::isDSAttached).or(new Trigger(DriverStation::isFMSAttached))
+        // .onTrue(new InstantCommand(()->AllianceWrapper.setAlliance(DriverStation.getAlliance())));
+        //addPeriodic(Logger::updateEntries, 0.1);
+        addPeriodic(()->{
+            AllianceWrapper.setAlliance(DriverStation.getAlliance());
+        }, 0.5);
     }
 
     @Override
     public void robotPeriodic() {
-
+        Logger.updateEntries();
         CommandScheduler.getInstance().run();
         robotContainer.periodic();
-        Logger.updateEntries();
-        
+        matchTimeEntry.setNumber(DriverStation.getMatchTime());
     }
 
     @Override
     public void autonomousInit() {
+        AllianceWrapper.setAlliance(DriverStation.getAlliance());
         robotContainer.onEnabled();
         autonomousCommand = robotContainer.getAutonomousCommand();
 
@@ -43,15 +76,28 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopInit() {
+        AllianceWrapper.setAlliance(DriverStation.getAlliance());
         robotContainer.onEnabled();
         if (autonomousCommand != null) autonomousCommand.cancel();
 
     }
 
     @Override
-    public void disabledPeriodic() {
-        super.disabledPeriodic();
+    public void disabledInit() {
         CommandScheduler.getInstance().cancelAll();
+        robotContainer.onDisabled();
+    }
+    @Override
+    public void disabledPeriodic() {
+        
+    }
+
+    public static boolean isSimulation() {
+        return isSimulation;
+    }
+
+    public static boolean isReal() {
+        return !isSimulation;
     }
 
 }
