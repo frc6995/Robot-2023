@@ -1,22 +1,14 @@
 package frc.robot;
 
-import java.io.IOException;
-
-import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.util.AllianceWrapper;
 import io.github.oblarg.oblog.Logger;
 
@@ -31,12 +23,6 @@ public class Robot extends TimedRobot {
     private NetworkTableEntry matchTimeEntry = NetworkTableInstance.getDefault().getEntry("/DriverDisplay/matchTime");
     @Override
     public void robotInit() {
-        try{
-            Constants.VisionConstants.TAG_FIELD_LAYOUT = AprilTagFields.k2023ChargedUp.loadAprilTagLayoutField();
-        }
-        catch (IOException e) {
-            
-        }
         
         Robot.isSimulation = RobotBase.isSimulation();
         DriverStation.silenceJoystickConnectionWarning(true);
@@ -54,6 +40,7 @@ public class Robot extends TimedRobot {
         addPeriodic(()->{
             AllianceWrapper.setAlliance(DriverStation.getAlliance());
         }, 0.5);
+        addPeriodic(Logger::updateEntries, 0.04);
     }
 
     @Override
@@ -84,7 +71,6 @@ public class Robot extends TimedRobot {
 
     @Override
     public void disabledInit() {
-        CommandScheduler.getInstance().cancelAll();
         robotContainer.onDisabled();
     }
     @Override

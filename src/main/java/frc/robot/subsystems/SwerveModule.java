@@ -1,18 +1,6 @@
 package frc.robot.subsystems;
 
-import static frc.robot.Constants.DriveConstants.AZMTH_REVS_PER_ENC_REV;
-import static frc.robot.Constants.DriveConstants.DRIVE_D;
-import static frc.robot.Constants.DriveConstants.DRIVE_FF_CONST;
-import static frc.robot.Constants.DriveConstants.DRIVE_P;
-import static frc.robot.Constants.DriveConstants.STEER_D;
-import static frc.robot.Constants.DriveConstants.STEER_MAX_ACCEL_RAD_PER_SEC_SQ;
-import static frc.robot.Constants.DriveConstants.STEER_MAX_SPEED_RAD_PER_SEC;
-import static frc.robot.Constants.DriveConstants.STEER_P;
-import static frc.robot.Constants.DriveConstants.WHEEL_ENC_COUNTS_PER_WHEEL_REV;
-import static frc.robot.Constants.DriveConstants.WHEEL_RADIUS_M;
-
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.MotorFeedbackSensor;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
@@ -26,19 +14,21 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DutyCycleEncoder;
-import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.util.sim.DutyCycleEncoderSim;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Robot;
-import frc.robot.Constants.DriveConstants;
+import static frc.robot.Constants.DriveConstants.AZMTH_REVS_PER_ENC_REV;
+import static frc.robot.Constants.DriveConstants.DRIVE_D;
+import static frc.robot.Constants.DriveConstants.DRIVE_FF_CONST;
+import static frc.robot.Constants.DriveConstants.DRIVE_P;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
-import frc.robot.util.TimingTracer;
-
+import static frc.robot.Constants.DriveConstants.STEER_D;
+import static frc.robot.Constants.DriveConstants.STEER_MAX_ACCEL_RAD_PER_SEC_SQ;
+import static frc.robot.Constants.DriveConstants.STEER_MAX_SPEED_RAD_PER_SEC;
+import static frc.robot.Constants.DriveConstants.STEER_P;
+import static frc.robot.Constants.DriveConstants.WHEEL_ENC_COUNTS_PER_WHEEL_REV;
+import static frc.robot.Constants.DriveConstants.WHEEL_RADIUS_M;
+import frc.robot.Robot;
 import frc.robot.util.sim.SparkMaxAbsoluteEncoderWrapper;
 import frc.robot.util.sim.SparkMaxEncoderWrapper;
 import io.github.oblarg.oblog.Loggable;
@@ -80,47 +70,47 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         m_steerMotor = new CANSparkMax(moduleConstants.rotationMotorID, MotorType.kBrushless);
         m_driveMotor.restoreFactoryDefaults(false);
         m_steerMotor.restoreFactoryDefaults(false);
-        
+        scheduleConfigCommands();
 
-        //m_driveMotor.setSmartCurrentLimit(35);
-        m_steerMotor.setSmartCurrentLimit(25);
-        //m_driveMotor.setCANTimeout(0);
+        // //m_driveMotor.setSmartCurrentLimit(35);
+        // m_steerMotor.setSmartCurrentLimit(25);
+        m_driveMotor.setCANTimeout(0);
 
-        m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
-        // m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
-        // m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
-        // m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
-        // m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
-        //m_steerMotor.setCANTimeout(0);
-        m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 40);
-        // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
-        // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
-        // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
-        // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
-        m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
-        // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
-        //set the output of the drive encoder to be in meters (instead of motor rots) for linear measurement
-        // wheel diam * pi = wheel circumference (meters/wheel rot) *
-        // 1/6.86 wheel rots per motor rot *
-        // number of motor rots
-        // = number of meters traveled
-        m_driveMotor.getEncoder().setPositionConversionFactor(
-            Math.PI * (WHEEL_RADIUS_M * 2) // meters/ wheel rev
-            / WHEEL_ENC_COUNTS_PER_WHEEL_REV // 1/ (enc revs / wheel rev) = wheel rev/enc rev
-        );
+        // m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 10);
+        // // m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
+        // // m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
+        // // m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
+        // // m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
+        m_steerMotor.setCANTimeout(0);
+        // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 40);
+        // // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
+        // // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
+        // // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
+        // // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
+        // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
+        // // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
+        // //set the output of the drive encoder to be in meters (instead of motor rots) for linear measurement
+        // // wheel diam * pi = wheel circumference (meters/wheel rot) *
+        // // 1/6.86 wheel rots per motor rot *
+        // // number of motor rots
+        // // = number of meters traveled
+        // m_driveMotor.getEncoder().setPositionConversionFactor(
+        //     Math.PI * (WHEEL_RADIUS_M * 2) // meters/ wheel rev
+        //     / WHEEL_ENC_COUNTS_PER_WHEEL_REV // 1/ (enc revs / wheel rev) = wheel rev/enc rev
+        // );
 
-        //set the output of the drive encoder to be in meters per second (instead of motor rpm) for velocity measurement
-        // wheel diam * pi = wheel circumference (meters/wheel rot) *
-        // 1/60 minutes per sec *
-        // 1/5.14 wheel rots per motor rot *
-        // motor rpm = wheel speed, m/s
-        m_driveMotor.getEncoder().setVelocityConversionFactor(
-            (WHEEL_RADIUS_M * 2) * Math.PI / 60 / WHEEL_ENC_COUNTS_PER_WHEEL_REV
-        );
+        // //set the output of the drive encoder to be in meters per second (instead of motor rpm) for velocity measurement
+        // // wheel diam * pi = wheel circumference (meters/wheel rot) *
+        // // 1/60 minutes per sec *
+        // // 1/5.14 wheel rots per motor rot *
+        // // motor rpm = wheel speed, m/s
+        // m_driveMotor.getEncoder().setVelocityConversionFactor(
+        //     (WHEEL_RADIUS_M * 2) * Math.PI / 60 / WHEEL_ENC_COUNTS_PER_WHEEL_REV
+        // );
 
-        //set the output of the rotation encoder to be in radians
-        // (2pi rad/(module rotation)) / 12.8 (motor rots/module rots)
-        m_steerMotor.getEncoder().setPositionConversionFactor(2.0 * Math.PI * AZMTH_REVS_PER_ENC_REV);
+        // //set the output of the rotation encoder to be in radians
+        // // (2pi rad/(module rotation)) / 12.8 (motor rots/module rots)
+        // m_steerMotor.getEncoder().setPositionConversionFactor(2.0 * Math.PI * AZMTH_REVS_PER_ENC_REV);
 
         // Create the encoder wrappers after setting conversion factors so that the wrapper reads the conversions.
         m_driveEncoderWrapper = new SparkMaxEncoderWrapper(m_driveMotor);
@@ -154,8 +144,8 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         //m_magEncoderSim = new DutyCycleEncoderSim(m_magEncoder);
         //m_magEncoderSim.setAbsolutePosition(m_magEncoderOffset/ (2*Math.PI));
         //Drive motors should brake, rotation motors should coast (to allow module realignment)
-        m_driveMotor.setIdleMode(IdleMode.kBrake);
-        m_steerMotor.setIdleMode(IdleMode.kBrake);
+        // m_driveMotor.setIdleMode(IdleMode.kBrake);
+        // m_steerMotor.setIdleMode(IdleMode.kBrake);
 
         // Config the pid controllers
 
@@ -190,7 +180,12 @@ public class SwerveModule extends SubsystemBase implements Loggable{
             Commands.waitSeconds(m_moduleConstants.driveMotorID * 0.015).ignoringDisable(true).andThen(
                 ()->{
                     m_driveMotor.setSmartCurrentLimit(35);
-                    //m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
+                    m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, m_moduleConstants.driveMotorID);
+                    m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
+                    m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
+                    var error = m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
+                    m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
+                    System.out.println("drive config " + m_moduleConstants.driveMotorID + error.toString());
                     m_driveMotor.getEncoder().setPositionConversionFactor(
                         Math.PI * (WHEEL_RADIUS_M * 2) // meters/ wheel rev
                         / WHEEL_ENC_COUNTS_PER_WHEEL_REV // 1/ (enc revs / wheel rev) = wheel rev/enc rev
@@ -217,14 +212,19 @@ public class SwerveModule extends SubsystemBase implements Loggable{
                 Commands.runOnce(
                 ()->{
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 40);
-                    m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
+                    m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
+                    m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
+                    m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
+                    m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
+                    m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, m_moduleConstants.rotationMotorID);
+                    m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
                     m_steerMotor.getEncoder().setPositionConversionFactor(2.0 * Math.PI * AZMTH_REVS_PER_ENC_REV);
                     m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setPositionConversionFactor(Math.PI*2);
                     m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setVelocityConversionFactor(Math.PI*2 * 60);
                     m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setZeroOffset(m_moduleConstants.magEncoderOffset);
                     m_steerMotor.setIdleMode(IdleMode.kBrake);
                     m_steerMotor.burnFlash();
-                    DriverStation.reportWarning(" config'd steer" + m_moduleConstants.rotationMotorID, false);
+                    DriverStation.reportWarning(" config'd steer" + m_moduleConstants.rotationMotorID + m_steerMotor.burnFlash().toString(), false);
                 })
             ).ignoringDisable(true)
         );
