@@ -46,6 +46,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
     private double m_currentAngle = 0;
     private double m_currentVelocity = 0;
     private double m_currentPosition = 0;
+    private double m_currentSteerEncoderAngle = 0;
     //private final DutyCycleEncoder m_magEncoder;
     //private final DutyCycleEncoderSim m_magEncoderSim;
 
@@ -275,7 +276,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
 
     @Log
     private double getMagEncoderAngleDouble() {
-        return m_magEncoder.getPosition();//m_currentAngle;
+        return m_currentAngle;
     }
 
     /**
@@ -285,18 +286,19 @@ public class SwerveModule extends SubsystemBase implements Loggable{
      * @return a Rotation2d, where 0 is forward and pi/-pi is backward.
      */
     public Rotation2d getCanEncoderAngle() {
-        return new Rotation2d(m_steerEncoderWrapper.getPosition());
+        return new Rotation2d(getCanEncoderAngleDouble());
     }
 
     @Log
     private double getCanEncoderAngleDouble() {
-        return m_steerEncoderWrapper.getPosition();
+        return m_currentSteerEncoderAngle;
     }
 
     private void updateEncoders() {
         m_currentAngle = m_magEncoder.getPosition();
         m_currentPosition = m_driveEncoderWrapper.getPosition();
         m_currentVelocity = m_driveEncoderWrapper.getVelocity();
+        m_currentSteerEncoderAngle = m_steerEncoderWrapper.getPosition();
     }
 
     /**
@@ -307,7 +309,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
      */
     @Log
     public double getCurrentVelocityMetersPerSecond() {
-        return m_driveEncoderWrapper.getVelocity();// m_currentVelocity;
+        return m_currentVelocity;
     }
 
     @Log

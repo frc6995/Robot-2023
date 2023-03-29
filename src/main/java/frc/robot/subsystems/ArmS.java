@@ -96,6 +96,13 @@ public class ArmS extends SubsystemBase implements Loggable {
     
     public final Field2d VISUALIZER = new Field2d();
     private Supplier<Double> handLengthSupplier;
+
+    private double m_pivotAngle = 0;
+    private double m_pivotVelocity = 0;
+    private double m_wristAngle = 0;
+    private double m_wristVelocity = 0;
+    private double m_extendLength = 0;
+    private double m_extendVelocity = 0;
     //public ArmConstraintsManager setpointManager = new ArmConstraintsManager(VISUALIZER);
     public ArmS(Supplier<Double> handLengthSupplier) {
         this.handLengthSupplier = handLengthSupplier;
@@ -124,6 +131,15 @@ public class ArmS extends SubsystemBase implements Loggable {
         //setDefaultCommand(followJointSpaceTargetC());
     }
 
+    private void updateEncoders() {
+        m_extendLength = Math.max(MIN_ARM_LENGTH-0.25, m_extendEncoderWrapper.getPosition());
+        m_extendVelocity = m_extendEncoderWrapper.getVelocity();
+        m_pivotAngle = continuousRangeAngleModulus((m_pivotEncoderWrapper.getPosition() * 2 * Math.PI) - PIVOT_ENCODER_OFFSET);
+        m_pivotVelocity = m_pivotEncoderWrapper.getVelocity() * 2 * Math.PI / 60;
+        m_wristAngle = MathUtil.angleModulus(m_wristEncoderWrapper.getPosition());
+        m_wristVelocity = m_wristEncoderWrapper.getVelocity();
+    }
+
     public double constrainLength(double length) {
         return constrainLength(length, getContinuousRangeAngle());
     }
@@ -138,7 +154,8 @@ public class ArmS extends SubsystemBase implements Loggable {
         return MIN_ARM_LENGTH + Units.inchesToMeters(0.125);
     }
 
-    public void periodic() {    
+    public void periodic() {
+        updateEncoders();  
         pivotPeriodic();
         //Translation2d[] path = setpointManager.calculatePath(new Translation2d(getAngle().getRadians(), getLengthMeters()),
         //VISUALIZER.getObject("pathTarget").getPose().getTranslation();
@@ -254,7 +271,7 @@ public class ArmS extends SubsystemBase implements Loggable {
      */
     @Log
     public double getLengthMeters() {
-        return Math.max(MIN_ARM_LENGTH-0.25, m_extendEncoderWrapper.getPosition());
+        return m_extendLength;
     }
 
     @Log
@@ -268,7 +285,7 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     @Log
     public double getExtendVelocity(){
-        return m_extendEncoderWrapper.getVelocity();
+        return m_extendVelocity;
     }
 
     /**
@@ -443,7 +460,7 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     @Log
     public double getContinuousRangeAngle() {
-        return continuousRangeAngleModulus((m_pivotEncoderWrapper.getPosition() * 2 * Math.PI) - PIVOT_ENCODER_OFFSET);
+        return m_pivotAngle;
     }
 
     public double continuousRangeAngleModulus(double targetAngle) {
@@ -460,7 +477,7 @@ public class ArmS extends SubsystemBase implements Loggable {
      */
     @Log
     public double getPivotVelocity() {
-        return m_pivotEncoderWrapper.getVelocity() * 2 * Math.PI / 60;
+        return m_pivotVelocity;
     }
 
     /**
@@ -621,7 +638,7 @@ public class ArmS extends SubsystemBase implements Loggable {
      */
 
     public Rotation2d getWristAngle() {
-        return Rotation2d.fromRadians(m_wristEncoderWrapper.getPosition());
+        return Rotation2d.fromRadians(getContinuousWristAngle());
     }
 
     /**
@@ -631,8 +648,7 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     @Log
     public double getContinuousWristAngle() {
-        var angle = MathUtil.angleModulus(m_wristEncoderWrapper.getPosition());
-        return angle;
+        return m_wristAngle;
     }
 
     /**
@@ -641,7 +657,7 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     @Log
     public double getWristVelocity() {
-        return m_wristEncoderWrapper.getVelocity();
+        return m_wristVelocity;
     }
 
     /**
