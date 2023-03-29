@@ -13,7 +13,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -44,6 +43,9 @@ public class SwerveModule extends SubsystemBase implements Loggable{
     private final SparkMaxEncoderWrapper m_driveEncoderWrapper;
     private final SparkMaxEncoderWrapper m_steerEncoderWrapper;
 
+    private double m_currentAngle = 0;
+    private double m_currentVelocity = 0;
+    private double m_currentPosition = 0;
     //private final DutyCycleEncoder m_magEncoder;
     //private final DutyCycleEncoderSim m_magEncoderSim;
 
@@ -63,6 +65,15 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         DRIVE_FF_CONST[1],
         DRIVE_FF_CONST[2]);        
 
+    @Log 
+    public String getLastDriveError() {
+        return m_driveMotor.getLastError().toString();
+    }
+
+    @Log 
+    public String getLastSteerError() {
+        return m_steerMotor.getLastError().toString();
+    }
 
     public SwerveModule( ModuleConstants moduleConstants) {
         m_moduleConstants = moduleConstants;
@@ -74,14 +85,12 @@ public class SwerveModule extends SubsystemBase implements Loggable{
 
         // //m_driveMotor.setSmartCurrentLimit(35);
         // m_steerMotor.setSmartCurrentLimit(25);
-        m_driveMotor.setCANTimeout(0);
 
         // m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 10);
         // // m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
         // // m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
         // // m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
         // // m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
-        m_steerMotor.setCANTimeout(0);
         // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 40);
         // // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
         // // m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
@@ -177,10 +186,10 @@ public class SwerveModule extends SubsystemBase implements Loggable{
 
     public void scheduleConfigCommands() {
         CommandScheduler.getInstance().schedule(
-            Commands.waitSeconds(m_moduleConstants.driveMotorID * 0.015).ignoringDisable(true).andThen(
+            Commands.waitSeconds(m_moduleConstants.driveMotorID * 0.04).ignoringDisable(true).andThen(
                 ()->{
                     m_driveMotor.setSmartCurrentLimit(35);
-                    m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, m_moduleConstants.driveMotorID);
+                    m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 10);
                     m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
                     m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
                     var error = m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
@@ -202,21 +211,21 @@ public class SwerveModule extends SubsystemBase implements Loggable{
 
                     m_driveMotor.setIdleMode(IdleMode.kBrake);
                     m_driveMotor.burnFlash();
+                    updateEncoders();
                 }
             ).ignoringDisable(true)
         );
-
-        CommandScheduler.getInstance().schedule(Commands.waitSeconds(10).andThen(Commands.print("print test")).ignoringDisable(true));
         CommandScheduler.getInstance().schedule(
-            Commands.waitSeconds(m_moduleConstants.rotationMotorID * 0.015).ignoringDisable(true).andThen(
+            Commands.waitSeconds(m_moduleConstants.rotationMotorID * 0.04).ignoringDisable(true).andThen(
+                
                 Commands.runOnce(
                 ()->{
-                    m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 40);
+                    m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 10);
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
-                    m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, m_moduleConstants.rotationMotorID);
+                    var error = m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 10);
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
                     m_steerMotor.getEncoder().setPositionConversionFactor(2.0 * Math.PI * AZMTH_REVS_PER_ENC_REV);
                     m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setPositionConversionFactor(Math.PI*2);
@@ -224,9 +233,10 @@ public class SwerveModule extends SubsystemBase implements Loggable{
                     m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setZeroOffset(m_moduleConstants.magEncoderOffset);
                     m_steerMotor.setIdleMode(IdleMode.kBrake);
                     m_steerMotor.burnFlash();
-                    DriverStation.reportWarning(" config'd steer" + m_moduleConstants.rotationMotorID + m_steerMotor.burnFlash().toString(), false);
+                    System.out.println(" config'd steer" + m_moduleConstants.rotationMotorID + error.toString());
                 })
             ).ignoringDisable(true)
+        
         );
     }
 
@@ -249,18 +259,23 @@ public class SwerveModule extends SubsystemBase implements Loggable{
      * @return the distance in meters.
      */
     public double getDriveDistanceMeters() {
-        return m_driveEncoderWrapper.getPosition();
+        return m_currentPosition;
     }
+
+    
     
     /**
      * Returns the current angle of the module in radians, from the mag encoder.
      * @return a Rotation2d, where 0 is forward and pi/-pi is backward.
      */
-    @Log(methodName = "getRadians")
     public Rotation2d getMagEncoderAngle() {
-        //double unsignedAngle = m_magEncoder.getAbsolutePosition() * 2*Math.PI - m_magEncoderOffset;
-        double unsignedAngle = m_magEncoder.getPosition();
-        return new Rotation2d(unsignedAngle);
+        //double unsignedAngle = m_magEncoder.getAbsolutePosition() * 2*Math.PI - m_magEncoderOffset;;
+        return new Rotation2d(m_currentAngle);
+    }
+
+    @Log
+    private double getMagEncoderAngleDouble() {
+        return m_magEncoder.getPosition();//m_currentAngle;
     }
 
     /**
@@ -269,9 +284,19 @@ public class SwerveModule extends SubsystemBase implements Loggable{
      * current angle is always desired angle.
      * @return a Rotation2d, where 0 is forward and pi/-pi is backward.
      */
-    @Log( methodName = "getRadians")
     public Rotation2d getCanEncoderAngle() {
         return new Rotation2d(m_steerEncoderWrapper.getPosition());
+    }
+
+    @Log
+    private double getCanEncoderAngleDouble() {
+        return m_steerEncoderWrapper.getPosition();
+    }
+
+    private void updateEncoders() {
+        m_currentAngle = m_magEncoder.getPosition();
+        m_currentPosition = m_driveEncoderWrapper.getPosition();
+        m_currentVelocity = m_driveEncoderWrapper.getVelocity();
     }
 
     /**
@@ -282,7 +307,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
      */
     @Log
     public double getCurrentVelocityMetersPerSecond() {
-        return m_driveEncoderWrapper.getVelocity();
+        return m_driveEncoderWrapper.getVelocity();// m_currentVelocity;
     }
 
     @Log
@@ -335,6 +360,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
     }
 
     public void periodic() {
+        updateEncoders();
         //SmartDashboard.putNumber(m_loggingName, getMagEncoderAngle().getRadians());
     }
 

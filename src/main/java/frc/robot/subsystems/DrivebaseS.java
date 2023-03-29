@@ -1,30 +1,13 @@
 package frc.robot.subsystems;
 
-import static frc.robot.Constants.DriveConstants.AZMTH_ENC_COUNTS_PER_MODULE_REV;
-import static frc.robot.Constants.DriveConstants.AZMTH_REVS_PER_ENC_REV;
-import static frc.robot.Constants.DriveConstants.BL;
-import static frc.robot.Constants.DriveConstants.BR;
-import static frc.robot.Constants.DriveConstants.FL;
-import static frc.robot.Constants.DriveConstants.FR;
-import static frc.robot.Constants.DriveConstants.NUM_MODULES;
-import static frc.robot.Constants.DriveConstants.ROBOT_MASS_kg;
-import static frc.robot.Constants.DriveConstants.ROBOT_MOI_KGM2;
-import static frc.robot.Constants.DriveConstants.WHEEL_BASE_WIDTH_M;
-import static frc.robot.Constants.DriveConstants.WHEEL_ENC_COUNTS_PER_WHEEL_REV;
-import static frc.robot.Constants.DriveConstants.WHEEL_RADIUS_M;
-import static frc.robot.Constants.DriveConstants.WHEEL_REVS_PER_ENC_REV;
-
 import java.util.List;
 import java.util.function.Supplier;
 
-import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.PathPoint;
-import frc.robot.util.trajectory.PPSwerveControllerCommand;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -43,20 +26,31 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import static frc.robot.Constants.DriveConstants.AZMTH_ENC_COUNTS_PER_MODULE_REV;
+import static frc.robot.Constants.DriveConstants.AZMTH_REVS_PER_ENC_REV;
+import static frc.robot.Constants.DriveConstants.BL;
+import static frc.robot.Constants.DriveConstants.BR;
+import static frc.robot.Constants.DriveConstants.FL;
+import static frc.robot.Constants.DriveConstants.FR;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
-import frc.robot.POIManager.POIS;
-import frc.robot.subsystems.LightS.States;
-import frc.robot.POIManager;
-import frc.robot.Robot;
-import frc.robot.Constants.DriveConstants;
+import static frc.robot.Constants.DriveConstants.NUM_MODULES;
+import static frc.robot.Constants.DriveConstants.ROBOT_MASS_kg;
+import static frc.robot.Constants.DriveConstants.ROBOT_MOI_KGM2;
+import static frc.robot.Constants.DriveConstants.WHEEL_BASE_WIDTH_M;
+import static frc.robot.Constants.DriveConstants.WHEEL_ENC_COUNTS_PER_WHEEL_REV;
+import static frc.robot.Constants.DriveConstants.WHEEL_RADIUS_M;
+import static frc.robot.Constants.DriveConstants.WHEEL_REVS_PER_ENC_REV;
 import frc.robot.Constants.VisionConstants;
+import frc.robot.NavX.AHRS;
+import frc.robot.POIManager.POIS;
+import frc.robot.Robot;
+import frc.robot.subsystems.LightS.States;
 import frc.robot.util.AllianceWrapper;
 import frc.robot.util.NomadMathUtil;
 import frc.robot.util.sim.SimGyroSensorModel;
@@ -64,6 +58,7 @@ import frc.robot.util.sim.wpiClasses.QuadSwerveSim;
 import frc.robot.util.sim.wpiClasses.SwerveModuleSim;
 import frc.robot.util.trajectory.PPChasePoseCommand;
 import frc.robot.util.trajectory.PPHolonomicDriveController;
+import frc.robot.util.trajectory.PPSwerveControllerCommand;
 import frc.robot.vision.PhotonCameraWrapper;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
@@ -74,7 +69,7 @@ import io.github.oblarg.oblog.annotations.Log;
  * Handles all the odometry and base movement for the chassis
  */
 public class DrivebaseS extends SubsystemBase implements Loggable {
-    private final AHRS m_navx = new AHRS(Port.kMXP);
+    private final AHRS m_navx = new AHRS(Port.kMXP, (byte) 50);
     private SimGyroSensorModel m_simNavx = new SimGyroSensorModel();
 
     public final PIDController m_xController = new PIDController(3, 0, 0);
@@ -134,7 +129,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
 
     public DrivebaseS() {
         m_navx.reset();
-        
+        m_navx.enableLogging(true);
         m_poseEstimator =
         new SwerveDrivePoseEstimator(
             m_kinematics, getHeading(), getModulePositions(), new Pose2d(),
@@ -162,12 +157,20 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
     }
 
     @Log
+    public double getGyroHeading() {
+        return m_navx.getAngle();
+    }
+
+    @Log
     public double getPitch() {
         return Units.degreesToRadians(m_navx.getPitch());
     }
 
     @Override
     public void periodic() {
+        updateModuleStates();
+        updateModulePositions();
+
         var cam1Pose = m_camera1Wrapper.getEstimatedGlobalPose(getPose());
         if (cam1Pose.getFirst() != null) {
             var pose = cam1Pose.getFirst();
@@ -287,6 +290,17 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         }
     }
 
+    private void updateModuleStates() {
+        for (int i = 0; i < NUM_MODULES; i++) {
+            currentStates[i] = m_modules.get(i).getCurrentState();
+        }
+    }
+
+    private void updateModulePositions() {
+        for (int i = 0; i < NUM_MODULES; i++) {
+            currentPositions[i] = m_modules.get(i).getCurrentPosition();
+        }
+    }
     /*
      *  returns an array of SwerveModuleStates. 
      *  Front(left, right), Rear(left, right)
@@ -294,9 +308,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      */
     public SwerveModuleState[] getModuleStates() {
         
-        for (int i = 0; i < NUM_MODULES; i++) {
-            currentStates[i] = m_modules.get(i).getCurrentState();
-        }
+
         return currentStates;
     }
 
@@ -305,9 +317,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      * @return an array of 4 SwerveModulePosition objects
      */
     public SwerveModulePosition[] getModulePositions() {
-        for (int i = 0; i < NUM_MODULES; i++) {
-            currentPositions[i] = m_modules.get(i).getCurrentPosition();
-        }
+
         return currentPositions;
     }
 
@@ -360,12 +370,16 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
     /**
      * @return the current navX heading (which will not match odometry after drift or reset)
      */
-    @Log(methodName = "getRadians")
     public Rotation2d getHeading() {
         if(Robot.isSimulation()) {
             return m_simNavx.getRotation2d();
         }
         return m_navx.getRotation2d();
+    }
+
+    @Log
+    public double getHeadingDouble() {
+        return getHeading().getRadians();
     }
 
     /**

@@ -5,7 +5,6 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.REVLibError;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 
-import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.Robot;
 
 public class SparkMaxAbsoluteEncoderWrapper {

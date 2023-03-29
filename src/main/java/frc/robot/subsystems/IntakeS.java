@@ -73,7 +73,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
     intakeMotor.burnFlash();
     intakeFollowerMotor.burnFlash();
 
-    distanceSensor.setRangingMode(RangingMode.Short, 50);
+    distanceSensor.setRangingMode(RangingMode.Short, 1000);
     distanceSensor.setRangeOfInterest(9,9,11,11);
     setDefaultCommand(run(()->this.intake(0)));
   }

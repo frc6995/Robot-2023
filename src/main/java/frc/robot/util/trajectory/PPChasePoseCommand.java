@@ -20,7 +20,6 @@ import frc.robot.subsystems.DrivebaseS;
 import frc.robot.subsystems.LightS;
 import frc.robot.subsystems.LightS.States;
 import io.github.oblarg.oblog.Loggable;
-import io.github.oblarg.oblog.annotations.Log;
 
 /**
  * A command that uses two PID controllers ({@link PIDController}) and a
@@ -45,7 +44,6 @@ import io.github.oblarg.oblog.annotations.Log;
  */
 @SuppressWarnings("MemberName")
 public class PPChasePoseCommand extends CommandBase implements Loggable {
-    @Log(methodName = "get")
     private final Timer m_timer = new Timer();
     private Supplier<Pose2d> m_targetPose;
     private PathPlannerTrajectory m_trajectory;
