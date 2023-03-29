@@ -64,6 +64,9 @@
       }
     },
     "transitory": {
+      "DriverDisplay": {
+        "open": true
+      },
       "Shuffleboard": {
         "ArmS": {
           "VISUALIZER": {

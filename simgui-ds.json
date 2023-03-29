@@ -4,6 +4,11 @@
       "visible": true
     }
   },
+  "Keyboard 2 Settings": {
+    "window": {
+      "visible": true
+    }
+  },
   "keyboardJoysticks": [
     {
       "axisConfig": [
@@ -68,7 +73,6 @@
     {
       "axisConfig": [
         {
-          "decKey": 263,
           "incKey": 262
         }
       ],
@@ -79,7 +83,7 @@
         -1,
         266,
         264,
-        -1,
+        263,
         -1,
         265,
         -1,
