@@ -116,7 +116,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
 
   @Log
   public boolean hitBeamBreak() {
-    return m_beamBreak.isPressed();
+    return m_beamBreak.isPressed() || (Math.abs(getConeCenterOffsetDistance()) > 0.1);
   }
 
   public double getHandLength() {
