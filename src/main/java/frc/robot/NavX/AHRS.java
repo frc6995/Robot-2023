@@ -10,18 +10,18 @@
 
 package frc.robot.NavX;
 
-import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.interfaces.Gyro;
-import frc.robot.NavX.AHRSProtocol.*;
-import frc.robot.NavX.IMUProtocol.*;
+import edu.wpi.first.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.hal.HAL;
+import edu.wpi.first.hal.SimDevice;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
-import edu.wpi.first.hal.FRCNetComm.tResourceType;
-import edu.wpi.first.hal.HAL;
-
-import edu.wpi.first.hal.SimDevice;
+import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.interfaces.Gyro;
+import frc.robot.NavX.AHRSProtocol.AHRSPosUpdate;
+import frc.robot.NavX.AHRSProtocol.BoardID;
+import frc.robot.NavX.IMUProtocol.YPRUpdate;
 
 /**
  * The AHRS class provides an interface to AHRS capabilities
@@ -215,7 +215,11 @@ public class AHRS implements Sendable, Gyro {
      */
     public AHRS(SPI.Port spi_port_id, byte update_rate_hz) {
         commonInit(update_rate_hz);
-        io = new RegisterIO(new RegisterIO_SPI(new SPI(spi_port_id)), update_rate_hz, io_complete_sink, board_capabilities);
+        if (m_simDevice != null) {
+            io = new SimIO(update_rate_hz, io_complete_sink, m_simDevice);
+        } else {
+            io = new RegisterIO(new RegisterIO_SPI(new SPI(spi_port_id)), update_rate_hz, io_complete_sink, board_capabilities);
+        }
         SendableRegistry.addLW(this, "navX-Sensor", spi_port_id.value);
         io_thread.start();
     }
@@ -246,7 +250,11 @@ public class AHRS implements Sendable, Gyro {
     public AHRS(SPI.Port spi_port_id, int spi_bitrate, byte update_rate_hz) {
         Tracer.Trace("Instantiating navX-Sensor on SPI Port %s.\n", spi_port_id.toString());        
         commonInit(update_rate_hz);
-        io = new RegisterIO(new RegisterIO_SPI(new SPI(spi_port_id), spi_bitrate), update_rate_hz, io_complete_sink, board_capabilities);
+        if (m_simDevice != null) {
+            io = new SimIO(update_rate_hz, io_complete_sink, m_simDevice);
+        } else {
+            io = new RegisterIO(new RegisterIO_SPI(new SPI(spi_port_id), spi_bitrate), update_rate_hz, io_complete_sink, board_capabilities);
+        }
         SendableRegistry.addLW(this, "navX-Sensor", spi_port_id.value);
         io_thread.start();
     }
