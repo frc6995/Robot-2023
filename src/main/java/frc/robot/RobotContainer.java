@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.InputDevices;
 import frc.robot.POIManager.POIS;
@@ -140,9 +141,25 @@ public class RobotContainer {
             )
         );
     }
+
+    @Log(methodName = "getAsBoolean")
+    private Trigger m_alignSafeToPlaceCube = new Trigger(()->{
+        Transform2d error = new Transform2d(m_targetAlignmentPose, m_drivebaseS.getPose());
+        return 
+            Math.abs(error.getRotation().getRadians()) < Units.degreesToRadians(3) &&
+            Math.abs(error.getX()) < 0.1 &&
+            Math.abs(error.getY()) < 0.1;
+
+    });
+
     public void configureButtonBindings() {
         m_driverController.a().toggleOnTrue(
-           alignToSelectedScoring().asProxy().andThen(autoScoreSequenceCG().asProxy())
+                alignToSelectedScoring().asProxy()
+                .until(
+                    ()->
+                    m_isCubeSelected ? m_alignSafeToPlaceCube.getAsBoolean() : false)
+                .andThen(autoScoreSequenceCG().asProxy())
+           
             );
         m_driverController.b().toggleOnTrue(
             Commands.sequence(
@@ -151,7 +168,11 @@ public class RobotContainer {
             )
             );
         // OFFICIAL CALEB PREFERENCE
-        m_driverController.y().toggleOnTrue(armIntakeCG(ArmConstants.OVERTOP_CONE_INTAKE_POSITION, false));
+        m_driverController.y().toggleOnTrue(armIntakeSelectedCG(
+            ArmConstants.OVERTOP_CUBE_INTAKE_POSITION,
+            ArmConstants.OVERTOP_CONE_INTAKE_POSITION,
+            ()->m_isCubeSelected
+        ));
         m_driverController.x().onTrue(m_armS.stowIndefiniteC());
         m_driverController.back().onTrue(m_intakeS.runOnce(m_intakeS::toggle));
 

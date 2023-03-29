@@ -303,6 +303,12 @@ public class Constants {
             1.400,
             Units.inchesToMeters(9.4)
         );
+        public static final ArmPosition OVERTOP_CUBE_INTAKE_POSITION = new ArmPosition(
+            3.25,
+            0.628,
+            1.400,
+            Units.inchesToMeters(9.4)
+        );
         // public static final ArmPosition HYBRID_NODE_OUTTAKE_POSITION = new ArmPosition(
         //     Units.degreesToRadians(66),
         //     MIN_ARM_LENGTH + Units.inchesToMeters(0.125),
