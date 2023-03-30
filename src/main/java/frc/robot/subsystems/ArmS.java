@@ -227,7 +227,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         m_extendMotor.burnFlash();
         m_extendEncoderWrapper.setPosition(MIN_ARM_LENGTH);
         m_extendController.reset(MIN_ARM_LENGTH);
-        m_extendMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
+        m_extendMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 25);
         m_extendMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
         m_extendMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
         m_extendMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
@@ -387,13 +387,13 @@ public class ArmS extends SubsystemBase implements Loggable {
         m_pivotFollowerMotor.follow(m_pivotMotor, true);
 
         m_pivotEncoderWrapper.setSimPosition(PIVOT_ENCODER_OFFSET / (2 * Math.PI));
-        m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
+        m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 25);
         m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
         m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
         m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
         m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
         m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
-        m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 20);
+        m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
         m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 45);
         m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
         m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
@@ -621,7 +621,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
         m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
         m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
-        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
+        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 25);
         m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
         m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
         // m_wristMotor.setSoftLimit(SoftLimitDirection.kForward, (float) WRIST_MAX_ANGLE);

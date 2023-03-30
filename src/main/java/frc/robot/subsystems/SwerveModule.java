@@ -190,7 +190,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
             Commands.waitSeconds(m_moduleConstants.driveMotorID * 0.04).ignoringDisable(true).andThen(
                 ()->{
                     m_driveMotor.setSmartCurrentLimit(35);
-                    m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 10);
+                    m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 25);
                     m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
                     m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
                     var error = m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
@@ -221,12 +221,12 @@ public class SwerveModule extends SubsystemBase implements Loggable{
                 
                 Commands.runOnce(
                 ()->{
-                    m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 10);
+                    m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 25);
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
-                    var error = m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 10);
+                    var error = m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
                     m_steerMotor.getEncoder().setPositionConversionFactor(2.0 * Math.PI * AZMTH_REVS_PER_ENC_REV);
                     m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setPositionConversionFactor(Math.PI*2);
@@ -298,7 +298,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         m_currentAngle = m_magEncoder.getPosition();
         m_currentPosition = m_driveEncoderWrapper.getPosition();
         m_currentVelocity = m_driveEncoderWrapper.getVelocity();
-        m_currentSteerEncoderAngle = m_steerEncoderWrapper.getPosition();
+        // m_currentSteerEncoderAngle = m_steerEncoderWrapper.getPosition();
     }
 
     /**
