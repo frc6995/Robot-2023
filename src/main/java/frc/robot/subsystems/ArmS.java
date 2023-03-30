@@ -135,9 +135,9 @@ public class ArmS extends SubsystemBase implements Loggable {
         m_extendLength = Math.max(MIN_ARM_LENGTH-0.25, m_extendEncoderWrapper.getPosition());
         m_extendVelocity = m_extendEncoderWrapper.getVelocity();
         m_pivotAngle = continuousRangeAngleModulus((m_pivotEncoderWrapper.getPosition() * 2 * Math.PI) - PIVOT_ENCODER_OFFSET);
-        m_pivotVelocity = m_pivotEncoderWrapper.getVelocity() * 2 * Math.PI / 60;
+        //m_pivotVelocity = m_pivotEncoderWrapper.getVelocity() * 2 * Math.PI / 60;
         m_wristAngle = MathUtil.angleModulus(m_wristEncoderWrapper.getPosition());
-        m_wristVelocity = m_wristEncoderWrapper.getVelocity();
+        //m_wristVelocity = m_wristEncoderWrapper.getVelocity();
     }
 
     public double constrainLength(double length) {
@@ -472,13 +472,13 @@ public class ArmS extends SubsystemBase implements Loggable {
         return targetAngle;
     }
 
-    /**
-     * @return the velocity of the pivot joint
-     */
-    @Log
-    public double getPivotVelocity() {
-        return m_pivotVelocity;
-    }
+    // /**
+    //  * @return the velocity of the pivot joint
+    //  */
+    // @Log
+    // public double getPivotVelocity() {
+    //     return m_pivotVelocity;
+    // }
 
     /**
      * @return the MOI of the arm in Joules per kg^2
@@ -651,14 +651,14 @@ public class ArmS extends SubsystemBase implements Loggable {
         return m_wristAngle;
     }
 
-    /**
-     * @return the current velocity of the wrist in rotations per minute
-     */
+    // /**
+    //  * @return the current velocity of the wrist in rotations per minute
+    //  */
 
-    @Log
-    public double getWristVelocity() {
-        return m_wristVelocity;
-    }
+    // @Log
+    // public double getWristVelocity() {
+    //     return m_wristVelocity;
+    // }
 
     /**
      * sets the wrist velocity in radians per second to velocity parameter

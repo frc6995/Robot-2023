@@ -66,15 +66,15 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         DRIVE_FF_CONST[1],
         DRIVE_FF_CONST[2]);        
 
-    @Log 
-    public String getLastDriveError() {
-        return m_driveMotor.getLastError().toString();
-    }
+    // @Log 
+    // public String getLastDriveError() {
+    //     return m_driveMotor.getLastError().toString();
+    // }
 
-    @Log 
-    public String getLastSteerError() {
-        return m_steerMotor.getLastError().toString();
-    }
+    // @Log 
+    // public String getLastSteerError() {
+    //     return m_steerMotor.getLastError().toString();
+    // }
 
     public SwerveModule( ModuleConstants moduleConstants) {
         m_moduleConstants = moduleConstants;

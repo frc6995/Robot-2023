@@ -109,10 +109,10 @@ public class IntakeS extends SubsystemBase implements Loggable {
     return distanceSensor.getRangeSigma();
   }
 
-  @Log
-  public boolean hitCurrentLimit() {
-    return intakeMotor.getFault(FaultID.kOvercurrent);
-  }
+  // @Log
+  // public boolean hitCurrentLimit() {
+  //   return intakeMotor.getFault(FaultID.kOvercurrent);
+  // }
 
   @Log
   public boolean hitBeamBreak() {
@@ -181,10 +181,6 @@ public class IntakeS extends SubsystemBase implements Loggable {
     isExtended = isCube;
   }
 
-  @Log
-  public boolean solenoidState() {
-    return doubleSolenoid.get() == Value.kReverse;
-  }
 
   /**
    * Toggles the intake between extend and retract
