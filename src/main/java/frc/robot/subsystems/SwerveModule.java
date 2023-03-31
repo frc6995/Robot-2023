@@ -222,12 +222,12 @@ public class SwerveModule extends SubsystemBase implements Loggable{
                 
                 Commands.runOnce(
                 ()->{
-                    m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 25);
+                    m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 40);
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
-                    var error = m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
+                    var error = m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 15);
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
                     m_steerMotor.getEncoder().setPositionConversionFactor(2.0 * Math.PI * AZMTH_REVS_PER_ENC_REV);
                     m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setPositionConversionFactor(Math.PI*2);

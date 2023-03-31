@@ -136,8 +136,8 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         m_poseEstimator =
         new SwerveDrivePoseEstimator(
             m_kinematics, getHeading(), getModulePositions(), new Pose2d(),
-            VecBuilder.fill(0.1, 0.1, 0.1),
-            VecBuilder.fill(0.9, 0.9, 0.9));
+            VecBuilder.fill(0.1, 0.1, 0.9),
+            VecBuilder.fill(0.9, 0.9, 0.1));
         m_thetaController.setTolerance(Units.degreesToRadians(0.5));
         m_thetaController.enableContinuousInput(-Math.PI, Math.PI);
         m_profiledThetaController.setTolerance(Units.degreesToRadians(0.5));
@@ -189,6 +189,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         }
 
         // update the odometry every 20ms
+        //m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(0.9, 0.9, 0.));
         m_odometry.update(getHeading(), currentPositions);
         m_poseEstimator.update(getHeading(), getModulePositions());
     }

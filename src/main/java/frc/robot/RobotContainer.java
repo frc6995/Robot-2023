@@ -305,7 +305,8 @@ public class RobotContainer {
             ),
 
             m_armS.goToPositionC(ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT).asProxy(),
-            m_drivebaseS.chargeStationAlignC().asProxy()
+            m_drivebaseS.chargeStationAlignC().asProxy(),
+            m_drivebaseS.run(()->m_drivebaseS.drive(new ChassisSpeeds(0, 0, 0.1))).withTimeout(0.5).asProxy()
             //m_drivebaseS.chargeStationBatteryFirstC()
         ).finallyDo((end)->m_drivebaseS.drive(new ChassisSpeeds()));
     }
@@ -440,8 +441,9 @@ public class RobotContainer {
                 m_armS.goToPositionC(ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT).asProxy().withTimeout(3),
                 sequence(
                     m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).asProxy(),
-                    m_drivebaseS.chargeStationAlignC().asProxy()
-                )
+                    m_drivebaseS.chargeStationAlignC().asProxy(),
+                    m_drivebaseS.run(()->m_drivebaseS.drive(new ChassisSpeeds(0, 0, 0.1))).withTimeout(0.5).asProxy()
+                ).finallyDo((end)->m_drivebaseS.drive(new ChassisSpeeds()))
                 
             )
         );
