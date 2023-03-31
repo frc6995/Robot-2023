@@ -202,7 +202,7 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     private final ProfiledPIDController m_extendController =
         new ProfiledPIDController(8,0,0,
-            new Constraints(1.3, 1.5),
+            new Constraints(1.3, 2),
             0.02
         );
 

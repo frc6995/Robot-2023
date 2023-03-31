@@ -20,6 +20,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -92,6 +93,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      * Takes in kinematics and robot angle for parameters
      */
     private final SwerveDrivePoseEstimator m_poseEstimator;
+    private final SwerveDriveOdometry m_odometry;
     private final PhotonCameraWrapper m_camera1Wrapper;
     private final PhotonCameraWrapper m_camera2Wrapper;
 
@@ -130,6 +132,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
     public DrivebaseS() {
         m_navx.reset();
         m_navx.enableLogging(true);
+        m_odometry = new SwerveDriveOdometry(m_kinematics, getHeading(), currentPositions);
         m_poseEstimator =
         new SwerveDrivePoseEstimator(
             m_kinematics, getHeading(), getModulePositions(), new Pose2d(),
@@ -186,6 +189,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         }
 
         // update the odometry every 20ms
+        m_odometry.update(getHeading(), currentPositions);
         m_poseEstimator.update(getHeading(), getModulePositions());
     }
 
@@ -329,6 +333,10 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         return m_poseEstimator.getEstimatedPosition();
     }
 
+    public Pose2d getOdometryPose() {
+        return m_odometry.getPoseMeters();
+    }
+
     /**
      * Return the simulated estimate of the robot's pose.
      * NOTE: on a real robot this will return a new Pose2d, (0, 0, 0)
@@ -360,6 +368,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
     public void resetPose(Pose2d pose) {
         m_quadSwerveSim.modelReset(pose);
         m_poseEstimator.resetPosition(getHeading(), getModulePositions(), pose );
+        m_odometry.resetPosition(getHeading(), currentPositions, pose);
     }
 
     // reset the measured distance driven for each module
@@ -473,6 +482,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      */
     public void drawRobotOnField(Field2d field) {
         field.setRobotPose(getPose());
+        field.getObject("odometry").setPose(getOdometryPose());
         // Draw a pose that is based on the robot pose, but shifted by the translation of the module relative to robot center,
         // then rotated around its own center by the angle of the module.
         field.getObject("modules").setPoses(List.of(

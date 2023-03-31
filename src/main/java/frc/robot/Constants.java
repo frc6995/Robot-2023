@@ -24,7 +24,7 @@ public class Constants {
     }
 
     public static final class DriveConstants {
-        static public final double WHEEL_BASE_WIDTH_M = Units.inchesToMeters(18.25);
+        static public final double WHEEL_BASE_WIDTH_M = Units.inchesToMeters(18.5);
         static public final double WHEEL_RADIUS_M = 0.0508; //Units.inchesToMeters(4.0/2.0); //four inch (diameter) wheels
         static public final double ROBOT_MASS_kg = Units.lbsToKilograms(150);
         static public final double ROBOT_MOI_KGM2 = 1.0/12.0 * ROBOT_MASS_kg * Math.pow((WHEEL_BASE_WIDTH_M*1.1),2) * 2; //Model moment of intertia as a square slab slightly bigger than wheelbase with axis through center
@@ -47,10 +47,10 @@ public class Constants {
         static private double HW = WHEEL_BASE_WIDTH_M/2.0;
 
         public enum ModuleConstants {
-            FL("FL", 18, 17, 6, 5.651346 + 0.005, HW, HW),
-            FR("FR", 12, 11, 7, 3.762759 - 0.003, HW, -HW),
-            BL("BL", 16, 15, 8, 1.823007 + 0.01, -HW, HW),
-            BR("BR", 14, 13, 9, 5.614791 - 0.008, -HW, -HW);
+            FL("FL", 18, 17, 6, 5.651346 + 0.005 + 0.01, HW, HW),
+            FR("FR", 12, 11, 7, 3.762759 - 0.003 + 0.002 + 0.01, HW, -HW),
+            BL("BL", 16, 15, 8, 1.823007 + 0.01 + 0.001 - 0.03, -HW, HW),
+            BR("BR", 14, 13, 9, 5.614791 - 0.008 - 0.04 - 0.03 + 0.11, -HW, -HW);
     
             public final String name;
             public final int driveMotorID;

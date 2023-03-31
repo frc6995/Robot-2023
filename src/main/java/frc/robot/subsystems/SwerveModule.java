@@ -417,6 +417,10 @@ public class SwerveModule extends SubsystemBase implements Loggable{
     }
 
     @Log
+    public double getDrivePosition() {
+        return m_currentPosition;
+    }
+    @Log
     public double getDriveCurrent() {
         return m_driveMotor.getOutputCurrent();
     }

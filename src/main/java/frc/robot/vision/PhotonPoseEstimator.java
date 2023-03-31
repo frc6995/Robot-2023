@@ -400,6 +400,7 @@ public class PhotonPoseEstimator {
             double targetPoseAmbiguity = target.getPoseAmbiguity();
 
             if (target.getFiducialId() < 1 || target.getFiducialId() > 8) continue;
+            if (target.getFiducialId() == 4 || target.getFiducialId() == 5) continue;
         
             if (target.getBestCameraToTarget().getTranslation().getNorm() > 3) {
                 continue;

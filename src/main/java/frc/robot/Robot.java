@@ -73,6 +73,7 @@ public class Robot extends TimedRobot {
     @Override
     public void disabledInit() {
         robotContainer.onDisabled();
+        System.gc();
     }
     @Override
     public void disabledPeriodic() {
