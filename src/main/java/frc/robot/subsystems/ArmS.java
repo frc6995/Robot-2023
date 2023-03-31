@@ -38,6 +38,7 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -387,25 +388,31 @@ public class ArmS extends SubsystemBase implements Loggable {
         m_pivotFollowerMotor.follow(m_pivotMotor, true);
 
         m_pivotEncoderWrapper.setSimPosition(PIVOT_ENCODER_OFFSET / (2 * Math.PI));
-        m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 25);
-        m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
-        m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
-        m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
-        m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
-        m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
-        m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
-        m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 45);
-        m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
-        m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
+        CommandScheduler.getInstance().schedule(Commands.waitSeconds(1).andThen(
+            Commands.runOnce(()->{
+                m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 25);
+                m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
+                m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
+                m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
+                m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
+                m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
+                m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
+                m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 45);
+                m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
+                m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
+        
+                m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
+                m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
+                m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
+                m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
+        
+                m_pivotController.reset(getContinuousRangeAngle());
+                m_pivotController.setTolerance(0.05, 0.05);
+                m_pivotMotor.burnFlash();
+            })).ignoringDisable(true)
+            
+        );
 
-        m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
-        m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
-        m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
-        m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
-
-        m_pivotController.reset(getContinuousRangeAngle());
-        m_pivotController.setTolerance(0.05, 0.05);
-        m_pivotMotor.burnFlash();
     }
 
     /**

@@ -28,6 +28,7 @@ import static frc.robot.Constants.DriveConstants.STEER_P;
 import static frc.robot.Constants.DriveConstants.WHEEL_ENC_COUNTS_PER_WHEEL_REV;
 import static frc.robot.Constants.DriveConstants.WHEEL_RADIUS_M;
 import frc.robot.Robot;
+import frc.robot.util.TimingTracer;
 import frc.robot.util.sim.SparkMaxAbsoluteEncoderWrapper;
 import frc.robot.util.sim.SparkMaxEncoderWrapper;
 import io.github.oblarg.oblog.Loggable;
@@ -413,5 +414,10 @@ public class SwerveModule extends SubsystemBase implements Loggable{
     @Log   
     public double getVelocitySetpoint() {
         return m_drivePIDController.getSetpoint();
+    }
+
+    @Log
+    public double getDriveCurrent() {
+        return m_driveMotor.getOutputCurrent();
     }
 }

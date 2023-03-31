@@ -4,6 +4,8 @@ import java.io.Console;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
+import org.photonvision.PhotonCamera;
+
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
 
@@ -81,6 +83,8 @@ public class RobotContainer {
     SendableChooser<Command> m_autoSelector = new SendableChooser<Command>();
 
     public RobotContainer() {
+        PhotonCamera usbCam = new PhotonCamera("USB_Camera");
+        usbCam.setDriverMode(true);
         m_keypad = new CommandOperatorKeypad(2, (pose)->{
             m_targetAlignmentPose = pose;
             m_field.getObject("Selection").setPose(pose);
@@ -121,7 +125,9 @@ public class RobotContainer {
         m_autoSelector.addOption("2 Cone", fifteenPointAuto());
         m_autoSelector.addOption("2 Cone Bal.", twentysevenPointAuto());
         m_autoSelector.addOption("2 Cone Over Bump", bumpTwoConeAuto());
-        m_autoSelector.addOption("Cone+Over Bump [UNTESTED]", ninePointAuto());
+
+        // m_autoSelector.addOption("Cone+Over Bump [UNTESTED]", ninePointAuto());
+
         m_autoSelector.addOption("Do Nothing", Commands.none());
         // m_autoSelector.addOption("21 Point No 2nd", twentyonePointAutoNo2nd());
         // m_autoSelector.addOption("21 Point With 2nd", twentyonePointAutoWith2nd());
@@ -245,12 +251,12 @@ public class RobotContainer {
         return 
         Commands.sequence(
             Commands.deadline(
-                m_intakeS.setGamePieceC(()->isCube).andThen(m_intakeS.intakeUntilBeamBreakC()),
+                m_intakeS.setGamePieceC(()->isCube).andThen(m_intakeS.intakeUntilBeamBreakC()).asProxy(),
                 m_armS.goToPositionIndefiniteC(position)
 
             ),
             Commands.parallel(
-                Commands.waitSeconds(0.75).andThen(m_intakeS.intakeC().withTimeout(0.75)),
+                Commands.waitSeconds(0.75).andThen(m_intakeS.intakeC().withTimeout(0.75)).asProxy(),
                 m_armS.stowIndefiniteC(), 
                 Commands.run(()->LightS.getInstance().requestState(isCube ? States.IntakedCube : States.IntakedCone)).asProxy().withTimeout(0.75)
             )
@@ -339,8 +345,7 @@ public class RobotContainer {
             m_keypad.blueSetpointCommand(8, 2),
             m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
             Commands.deadline(
-                m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
-                alignToSelectedScoring().asProxy()
+                m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3)
             ),
             m_intakeS.outtakeC().withTimeout(0.3).asProxy(),
             
@@ -382,7 +387,7 @@ public class RobotContainer {
                 alignToSelectedScoring().asProxy()
             ),
             m_intakeS.outtakeC().withTimeout(0.3).asProxy(),
-            
+            m_armS.goToPositionC(ArmConstants.RETRACTED_SCORE_CONE_POSITION).asProxy(),
             m_keypad.blueSetpointCommand(2, 2),
 
             Commands.deadline(
@@ -401,7 +406,8 @@ public class RobotContainer {
             Commands.deadline(
                 sequence(
                     m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy(),
-                    m_intakeS.outtakeC().withTimeout(0.3).asProxy()
+                    m_intakeS.outtakeC().withTimeout(0.3).asProxy(),
+                    m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy()
                 ),
                 alignToSelectedScoring().asProxy()
             )

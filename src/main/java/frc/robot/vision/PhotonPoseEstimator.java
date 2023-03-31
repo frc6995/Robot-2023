@@ -401,7 +401,7 @@ public class PhotonPoseEstimator {
 
             if (target.getFiducialId() < 1 || target.getFiducialId() > 8) continue;
         
-            if (target.getBestCameraToTarget().getTranslation().getNorm() > Units.feetToMeters(20)) {
+            if (target.getBestCameraToTarget().getTranslation().getNorm() > 3) {
                 continue;
             }
             // Make sure the target is a Fiducial target.

@@ -222,7 +222,7 @@ public class Constants {
         public static final double HAND_MASS_KILOS = Units.lbsToKilograms(5);
       
         public static final double WRIST_MIN_ANGLE = Units.degreesToRadians(-60);
-        public static final double WRIST_MAX_ANGLE = Units.degreesToRadians(80);
+        public static final double WRIST_MAX_ANGLE = 1.5;
         public static final double WRIST_KG = 5.744 * 1.6 * 5 / (300.0);
 
         public static final ArmPosition SCORE_HIGH_CONE_POSITION = new ArmPosition(
@@ -304,9 +304,9 @@ public class Constants {
             Units.inchesToMeters(9.4)
         );
         public static final ArmPosition OVERTOP_CUBE_INTAKE_POSITION = new ArmPosition(
-            3.25,
+            3.3,
             0.628,
-            1.400,
+            1.5,
             Units.inchesToMeters(9.4)
         );
         // public static final ArmPosition HYBRID_NODE_OUTTAKE_POSITION = new ArmPosition(
