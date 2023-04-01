@@ -362,7 +362,7 @@ public class RobotContainer {
             ),
             Commands.parallel(
                 
-                m_intakeS.intakeC().withTimeout(0.1).asProxy(),
+                m_intakeS.intakeC().withTimeout(0.5).asProxy(),
                 m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
                 m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).asProxy()
             ),

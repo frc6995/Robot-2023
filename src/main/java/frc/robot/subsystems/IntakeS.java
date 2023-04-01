@@ -147,7 +147,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
   }
 
   public Command autoStagedIntakeC() {
-    return runEnd(()->intake(Constants.IntakeConstants.INTAKE_VOLTAGE * 3 * 2.9/3.4), this::stop);
+    return runEnd(()->intake(Constants.IntakeConstants.INTAKE_VOLTAGE * 3 * 1/3.4), this::stop);
   }
 
   /**

@@ -298,7 +298,7 @@ public class Constants {
             Units.inchesToMeters(9.4)
         );
         public static final ArmPosition OVERTOP_CONE_INTAKE_POSITION = new ArmPosition(
-            3.5,
+            3.51,
             0.628,
             1.400,
             Units.inchesToMeters(9.4)
