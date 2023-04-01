@@ -124,6 +124,8 @@ public class RobotContainer {
         //No Bump:
         m_autoSelector.addOption("2 Cone", fifteenPointAuto());
         m_autoSelector.addOption("2 Cone Bal.", twentysevenPointAuto());
+        // m_autoSelector.addOption("Cone Over+Back - HP", overBackAuto(5));
+        // m_autoSelector.addOption("Cone Over+Back - Bump", overBackAuto(3));
         m_autoSelector.addOption("2 Cone Over Bump", bumpTwoConeAuto());
 
         // m_autoSelector.addOption("Cone+Over Bump [UNTESTED]", ninePointAuto());
@@ -311,6 +313,35 @@ public class RobotContainer {
         ).finallyDo((end)->m_drivebaseS.drive(new ChassisSpeeds()));
     }
 
+    // public Command overBackAuto(int blueColumn) {
+    //     return Commands.sequence(
+    //         m_intakeS.retractC().asProxy(),
+
+    //         Commands.runOnce(
+    //             ()->m_drivebaseS.resetPose(
+    //                 NomadMathUtil.mirrorPose(POIManager.BLUE_COMMUNITY.get(blueColumn), AllianceWrapper.getAlliance())
+    //             )),
+            
+    //         m_keypad.blueSetpointCommand(blueColumn, 2),
+    //         Commands.deadline(
+    //             Commands.sequence(
+    //                 m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).withTimeout(3).asProxy(),
+    //                 m_intakeS.outtakeC().withTimeout(0.4).asProxy()
+    //             ),
+    //             alignToSelectedScoring().asProxy()
+    //         ),
+
+    //         m_armS.goToPositionC(ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT).asProxy(),
+    //         sequence(
+    //             m_drivebaseS.run(()->m_drivebaseS.driveAllianceRelative(new ChassisSpeeds(3, 0, 0))).withTimeout(5).until(()->POIManager.mirrorPoseAlliance(m_drivebaseS.getPose()).getX() > 6).asProxy(),
+    //             m_drivebaseS.run(()->m_drivebaseS.driveAllianceRelative(new ChassisSpeeds(3, 0, 0))).withTimeout(3).until(()->Math.abs(m_drivebaseS.getPitch()) > Units.degreesToRadians(10)).asProxy(),
+    //             m_drivebaseS.chargeStationAlignC().asProxy()
+    //         ),
+    //         m_drivebaseS.run(()->m_drivebaseS.drive(new ChassisSpeeds(0, 0, 0.1))).withTimeout(0.5).asProxy()
+    //         //m_drivebaseS.chargeStationBatteryFirstC()
+    //     ).finallyDo((end)->m_drivebaseS.drive(new ChassisSpeeds()));
+    // }
+
     public Command ninePointAuto(){
         
         return Commands.sequence(
@@ -355,7 +386,7 @@ public class RobotContainer {
 
             Commands.deadline(
                 Commands.race(
-                    m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.stopOnceC()).asProxy(),
+                    m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).asProxy(),
                     m_intakeS.intakeUntilBeamBreakC(m_intakeS.autoStagedIntakeC()).asProxy()
                 ),
                 m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION).asProxy().withTimeout(5)  
@@ -379,7 +410,7 @@ public class RobotContainer {
 
 
     private Command bumpTwoConeAuto() {
-        var pathGroup = PathPlanner.loadPathGroup("Bump 27 Point", new PathConstraints(2, 2));
+        var pathGroup = PathPlanner.loadPathGroup("Bump 27 Point", new PathConstraints(1.5, 2));
         return Commands.sequence(
             m_intakeS.retractC().asProxy(),
             m_keypad.blueSetpointCommand(0, 2),

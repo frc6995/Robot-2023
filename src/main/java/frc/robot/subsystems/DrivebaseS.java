@@ -662,6 +662,21 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
                 new PathConstraints(2, 3)),
             this);
     }
+
+    public Command chargeStationOverAlignC() {
+        return new PPChasePoseCommand(
+            ()->new Pose2d(
+                POIS.CHARGE_STATION_OVER.ownPose().getX(),
+                getPose().getY(),
+                POIS.CHARGE_STATION_OVER.ownPose().getRotation()),
+            this::getPose,
+            m_holonomicDriveController,
+            this::drive,
+            (PathPlannerTrajectory traj) -> {}, // empty output for current trajectory.
+            (startPose, endPose)->DrivebaseS.generateTrajectoryToPose(startPose, endPose, getFieldRelativeLinearSpeedsMPS(),
+                new PathConstraints(2, 3)),
+            this);
+    }
     public Command chargeStationBatteryFirstC() {
         return Commands.sequence(
             
