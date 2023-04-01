@@ -346,7 +346,8 @@ public class RobotContainer {
             m_keypad.blueSetpointCommand(8, 2),
             m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
             Commands.deadline(
-                m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3)
+                m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
+                alignToSelectedScoring().asProxy()
             ),
             m_intakeS.outtakeC().withTimeout(0.3).asProxy(),
             
