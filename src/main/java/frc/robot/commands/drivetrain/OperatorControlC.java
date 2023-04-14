@@ -29,9 +29,9 @@ public class OperatorControlC extends CommandBase {
      * versus using a double which would only update when the constructor is called
      */
     private final DoubleSupplier m_forwardX;
-    private final AsymmetricSlewRateLimiter m_xRateLimiter = new AsymmetricSlewRateLimiter(2, 6);
+    private final AsymmetricSlewRateLimiter m_xRateLimiter = new AsymmetricSlewRateLimiter(3, 3);
     private final DoubleSupplier m_forwardY;
-    private final AsymmetricSlewRateLimiter m_yRateLimiter = new AsymmetricSlewRateLimiter(2, 6);
+    private final AsymmetricSlewRateLimiter m_yRateLimiter = new AsymmetricSlewRateLimiter(3, 3);
     private final DoubleSupplier m_rotation;
     private final SlewRateLimiter m_thetaRateLimiter = new SlewRateLimiter(2);
     private final DoubleSupplier m_headingToHold;
@@ -39,7 +39,7 @@ public class OperatorControlC extends CommandBase {
 
     private boolean lastHoldHeading = false;
 
-    private final double MAX_LINEAR_SPEED = Units.feetToMeters(14);
+    private final double MAX_LINEAR_SPEED = Units.feetToMeters(11);
 
     public static final double MAX_TURN_SPEED = Units.degreesToRadians(360);
 

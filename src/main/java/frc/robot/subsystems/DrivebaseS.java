@@ -47,6 +47,8 @@ import frc.robot.Constants;
 import frc.robot.POIManager;
 import frc.robot.Robot;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.PoseEstimator;
+
 import static frc.robot.Constants.DriveConstants.NUM_MODULES;
 import static frc.robot.Constants.DriveConstants.ROBOT_MASS_kg;
 import static frc.robot.Constants.DriveConstants.ROBOT_MOI_KGM2;
@@ -214,7 +216,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
             if (Math.abs(estimatedPose.getZ()) > 0.5) {
                 continue;
             }
-            if (estimation.targetsUsed.size() < 2) {
+            if (estimation.targetsUsed.size() < 2 && estimation.targetsUsed.get(0).getPoseAmbiguity() > PoseEstimator.POSE_AMBIGUITY_CUTOFF) {
                 continue;
             }
             multitagPose = measurement.estimation().estimatedPose.toPose2d();
