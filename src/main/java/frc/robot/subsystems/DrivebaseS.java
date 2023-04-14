@@ -40,6 +40,13 @@ import static frc.robot.Constants.DriveConstants.BR;
 import static frc.robot.Constants.DriveConstants.FL;
 import static frc.robot.Constants.DriveConstants.FR;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
+import frc.robot.POIManager.POIS;
+import frc.robot.subsystems.LightS.States;
+import frc.robot.subsystems.VisionWrapper.VisionMeasurement;
+import frc.robot.Constants;
+import frc.robot.POIManager;
+import frc.robot.Robot;
+import frc.robot.Constants.DriveConstants;
 import static frc.robot.Constants.DriveConstants.NUM_MODULES;
 import static frc.robot.Constants.DriveConstants.ROBOT_MASS_kg;
 import static frc.robot.Constants.DriveConstants.ROBOT_MOI_KGM2;
@@ -97,6 +104,8 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
     private final PhotonCameraWrapper m_camera1Wrapper;
     private final PhotonCameraWrapper m_camera2Wrapper;
 
+    private final VisionWrapper m_visionWrapper = new VisionWrapper();
+
     private final List<SwerveModuleSim> m_moduleSims = List.of(
         DrivebaseS.swerveSimModuleFactory(),
         DrivebaseS.swerveSimModuleFactory(),
@@ -129,6 +138,8 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         new SwerveModulePosition()
     };
 
+    private Pose2d multitagPose = new Pose2d();
+
     public DrivebaseS() {
         m_navx.reset();
         m_navx.enableLogging(true);
@@ -136,8 +147,8 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         m_poseEstimator =
         new SwerveDrivePoseEstimator(
             m_kinematics, getHeading(), getModulePositions(), new Pose2d(),
-            VecBuilder.fill(0.1, 0.1, 0.9),
-            VecBuilder.fill(0.9, 0.9, 0.1));
+            Constants.PoseEstimator.STATE_STANDARD_DEVIATIONS,
+            Constants.PoseEstimator.VISION_MEASUREMENT_STANDARD_DEVIATIONS);
         m_thetaController.setTolerance(Units.degreesToRadians(0.5));
         m_thetaController.enableContinuousInput(-Math.PI, Math.PI);
         m_profiledThetaController.setTolerance(Units.degreesToRadians(0.5));
@@ -174,24 +185,44 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         updateModuleStates();
         updateModulePositions();
 
-        var cam1Pose = m_camera1Wrapper.getEstimatedGlobalPose(getPose());
-        if (cam1Pose.getFirst() != null) {
-            var pose = cam1Pose.getFirst();
-            var timestamp = cam1Pose.getSecond();
-            m_poseEstimator.addVisionMeasurement(pose, timestamp);
-        }
+        // var cam1Pose = m_camera1Wrapper.getEstimatedGlobalPose(getPose());
+        // if (cam1Pose.getFirst() != null) {
+        //     var pose = cam1Pose.getFirst();
+        //     var timestamp = cam1Pose.getSecond();
+        //     m_poseEstimator.addVisionMeasurement(pose, timestamp);
+        // }
 
-        var cam2Pose = m_camera2Wrapper.getEstimatedGlobalPose(getPose());
-        if (cam2Pose.getFirst() != null) {
-            var pose = cam2Pose.getFirst();
-            var timestamp = cam2Pose.getSecond();
-            m_poseEstimator.addVisionMeasurement(pose, timestamp);
-        }
+        // var cam2Pose = m_camera2Wrapper.getEstimatedGlobalPose(getPose());
+        // if (cam2Pose.getFirst() != null) {
+        //     var pose = cam2Pose.getFirst();
+        //     var timestamp = cam2Pose.getSecond();
+        //     m_poseEstimator.addVisionMeasurement(pose, timestamp);
+        // }
+
+
 
         // update the odometry every 20ms
         //m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(0.9, 0.9, 0.));
         m_odometry.update(getHeading(), currentPositions);
         m_poseEstimator.update(getHeading(), getModulePositions());
+
+        VisionMeasurement measurement;
+        while ((measurement = m_visionWrapper.drainVisionMeasurement()) != null) {
+            var estimation = measurement.estimation();
+            var estimatedPose = estimation.estimatedPose;
+            // height of final pose
+            if (Math.abs(estimatedPose.getZ()) > 0.5) {
+                continue;
+            }
+            if (estimation.targetsUsed.size() < 2) {
+                continue;
+            }
+            multitagPose = measurement.estimation().estimatedPose.toPose2d();
+            m_poseEstimator.addVisionMeasurement(
+                multitagPose,
+                measurement.estimation().timestampSeconds,
+                measurement.confidence());
+        }
     }
 
     public void drive(ChassisSpeeds speeds) {
@@ -484,6 +515,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
     public void drawRobotOnField(Field2d field) {
         field.setRobotPose(getPose());
         field.getObject("odometry").setPose(getOdometryPose());
+        field.getObject("multitag").setPose(multitagPose);
         // Draw a pose that is based on the robot pose, but shifted by the translation of the module relative to robot center,
         // then rotated around its own center by the angle of the module.
         field.getObject("modules").setPoses(List.of(
@@ -492,6 +524,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
             getPose().transformBy(new Transform2d(ModuleConstants.BL.centerOffset, getModuleStates()[BL].angle)),
             getPose().transformBy(new Transform2d(ModuleConstants.BR.centerOffset, getModuleStates()[BR].angle))
         ));
+
     }
 
     static SwerveModuleSim swerveSimModuleFactory(){

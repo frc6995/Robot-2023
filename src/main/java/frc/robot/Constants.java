@@ -1,19 +1,28 @@
 package frc.robot;
 
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 
 import edu.wpi.first.apriltag.AprilTag;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Filesystem;
 import frc.robot.subsystems.ArmS.ArmPosition;
+import frc.robot.subsystems.VisionWrapper.UnitDeviationParams;
+import frc.robot.subsystems.VisionWrapper.TagCountDeviation;
 
 public class Constants {
 
@@ -107,6 +116,78 @@ public class Constants {
 
     }
 
+    public static final class Config {
+ 
+        /** def turn this off unless you are using it, generates in excess of 100k rows for a match. */
+        public static final boolean WRITE_APRILTAG_DATA = false;
+    
+        public static final Path APRILTAG_DATA_PATH =
+            Filesystem.getDeployDirectory().toPath().resolve("poseEstimationsAtDistances.csv");
+        public static final double REAL_X = 0.0;
+        public static final double REAL_Y = 0.0;
+      }
+    
+    
+      public static final class PoseEstimator {
+        /**
+         * Standard deviations of model states. Increase these numbers to trust your model's state
+         * estimates less. This matrix is in the form [x, y, theta]ᵀ, with units in meters and radians.
+         */
+        public static final Matrix<N3, N1> STATE_STANDARD_DEVIATIONS =
+            Matrix.mat(Nat.N3(), Nat.N1())
+                .fill(
+                    0.1, // x
+                    0.1, // y
+                    0.1 // theta
+                    );
+    
+        /**
+         * Standard deviations of the vision measurements. Increase these numbers to trust global
+         * measurements from vision less. This matrix is in the form [x, y, theta]ᵀ, with units in
+         * meters and radians.
+         *
+         * <p>These are not actually used anymore, but the constructor for the pose estimator wants
+         * them. This value is calculated dynamically using the below list.
+         */
+        public static final Matrix<N3, N1> VISION_MEASUREMENT_STANDARD_DEVIATIONS =
+            Matrix.mat(Nat.N3(), Nat.N1())
+                .fill(
+                    // if these numbers are less than one, multiplying will do bad things
+                    1, // x
+                    1, // y
+                    1 * Math.PI // theta
+                    );
+    
+        public static final double POSE_AMBIGUITY_CUTOFF = .1;
+    
+        public static final List<TagCountDeviation> TAG_COUNT_DEVIATION_PARAMS =
+            List.of(
+                // 1 tag
+                new TagCountDeviation(
+                    new UnitDeviationParams(.25, .4, .9),
+                    new UnitDeviationParams(.35, .5, 1.2),
+                    new UnitDeviationParams(.5, .7, 1.5)),
+    
+                // 2 tags
+                new TagCountDeviation(
+                    new UnitDeviationParams(.35, .1, .4), new UnitDeviationParams(.5, .7, 1.5)),
+    
+                // 3+ tags
+                new TagCountDeviation(
+                    new UnitDeviationParams(.25, .07, .25), new UnitDeviationParams(.15, 1, 1.5)));
+    
+        /** about one inch */
+        public static final double DRIVE_TO_POSE_XY_ERROR_MARGIN_METERS = .025;
+    
+        public static final double DRIVE_TO_POSE_THETA_ERROR_MARGIN_DEGREES = 2;
+    
+        public static final List<Set<Integer>> POSSIBLE_FRAME_FID_COMBOS =
+            List.of(Set.of(1, 2, 3, 4), Set.of(5, 6, 7, 8));
+    
+        public static final int MAX_FRAME_FIDS = 4;
+      }
+
+
     public static final class VisionConstants{
 
         public static final String CAM_2_NAME = "OV9281-2";
@@ -169,6 +250,24 @@ public class Constants {
             8.0137
         );
     }
+
+        /**
+     * Pose estimation from FRC 5026 Iron Panthers, used by permission
+     */
+    public static final class Vision {
+        public static record VisionSource(String name, Transform3d robotToCamera) {}
+    
+        public static final List<VisionSource> VISION_SOURCES =
+            List.of(
+                new VisionSource(
+                    VisionConstants.CAM_1_NAME,
+                    VisionConstants.robotToCam1),
+                new VisionSource(
+                    VisionConstants.CAM_2_NAME,
+                   VisionConstants.robotToCam2));
+    
+        public static final int THREAD_SLEEP_DURATION_MS = 5;
+      }
 
     public static final class ArmConstants {
 
