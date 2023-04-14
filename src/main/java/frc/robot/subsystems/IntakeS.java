@@ -100,6 +100,11 @@ public class IntakeS extends SubsystemBase implements Loggable {
   }
 
   @Log
+  public double getIntakeFollowerVolts() {
+    return intakeFollowerMotor.getAppliedOutput() * 12;
+  }
+
+  @Log
   public double getDistanceSensor() {
     return distanceSensor.getRange();
   }
