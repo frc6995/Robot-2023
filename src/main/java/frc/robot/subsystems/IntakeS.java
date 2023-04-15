@@ -307,7 +307,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
     return intakeCommand.until(()->{
       return isExtended ? 
       cubeDebouncedBeamBreak.getAsBoolean() : coneDebouncedBeamBreak.getAsBoolean();})
-      .andThen(intakeC().withTimeout(isExtended ? 0.1 : 0.1));
+      .andThen(intakeC().withTimeout(isExtended ? 0 : 0.1));
     
   }
 
