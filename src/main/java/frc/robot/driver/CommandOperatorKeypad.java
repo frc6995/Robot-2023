@@ -106,7 +106,7 @@ public class CommandOperatorKeypad {
     }
 
     public Trigger alignForward() {
-        return key(Button.kMidCenter).and(key(Button.kHighCenter)).and(anyGrid().negate());
+        return key(Button.kMidCenter).and(key(Button.kLowCenter)).and(anyGrid().negate());
     }
 
     public Trigger alignLeft() {
@@ -118,7 +118,7 @@ public class CommandOperatorKeypad {
     }
 
     public Trigger alignBackward() {
-        return key(Button.kMidCenter).and(key(Button.kLowCenter)).and(anyGrid().negate());
+        return key(Button.kMidCenter).and(key(Button.kHighCenter)).and(anyGrid().negate());
     }
 
     public Command setpointCommand(int columnInGrid, int row) {

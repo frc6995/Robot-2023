@@ -116,7 +116,7 @@ public class RobotContainer {
                         return downfield - Math.PI/2;
                     }
                     else if (
-                        m_keypad.alignLeft().getAsBoolean()) {
+                        m_keypad.alignBackward().getAsBoolean()) {
                         return downfield - Math.PI;
                     }
                     
@@ -128,6 +128,8 @@ public class RobotContainer {
                 m_drivebaseS
             )
         );
+
+        m_keypad.blueSetpointCommand(0, 0).schedule();
 
         configureButtonBindings();
 
@@ -168,9 +170,9 @@ public class RobotContainer {
 
     private Command alignAndScoreCG() {
         return 
-        Commands.deadline(
+        Commands.race(
             Commands.waitUntil(m_keypad.isChangingTarget()),
-            Commands.sequence(
+        Commands.sequence(
                 // retract and align
                 Commands.parallel(
                     Commands.sequence(
@@ -189,16 +191,15 @@ public class RobotContainer {
 
                 ),
                 m_intakeS.outtakeC().withTimeout(0.25).asProxy()
-            )
-        )
-        .andThen(
-            Commands.deadline(
-                m_armS.stowC().asProxy().withTimeout(3),
-                m_drivebaseS.stopC().until(
-                    ()->m_armS.getLengthMeters() < ArmConstants.SCORE_MID_CUBE_POSITION.armLength
+            ))
+            .andThen(
+                Commands.deadline(
+                    m_armS.stowC().asProxy().withTimeout(3),
+                    m_drivebaseS.stopC().asProxy().until(
+                        ()->m_armS.getLengthMeters() < ArmConstants.SCORE_MID_CUBE_POSITION.armLength
+                    )
                 )
             )
-        )
         ;
     }
 
@@ -217,8 +218,8 @@ public class RobotContainer {
         Transform2d error = new Transform2d(m_targetAlignmentPose, m_drivebaseS.getPose());
         return 
             Math.abs(error.getRotation().getRadians()) < Units.degreesToRadians(6) &&
-            (Math.abs(error.getX()) < 0.4) &&
-            Math.abs(error.getY()) < 0.4;
+            (Math.abs(error.getX()) < 0.51) &&
+            Math.abs(error.getY()) < 0.51;
 
     });
 
