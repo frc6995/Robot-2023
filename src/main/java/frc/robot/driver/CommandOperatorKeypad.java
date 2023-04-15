@@ -82,6 +82,8 @@ public class CommandOperatorKeypad {
         setupTrigger(rightGrid(), Button.kHighLeft, 2, 2);
         setupTrigger(rightGrid(), Button.kHighCenter, 1, 2);
         setupTrigger(rightGrid(), Button.kHighRight, 0, 2);
+
+
         selectionEntry.setNumber(0);
 
 
@@ -97,6 +99,25 @@ public class CommandOperatorKeypad {
     public Command blueSetpointCommand(int columnInGrid, int row) {
         return Commands.either(
             setpointCommand(8-columnInGrid, row), setpointCommand(columnInGrid, row), AllianceWrapper::isRed);
+    }
+    public Trigger anyGrid() {
+        return key(Button.kLeftGrid).or(key(Button.kCenterGrid)).or(key(Button.kRightGrid));
+    }
+
+    public Trigger alignForward() {
+        return key(Button.kMidCenter).and(key(Button.kHighCenter)).and(anyGrid().negate());
+    }
+
+    public Trigger alignLeft() {
+        return key(Button.kMidCenter).and(key(Button.kMidLeft)).and(anyGrid().negate());
+    }
+
+    public Trigger alignRight() {
+        return key(Button.kMidCenter).and(key(Button.kMidRight)).and(anyGrid().negate());
+    }
+
+    public Trigger alignBackward() {
+        return key(Button.kMidCenter).and(key(Button.kLowCenter)).and(anyGrid().negate());
     }
 
     public Command setpointCommand(int columnInGrid, int row) {
