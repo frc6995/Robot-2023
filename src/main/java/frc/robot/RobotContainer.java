@@ -154,27 +154,34 @@ public class RobotContainer {
         return 
         Commands.deadline(
             Commands.waitUntil(m_keypad.isChangingTarget()),
-        Commands.sequence(
-            // retract and align
-            Commands.parallel(
-                Commands.sequence(
-                    m_armS.stowIndefiniteC().asProxy()
-                        .until(m_alignSafeToStartExtending),
-                    new GoToPositionC(m_armS, ()->m_targetArmPosition).asProxy()
-                ),
-                Commands.sequence(
-                    Commands.waitUntil(()->m_armS.getLengthMeters() < ArmConstants.SCORE_HIGH_CUBE_POSITION.armLength),
-                    alignToSelectedScoring().asProxy()
-                    .until(
-                        ()->
-                        m_isCubeSelected ? m_alignSafeToPlaceCube.getAsBoolean() : false),
-                    m_drivebaseS.stopOnceC().asProxy()
-                )
+            Commands.sequence(
+                // retract and align
+                Commands.parallel(
+                    Commands.sequence(
+                        m_armS.stowIndefiniteC().asProxy()
+                            .until(m_alignSafeToStartExtending),
+                        new GoToPositionC(m_armS, ()->m_targetArmPosition).asProxy()
+                    ),
+                    Commands.sequence(
+                        Commands.waitUntil(()->m_armS.getLengthMeters() < ArmConstants.SCORE_MID_CUBE_POSITION.armLength),
+                        alignToSelectedScoring().asProxy()
+                        .until(
+                            ()->
+                            m_isCubeSelected ? m_alignSafeToPlaceCube.getAsBoolean() : false),
+                        m_drivebaseS.stopOnceC().asProxy()
+                    )
 
-            ),
-            m_intakeS.outtakeC().withTimeout(0.25).asProxy(),
-            m_armS.stowC().asProxy()
+                ),
+                m_intakeS.outtakeC().withTimeout(0.25).asProxy()
+            )
         )
+        .andThen(
+            Commands.deadline(
+                m_armS.stowC().asProxy().withTimeout(3),
+                m_drivebaseS.stopC().until(
+                    ()->m_armS.getLengthMeters() < ArmConstants.SCORE_MID_CUBE_POSITION.armLength
+                )
+            )
         )
         ;
     }
