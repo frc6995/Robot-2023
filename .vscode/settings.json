@@ -40,5 +40,6 @@
   "circuitpython.board.vid": "0x239A",
   "circuitpython.board.pid": "0x80F4",
   "wpilib.selectDefaultSimulateExtension": false,
-  "wpilib.autoStartRioLog": true
+  "wpilib.autoStartRioLog": true,
+  "java.debug.settings.onBuildFailureProceed": true
 }

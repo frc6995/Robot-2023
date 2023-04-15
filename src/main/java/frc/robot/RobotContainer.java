@@ -397,13 +397,16 @@ public class RobotContainer {
                 m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
                 m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).asProxy()
             ),
-            Commands.deadline(
-                sequence(
-                    m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy(),
-                    m_intakeS.outtakeC().withTimeout(0.3).asProxy()
-                ),
-                alignToSelectedScoring().asProxy()
-            )
+            Commands.parallel(
+                alignToSelectedScoring().asProxy(),
+                Commands.sequence(
+                    Commands.waitUntil(m_alignSafeToPlaceCube),
+                    m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy()
+                    
+                )
+            ),
+            m_intakeS.outtakeC().withTimeout(0.3).asProxy()
+            
 
         );
     }

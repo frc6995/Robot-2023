@@ -216,7 +216,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
             if (Math.abs(estimatedPose.getZ()) > 0.5) {
                 continue;
             }
-            if (estimation.targetsUsed.size() < 2 && estimation.targetsUsed.get(0).getPoseAmbiguity() > PoseEstimator.POSE_AMBIGUITY_CUTOFF) {
+            if (estimation.targetsUsed.size() < 2 && estimation.targetsUsed.get(0).getBestCameraToTarget().getTranslation().getNorm() > Units.feetToMeters(10)) {
                 continue;
             }
             multitagPose = measurement.estimation().estimatedPose.toPose2d();
@@ -235,7 +235,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         // By default it would point all modules forward when stopped. Here, we override this.
         if(Math.abs(speeds.vxMetersPerSecond) < 0.01
             && Math.abs(speeds.vyMetersPerSecond) < 0.01
-            && Math.abs(speeds.omegaRadiansPerSecond) < 0.0001) {
+            && Math.abs(speeds.omegaRadiansPerSecond) < 0.0001 && false) {
                 states = getStoppedStates();
         } else {
             // make sure the wheels don't try to spin faster than the maximum speed possible

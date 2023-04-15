@@ -6,6 +6,7 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
@@ -190,7 +191,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         CommandScheduler.getInstance().schedule(
             Commands.waitSeconds(m_moduleConstants.driveMotorID * 0.04).ignoringDisable(true).andThen(
                 ()->{
-                    m_driveMotor.setSmartCurrentLimit(35);
+                    m_driveMotor.setSmartCurrentLimit(50);
                     m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 25);
                     m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
                     m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
@@ -223,7 +224,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
                 Commands.runOnce(
                 ()->{
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 40);
-                    m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
+                    m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 40);
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
@@ -299,7 +300,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         m_currentAngle = m_magEncoder.getPosition();
         m_currentPosition = m_driveEncoderWrapper.getPosition();
         m_currentVelocity = m_driveEncoderWrapper.getVelocity();
-        // m_currentSteerEncoderAngle = m_steerEncoderWrapper.getPosition();
+        m_currentSteerEncoderAngle = m_steerEncoderWrapper.getPosition();
     }
 
     /**
@@ -348,10 +349,12 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         // Save the desired state for reference (Simulation assumes the modules always are at the desired state)
         
         desiredState = SwerveModuleState.optimize(desiredState, getMagEncoderAngle());
+        desiredState.speedMetersPerSecond *= Math.cos(getMagEncoderAngleDouble() - desiredState.angle.getRadians());
         
         double goal = desiredState.angle.getRadians();
         double measurement = getMagEncoderAngle().getRadians();
         double rotationVolts = m_steerPIDController.calculate(measurement, goal);
+        rotationVolts += 0.1 * Math.signum(rotationVolts);
         rotationVolts += 1 * Math.signum(m_steerPIDController.getSetpoint().velocity);
         double prevSpeedSetpoint = m_drivePIDController.getSetpoint();
         double driveVolts = m_drivePIDController.calculate(getCurrentVelocityMetersPerSecond(), desiredState.speedMetersPerSecond)
@@ -423,5 +426,9 @@ public class SwerveModule extends SubsystemBase implements Loggable{
     @Log
     public double getDriveCurrent() {
         return m_driveMotor.getOutputCurrent();
+    }
+    @Log
+    public double getEncoderDiscrepancy() {
+        return (m_currentSteerEncoderAngle % (2 * Math.PI)) - m_currentAngle;
     }
 }

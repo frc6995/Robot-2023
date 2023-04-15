@@ -56,10 +56,10 @@ public class Constants {
         static private double HW = WHEEL_BASE_WIDTH_M/2.0;
 
         public enum ModuleConstants {
-            FL("FL", 18, 17, 6, 5.651346 + 0.005 + 0.01, HW, HW),
-            FR("FR", 12, 11, 7, 3.762759 - 0.003 + 0.002 + 0.01, HW, -HW),
-            BL("BL", 16, 15, 8, 1.823007 + 0.01 + 0.001 - 0.03, -HW, HW),
-            BR("BR", 14, 13, 9, 5.614791 - 0.008 - 0.04 - 0.03 + 0.11, -HW, -HW);
+            FL("FL", 18, 17, 6, 5.651346 + 0.005 + 0.01 - 0.006, HW, HW),
+            FR("FR", 12, 11, 7, 3.762759 - 0.003 + 0.002 + 0.01 + 0.041, HW, -HW),
+            BL("BL", 16, 15, 8, 1.823007 + 0.01 + 0.001 - 0.03 - 0.004, -HW, HW),
+            BR("BR", 14, 13, 9, 5.614791 - 0.008 - 0.04 - 0.03 + 0.11-0.006, -HW, -HW);
     
             public final String name;
             public final int driveMotorID;
@@ -194,10 +194,10 @@ public class Constants {
         public static final String CAM_1_NAME = "OV9281-1";
         public static final Transform3d robotToCam2 = new Transform3d(
             new Translation3d(Units.inchesToMeters(9.625), Units.inchesToMeters(8.75), Units.inchesToMeters(10.875)), 
-            new Rotation3d(Units.degreesToRadians(0) , Units.degreesToRadians(-12),Units.degreesToRadians(-46) ));
+            new Rotation3d(Units.degreesToRadians(0) , Units.degreesToRadians(-12),Units.degreesToRadians(-45.5) ));
         public static final Transform3d robotToCam1 = new Transform3d(
             new Translation3d(Units.inchesToMeters(9.625), Units.inchesToMeters(-8.75), Units.inchesToMeters(10.875)), 
-            new Rotation3d(Units.degreesToRadians(0) , Units.degreesToRadians(-12),Units.degreesToRadians(46) ));
+            new Rotation3d(Units.degreesToRadians(0) , Units.degreesToRadians(-12),Units.degreesToRadians(47.5) ));
         public static AprilTagFieldLayout TAG_FIELD_LAYOUT = 
         new AprilTagFieldLayout(
             List.of(
@@ -266,7 +266,7 @@ public class Constants {
                     VisionConstants.CAM_2_NAME,
                    VisionConstants.robotToCam2));
     
-        public static final int THREAD_SLEEP_DURATION_MS = 5;
+        public static final int THREAD_SLEEP_DURATION_MS = 10;
       }
 
     public static final class ArmConstants {
