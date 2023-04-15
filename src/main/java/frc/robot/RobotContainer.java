@@ -150,6 +150,35 @@ public class RobotContainer {
         );
     }
 
+    private Command alignAndScoreCG() {
+        return 
+        Commands.deadline(
+            Commands.waitUntil(m_keypad.isChangingTarget()),
+        Commands.sequence(
+            // retract and align
+            Commands.parallel(
+                Commands.sequence(
+                    m_armS.stowIndefiniteC().asProxy()
+                        .until(m_alignSafeToStartExtending),
+                    new GoToPositionC(m_armS, ()->m_targetArmPosition).asProxy()
+                ),
+                Commands.sequence(
+                    Commands.waitUntil(()->m_armS.getLengthMeters() < ArmConstants.SCORE_HIGH_CUBE_POSITION.armLength),
+                    alignToSelectedScoring().asProxy()
+                    .until(
+                        ()->
+                        m_isCubeSelected ? m_alignSafeToPlaceCube.getAsBoolean() : false),
+                    m_drivebaseS.stopOnceC().asProxy()
+                )
+
+            ),
+            m_intakeS.outtakeC().withTimeout(0.25).asProxy(),
+            m_armS.stowC().asProxy()
+        )
+        )
+        ;
+    }
+
     @Log(methodName = "getAsBoolean")
     private Trigger m_alignSafeToPlaceCube = new Trigger(()->{
         Transform2d error = new Transform2d(m_targetAlignmentPose, m_drivebaseS.getPose());
@@ -160,15 +189,25 @@ public class RobotContainer {
 
     });
 
+    @Log(methodName = "getAsBoolean")
+    private Trigger m_alignSafeToStartExtending = new Trigger(()->{
+        Transform2d error = new Transform2d(m_targetAlignmentPose, m_drivebaseS.getPose());
+        return 
+            Math.abs(error.getRotation().getRadians()) < Units.degreesToRadians(6) &&
+            (Math.abs(error.getX()) < 0.4) &&
+            Math.abs(error.getY()) < 0.4;
+
+    });
+
     public void configureButtonBindings() {
-        m_driverController.a().toggleOnTrue(
-                alignToSelectedScoring().asProxy()
-                .until(
-                    ()->
-                    m_isCubeSelected ? m_alignSafeToPlaceCube.getAsBoolean() : false)
-                .andThen(autoScoreSequenceCG().asProxy())
+        m_driverController.a().toggleOnTrue(alignAndScoreCG());
+            //     alignToSelectedScoring().asProxy()
+            //     .until(
+            //         ()->
+            //         m_isCubeSelected ? m_alignSafeToPlaceCube.getAsBoolean() : false)
+            //     .andThen(autoScoreSequenceCG().asProxy())
            
-            );
+            // );
         m_driverController.b().toggleOnTrue(
             Commands.sequence(
                 m_intakeS.outtakeC().withTimeout(0.5),
@@ -258,7 +297,7 @@ public class RobotContainer {
 
             ),
             Commands.parallel(
-                Commands.waitSeconds(0.75).andThen(m_intakeS.intakeC().withTimeout(0.75)).asProxy(),
+                //Commands.waitSeconds(0.75).andThen(m_intakeS.intakeC().withTimeout(0.75)).asProxy(),
                 m_armS.stowIndefiniteC(), 
                 Commands.run(()->LightS.getInstance().requestState(isCube ? States.IntakedCube : States.IntakedCone)).asProxy().withTimeout(0.75)
             )
@@ -394,17 +433,25 @@ public class RobotContainer {
             Commands.parallel(
                 
                 m_intakeS.intakeC().withTimeout(0.5).asProxy(),
-                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).asProxy()
-            ),
-            Commands.parallel(
-                alignToSelectedScoring().asProxy(),
                 Commands.sequence(
-                    Commands.waitUntil(m_alignSafeToPlaceCube),
+                    m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
+                    Commands.waitUntil(m_alignSafeToStartExtending),
                     m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy()
-                    
+                ),
+                Commands.sequence(
+                    m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).asProxy(),
+                    alignToSelectedScoring().asProxy()
                 )
+                
             ),
+            // Commands.parallel(
+            //     alignToSelectedScoring().asProxy(),
+            //     Commands.sequence(
+            //         Commands.waitUntil(m_alignSafeToPlaceCube),
+            //         m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy()
+                    
+            //     )
+            // ),
             m_intakeS.outtakeC().withTimeout(0.3).asProxy()
             
 

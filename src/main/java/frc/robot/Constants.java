@@ -325,9 +325,9 @@ public class Constants {
         public static final double WRIST_KG = 5.744 * 1.6 * 5 / (300.0);
 
         public static final ArmPosition SCORE_HIGH_CONE_POSITION = new ArmPosition(
-            0.658,
-            1.429,
-            -Units.degreesToRadians(10),
+            0.628,
+            1.474,
+            -Units.degreesToRadians(12),
             Units.inchesToMeters(9.4));
         public static final ArmPosition SCORE_HIGH_CUBE_POSITION = new ArmPosition(
         0.658 - Units.degreesToRadians(10),
@@ -335,9 +335,9 @@ public class Constants {
         (Math.PI/2)-1,
         Units.inchesToMeters(9.4));
         public static final ArmPosition SCORE_MID_CONE_POSITION = new ArmPosition(
-            0.74,
-            1.082,
-            -0.74,
+            0.628,
+            0.932,
+            0,
             Units.inchesToMeters(9.4));
         public static final ArmPosition SCORE_MID_CUBE_POSITION = new ArmPosition(
             0.658 - Units.degreesToRadians(15),
@@ -362,7 +362,7 @@ public class Constants {
         public static final ArmPosition GROUND_CONE_INTAKE_POSITION = new ArmPosition(
             -0.42,
             0.611,
-            WRIST_MAX_ANGLE - Units.degreesToRadians(8),
+            WRIST_MAX_ANGLE - Units.degreesToRadians(17),
             Units.inchesToMeters(9.4));
         public static final ArmPosition RAMP_CONE_INTAKE_POSITION = new ArmPosition(
             2.682,

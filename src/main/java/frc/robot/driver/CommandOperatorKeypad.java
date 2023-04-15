@@ -23,6 +23,7 @@ public class CommandOperatorKeypad {
     private Consumer<Pose2d> setDriveSetpoint;
     private Consumer<ArmPosition> setArmSetpoint;
     private Consumer<Boolean> setSelectedCube;
+    private Trigger isChangingTarget = new Trigger(()->false);
 
     private NetworkTableEntry selectionEntry = NetworkTableInstance.getDefault().getEntry("/DriverDisplay/selection");
     public enum Button {
@@ -115,7 +116,7 @@ public class CommandOperatorKeypad {
                 return Constants.ArmConstants.SCORE_MID_CONE_POSITION;
             }
             else {
-                return Constants.ArmConstants.SCORE_HYBRID_POSITION;
+                return Constants.ArmConstants.STOW_POSITION;
             }
         },
         ()->{
@@ -127,6 +128,7 @@ public class CommandOperatorKeypad {
     private void setupTrigger(Trigger grid, Button position, int columnInGrid, int row) {
         grid.and(key(position)).onTrue(
             setpointCommand(columnInGrid, row));
+        isChangingTarget = isChangingTarget.or(grid.and(key(position)));
             
     }
     private Trigger key(Button key) {
@@ -142,6 +144,10 @@ public class CommandOperatorKeypad {
 
     public Trigger rightGrid() {
         return key(Button.kRightGrid);
+    }
+
+    public Trigger isChangingTarget() {
+        return isChangingTarget;
     }
 
     private Command setpointCommand(Supplier<Pose2d> driveSetpoint, Supplier<ArmPosition> armSetpoint, Supplier<Boolean> selectedCube, int selectionNumber) {

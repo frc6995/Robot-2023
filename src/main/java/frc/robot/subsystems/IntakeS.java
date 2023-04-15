@@ -51,7 +51,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
     intakeFollowerMotor.restoreFactoryDefaults();
     intakeMotor.setIdleMode(IdleMode.kBrake);
     intakeFollowerMotor.setIdleMode(IdleMode.kBrake);
-    intakeMotor.setSecondaryCurrentLimit(15);
+    intakeMotor.setSecondaryCurrentLimit(25);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 25);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
@@ -68,7 +68,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
     intakeFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
     m_beamBreak.enableLimitSwitch(false);
     
-    intakeMotor.setSmartCurrentLimit(10, 10);
+    intakeMotor.setSmartCurrentLimit(20, 20);
     intakeFollowerMotor.follow(intakeMotor, false);
     intakeMotor.burnFlash();
     intakeFollowerMotor.burnFlash();
@@ -152,7 +152,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
    */
 
   public void intake() {
-    intake(Constants.IntakeConstants.INTAKE_VOLTAGE * (isExtended() ? 1.5 : 3));
+    intake(Constants.IntakeConstants.INTAKE_VOLTAGE * (isExtended() ? 2.5 : 3));
   }
 
   public Command autoStagedIntakeC() {
