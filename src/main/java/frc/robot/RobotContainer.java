@@ -101,14 +101,30 @@ public class RobotContainer {
                 ()->{
                     double downfield = (AllianceWrapper.getAlliance() == Alliance.Red) ? 
                     Math.PI : 0.0;
+
                     if (m_driverController.start().getAsBoolean()) {
                         return downfield;
+                    } else if (
+                        m_keypad.alignForward().getAsBoolean()) {
+                        return downfield;
+                    } else if (
+                        m_keypad.alignLeft().getAsBoolean()) {
+                        return downfield + Math.PI/2;
                     }
+                    else if (
+                        m_keypad.alignRight().getAsBoolean()) {
+                        return downfield - Math.PI/2;
+                    }
+                    else if (
+                        m_keypad.alignLeft().getAsBoolean()) {
+                        return downfield - Math.PI;
+                    }
+                    
                     else {
                         return m_drivebaseS.getPoseHeading().getRadians();
                     }
                 },
-                m_driverController.start(),
+                m_driverController.start().or(m_keypad.alignForward()).or(m_keypad.alignLeft()).or(m_keypad.alignBackward()).or(m_keypad.alignRight()),
                 m_drivebaseS
             )
         );
