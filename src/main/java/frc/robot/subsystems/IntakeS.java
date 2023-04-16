@@ -152,11 +152,11 @@ public class IntakeS extends SubsystemBase implements Loggable {
    */
 
   public void intake() {
-    intake(Constants.IntakeConstants.INTAKE_VOLTAGE * (isExtended() ? 2.5 : 3));
+    intake(isExtended() ? (Constants.IntakeConstants.INTAKE_VOLTAGE * 2.5) : 10);
   }
 
   public Command autoStagedIntakeC() {
-    return runEnd(()->intake(Constants.IntakeConstants.INTAKE_VOLTAGE * 3 * 1/3.4), this::stop);
+    return runEnd(()->intake(10), this::stop);
   }
 
   /**
@@ -164,7 +164,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
    */
 
   public void outtake() {
-    intake(-Constants.IntakeConstants.INTAKE_VOLTAGE * (isExtended() ? 2 : 1));
+    intake( (isExtended() ? -9 : -Constants.IntakeConstants.INTAKE_VOLTAGE * 2));
   }
 
   /**
@@ -243,6 +243,10 @@ public class IntakeS extends SubsystemBase implements Loggable {
 
   public Command outtakeC() {
     return runEnd(this::outtake, this::stop);
+  }
+
+  public Command shootC() {
+    return runEnd(()->intake(-12), this::stop);
   }
 
   /**

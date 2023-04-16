@@ -63,7 +63,7 @@ public class VisionWrapper {
               PhotonPoseEstimator.PoseStrategy.MULTI_TAG_PNP,
               camera,
               visionSource.robotToCamera());
-      estimator.setMultiTagFallbackStrategy(PhotonPoseEstimator.PoseStrategy.LOWEST_AMBIGUITY);
+      estimator.setMultiTagFallbackStrategy(PhotonPoseEstimator.PoseStrategy.CLOSEST_TO_CAMERA_HEIGHT);
       cameraStatusList.addBoolean(visionSource.name(), camera::isConnected);
       cameraEstimators.add(new CameraEstimator(camera, estimator));
     }

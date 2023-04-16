@@ -25,7 +25,7 @@ public class GoToPositionC extends CommandBase {
   private ArmPosition m_targetPosition;
   private List<ArmPosition> m_waypoints;
   private Supplier<ArmPosition> m_positionSupplier;
-  private double maxRotateLength = 0.64;
+  private double maxRotateLength = 0.7;
   private int currentTarget = 0;
   private boolean m_shouldFinish = true;
   /** Creates a new GoToPositionC. */

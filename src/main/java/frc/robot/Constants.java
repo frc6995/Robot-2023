@@ -56,10 +56,10 @@ public class Constants {
         static private double HW = WHEEL_BASE_WIDTH_M/2.0;
 
         public enum ModuleConstants {
-            FL("FL", 18, 17, 6, 5.651346 + 0.005 + 0.01 - 0.006, HW, HW),
-            FR("FR", 12, 11, 7, 3.762759 - 0.003 + 0.002 + 0.01 + 0.041, HW, -HW),
-            BL("BL", 16, 15, 8, 1.823007 + 0.01 + 0.001 - 0.03 - 0.004, -HW, HW),
-            BR("BR", 14, 13, 9, 5.614791 - 0.008 - 0.04 - 0.03 + 0.11-0.006, -HW, -HW);
+            FL("FL", 18, 17, 6, 5.645746 - 0.001, HW, HW),
+            FR("FR", 12, 11, 7, 3.798559, HW, -HW),
+            BL("BL", 16, 15, 8, 1.793807 - 0.007, -HW, HW),
+            BR("BR", 14, 13, 9, 5.649191 - 0.003, -HW, -HW);
     
             public final String name;
             public final int driveMotorID;
@@ -266,7 +266,7 @@ public class Constants {
                     VisionConstants.CAM_2_NAME,
                    VisionConstants.robotToCam2));
     
-        public static final int THREAD_SLEEP_DURATION_MS = 10;
+        public static final int THREAD_SLEEP_DURATION_MS = 5;
       }
 
     public static final class ArmConstants {
@@ -326,25 +326,21 @@ public class Constants {
 
         public static final ArmPosition SCORE_HIGH_CONE_POSITION = new ArmPosition(
             0.628,
-            1.474,
+            1.45,
             -Units.degreesToRadians(12),
             Units.inchesToMeters(9.4));
-        public static final ArmPosition SCORE_HIGH_CUBE_POSITION = new ArmPosition(
-        0.658 - Units.degreesToRadians(10),
-        1.2,
-        (Math.PI/2)-1,
-        Units.inchesToMeters(9.4));
+
         public static final ArmPosition SCORE_MID_CONE_POSITION = new ArmPosition(
             0.628,
-            0.932,
+            0.875,
             0,
             Units.inchesToMeters(9.4));
-        public static final ArmPosition SCORE_MID_CUBE_POSITION = new ArmPosition(
-            0.658 - Units.degreesToRadians(15),
-            0.75,
-            (Math.PI/2)-1,
-            Units.inchesToMeters(9.4));
-        public static final ArmPosition RETRACTED_SCORE_CONE_POSITION = new ArmPosition(
+
+            public static final ArmPosition SCORE_MID_CUBE_POSITION = new ArmPosition(
+                0.658 - Units.degreesToRadians(15),
+                0.75,
+                (Math.PI/2)-1,
+                Units.inchesToMeters(9.4));        public static final ArmPosition RETRACTED_SCORE_CONE_POSITION = new ArmPosition(
             0.658,
             0.628,
             0,
@@ -353,6 +349,11 @@ public class Constants {
             Units.degreesToRadians(66),
             MIN_ARM_LENGTH + Units.inchesToMeters(1),
             WRIST_MAX_ANGLE - Units.degreesToRadians(5),
+            Units.inchesToMeters(9.4));
+        public static final ArmPosition SCORE_HIGH_CUBE_POSITION = new ArmPosition(
+            STOW_POSITION.pivotRadians - 0.2,
+            STOW_POSITION.armLength + 0.5,
+            (Math.PI/2)-STOW_POSITION.pivotRadians + 0.2,
             Units.inchesToMeters(9.4));
         public static final ArmPosition GROUND_CUBE_INTAKE_POSITION = new ArmPosition(
             -0.41,

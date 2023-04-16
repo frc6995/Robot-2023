@@ -431,4 +431,8 @@ public class SwerveModule extends SubsystemBase implements Loggable{
     public double getEncoderDiscrepancy() {
         return (m_currentSteerEncoderAngle % (2 * Math.PI)) - m_currentAngle;
     }
+    @Log
+    public double calibrationOffset() {
+        return Math.IEEEremainder(m_currentAngle, Math.PI);
+    }
 }

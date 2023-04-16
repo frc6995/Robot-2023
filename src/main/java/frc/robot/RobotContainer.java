@@ -137,18 +137,19 @@ public class RobotContainer {
         // m_driverController.back().whileTrue(m_drivebaseS.chargeStationFrontFirstC());
 
         //Autonomous Option Selections:
-        m_autoSelector.setDefaultOption("Cone Bal.-Bump Side", eighteenPointAuto(3));
+        m_autoSelector.addOption("Cone Bal.-Bump Side", eighteenPointAuto(3));
         m_autoSelector.addOption("Cone Bal.-HP Side", eighteenPointAuto(5));
         //No Bump:
         m_autoSelector.addOption("2 Cone", fifteenPointAuto());
         m_autoSelector.addOption("2 Cone Bal.", twentysevenPointAuto());
+        m_autoSelector.addOption("Mid Link", midLinkAuto());
         // m_autoSelector.addOption("Cone Over+Back - HP", overBackAuto(5));
         // m_autoSelector.addOption("Cone Over+Back - Bump", overBackAuto(3));
         m_autoSelector.addOption("2 Cone Over Bump", bumpTwoConeAuto());
 
         // m_autoSelector.addOption("Cone+Over Bump [UNTESTED]", ninePointAuto());
 
-        m_autoSelector.addOption("Do Nothing", Commands.none());
+        m_autoSelector.setDefaultOption("Do Nothing", Commands.none());
         // m_autoSelector.addOption("21 Point No 2nd", twentyonePointAutoNo2nd());
         // m_autoSelector.addOption("21 Point With 2nd", twentyonePointAutoWith2nd());
         // m_autoSelector.addOption("27 Point (Cone Cube)", twentysevenPointConeCubeAuto());
@@ -190,13 +191,18 @@ public class RobotContainer {
                     )
 
                 ),
-                m_intakeS.outtakeC().withTimeout(0.25).asProxy()
+                Commands.either(
+                    m_intakeS.outtakeC().withTimeout(0.25).asProxy(),
+                    m_intakeS.outtakeC().withTimeout(0.4).asProxy(),
+                    ()->m_isCubeSelected
+                )
+                
             ))
             .andThen(
                 Commands.deadline(
                     m_armS.stowC().asProxy().withTimeout(3),
                     m_drivebaseS.stopC().asProxy().until(
-                        ()->m_armS.getLengthMeters() < ArmConstants.SCORE_MID_CUBE_POSITION.armLength
+                        ()->m_armS.getLengthMeters() < ArmConstants.SCORE_MID_CONE_POSITION.armLength
                     )
                 )
             )
@@ -207,9 +213,9 @@ public class RobotContainer {
     private Trigger m_alignSafeToPlaceCube = new Trigger(()->{
         Transform2d error = new Transform2d(m_targetAlignmentPose, m_drivebaseS.getPose());
         return 
-            Math.abs(error.getRotation().getRadians()) < Units.degreesToRadians(3) &&
-            Math.abs(error.getX()) < 0.1 &&
-            Math.abs(error.getY()) < 0.1;
+            Math.abs(error.getRotation().getRadians()) < Units.degreesToRadians(1.5) &&
+            Math.abs(error.getX()) < 0.15 &&
+            Math.abs(error.getY()) < 0.15;
 
     });
 
@@ -433,19 +439,19 @@ public class RobotContainer {
 
     //No Bump
 
-    private Command twoConeAuto() {
-        var pathGroup = PathPlanner.loadPathGroup("27 Point", new PathConstraints(2, 2), new PathConstraints(4, 3));
+    private Command twoConeAuto(boolean isMid) {
+        var pathGroup = PathPlanner.loadPathGroup("27 Point", new PathConstraints(2.1, 3), new PathConstraints(4, 3));
         return Commands.sequence(
             m_intakeS.retractC().asProxy(),
-            m_keypad.blueSetpointCommand(8, 2),
+            m_keypad.blueSetpointCommand(8, isMid? 1: 2),
             m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
             Commands.deadline(
-                m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
+                m_armS.goToPositionC(isMid? ArmConstants.SCORE_MID_CONE_POSITION: ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
                 alignToSelectedScoring().asProxy()
             ),
-            m_intakeS.outtakeC().withTimeout(0.3).asProxy(),
+            m_intakeS.outtakeC().withTimeout(0.2).asProxy(),
             
-            m_keypad.blueSetpointCommand(6, 2),
+            m_keypad.blueSetpointCommand(6, isMid ? 1: 2),
 
             Commands.deadline(
                 Commands.race(
@@ -456,11 +462,11 @@ public class RobotContainer {
             ),
             Commands.parallel(
                 
-                m_intakeS.intakeC().withTimeout(0.5).asProxy(),
+                Commands.waitSeconds(1).andThen(m_intakeS.intakeC().withTimeout(0.5).asProxy()),
                 Commands.sequence(
                     m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
                     Commands.waitUntil(m_alignSafeToStartExtending),
-                    m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy()
+                    m_armS.goToPositionC(isMid? ArmConstants.SCORE_MID_CONE_POSITION: ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy()
                 ),
                 Commands.sequence(
                     m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).asProxy(),
@@ -476,7 +482,7 @@ public class RobotContainer {
                     
             //     )
             // ),
-            m_intakeS.outtakeC().withTimeout(0.3).asProxy()
+            m_intakeS.outtakeC().withTimeout(0.2).asProxy()
             
 
         );
@@ -526,13 +532,51 @@ public class RobotContainer {
 
 
     public Command fifteenPointAuto(){
-        var backOutPath = PathPlanner.loadPath("15 Point Back Out", new PathConstraints(4, 3));
+        var backOutPath = PathPlanner.loadPathGroup("15 Point Back Out", new PathConstraints(3.7, 2.7), new PathConstraints(4.5, 3.5), new PathConstraints(4.5, 3.5));
         
-        return twoConeAuto().andThen(
+        return twoConeAuto(false).andThen(
             Commands.parallel(
                 m_keypad.blueSetpointCommand(7, 2),
-                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
-                m_drivebaseS.pathPlannerCommand(backOutPath).asProxy()
+                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3).andThen(Commands.waitSeconds(0)).andThen(
+                    m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION).asProxy().withTimeout(3)
+                ),
+                Commands.parallel(
+                    Commands.waitSeconds(0).andThen(m_drivebaseS.pathPlannerCommand(backOutPath.get(0))).asProxy()
+                    .andThen(
+                        m_drivebaseS.run(
+                            ()->m_drivebaseS.drive(
+                                new ChassisSpeeds(0, 0, AllianceWrapper.isRed() ? 2 : -2)
+                            )
+                        ).withTimeout(0.75).asProxy()
+                    ),
+                    m_intakeS.extendAndIntakeC().asProxy().until(m_intakeS::hitBeamBreak)
+                )
+                
+            )
+
+            
+        ).andThen(
+            parallel(
+                m_armS.stowC().asProxy().andThen(Commands.waitSeconds(0)).andThen(
+                    m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CUBE_POSITION).asProxy().withTimeout(3))
+                    ,
+                m_drivebaseS.pathPlannerCommand(backOutPath.get(2)).asProxy().andThen(
+                    alignToSelectedScoring().asProxy().until(m_alignSafeToPlaceCube)
+                )
+
+            )
+            .andThen(m_intakeS.outtakeC().asProxy().withTimeout(1))
+        );
+    }
+
+    public Command midLinkAuto(){
+        var backOutPath = PathPlanner.loadPath("15 Point Back Out", new PathConstraints(4, 3));
+        
+        return twoConeAuto(true).andThen(
+            Commands.parallel(
+                m_keypad.blueSetpointCommand(7, 1),
+                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3)//,
+                //m_drivebaseS.pathPlannerCommand(backOutPath).asProxy()
             )
             
         );
@@ -541,7 +585,7 @@ public class RobotContainer {
 
     public Command twentysevenPointAuto(){
         var pathGroup = PathPlanner.loadPathGroup("27 Point", new PathConstraints(2, 2));
-        return twoConeAuto().andThen(
+        return twoConeAuto(false).andThen(
 
             Commands.parallel(
                 m_armS.goToPositionC(ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT).asProxy().withTimeout(3),
