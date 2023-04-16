@@ -142,7 +142,6 @@ public class RobotContainer {
         //No Bump:
         m_autoSelector.addOption("2 Cone", fifteenPointAuto());
         m_autoSelector.addOption("2 Cone Bal.", twentysevenPointAuto());
-        m_autoSelector.addOption("Mid Link", midLinkAuto());
         // m_autoSelector.addOption("Cone Over+Back - HP", overBackAuto(5));
         // m_autoSelector.addOption("Cone Over+Back - Bump", overBackAuto(3));
         m_autoSelector.addOption("2 Cone Over Bump", bumpTwoConeAuto());
@@ -566,19 +565,6 @@ public class RobotContainer {
 
             )
             .andThen(m_intakeS.outtakeC().asProxy().withTimeout(1))
-        );
-    }
-
-    public Command midLinkAuto(){
-        var backOutPath = PathPlanner.loadPath("15 Point Back Out", new PathConstraints(4, 3));
-        
-        return twoConeAuto(true).andThen(
-            Commands.parallel(
-                m_keypad.blueSetpointCommand(7, 1),
-                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3)//,
-                //m_drivebaseS.pathPlannerCommand(backOutPath).asProxy()
-            )
-            
         );
     }
 
