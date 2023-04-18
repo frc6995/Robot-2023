@@ -119,17 +119,29 @@ public class RobotContainer {
                         m_keypad.alignBackward().getAsBoolean()) {
                         return downfield - Math.PI;
                     }
+                    else if (
+                        m_keypad.alignForwardLeft().getAsBoolean()) {
+                            return downfield + Math.PI / 6.0;
+                    }
+                    else if (
+                        m_keypad.alignForwardRight().getAsBoolean()) {
+                            return downfield - Math.PI / 6.0;
+                    }
                     
                     else {
                         return m_drivebaseS.getPoseHeading().getRadians();
                     }
                 },
-                m_driverController.start().or(m_keypad.alignForward()).or(m_keypad.alignLeft()).or(m_keypad.alignBackward()).or(m_keypad.alignRight()),
+                m_driverController.start()
+                .or(m_keypad.alignForward())
+                .or(m_keypad.alignLeft())
+                .or(m_keypad.alignBackward())
+                .or(m_keypad.alignRight())
+                .or(m_keypad.alignForwardRight())
+                .or(m_keypad.alignForwardLeft()),
                 m_drivebaseS
             )
         );
-
-        m_keypad.blueSetpointCommand(0, 0).schedule();
 
         configureButtonBindings();
 

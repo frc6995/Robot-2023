@@ -117,6 +117,14 @@ public class CommandOperatorKeypad {
         return key(Button.kMidCenter).and(key(Button.kMidRight)).and(anyGrid().negate());
     }
 
+    public Trigger alignForwardRight() {
+        return key(Button.kMidCenter).and(key(Button.kLowRight)).and(anyGrid().negate());
+    }
+
+    public Trigger alignForwardLeft() {
+        return key(Button.kMidCenter).and(key(Button.kLowLeft)).and(anyGrid().negate());
+    }
+
     public Trigger alignBackward() {
         return key(Button.kMidCenter).and(key(Button.kHighCenter)).and(anyGrid().negate());
     }
