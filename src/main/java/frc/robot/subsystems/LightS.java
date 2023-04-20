@@ -39,6 +39,7 @@ public class LightS {
     Climbing(LED_PARTY_MODE), // set through triggers in RobotContainer
     IntakedCone(LED_STROBE_GOLD),
     IntakedCube(LED_STROBE_GOLD),
+    Intaking(LED_STROBE_WHITE),
     RequestingCube(LED_SOLID_VIOLET),
     RequestingCone(LED_SOLID_YELLOW),
 

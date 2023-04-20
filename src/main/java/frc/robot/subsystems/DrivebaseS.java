@@ -216,11 +216,15 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
             if (Math.abs(estimatedPose.getZ()) > 0.5) {
                 continue;
             }
-            // if (estimation.targetsUsed.size() < 2 && estimation.targetsUsed.get(0).getBestCameraToTarget().getTranslation().getNorm() > Units.feetToMeters(10)) {
+
+            if (estimation.targetsUsed.size() < 2 && estimation.targetsUsed.get(0).getPoseAmbiguity() > 0.2) {
+                continue;
+            }
+            // if (estimation.targetsUsed.size() < 2 && estimation.targetsUsed.get(0).getBestCameraToTarget().getTranslation().getNorm() > Units.feetToMeters(12)) {
             //     continue;
             // }
 
-            if (estimation.targetsUsed.size() < 2 && Math.abs(estimatedPose.toPose2d().getRotation().minus(getPoseHeading()).getRadians()) > Units.degreesToRadians(10)) {
+            if (estimation.targetsUsed.size() < 2 && Math.abs(estimatedPose.toPose2d().getRotation().minus(getPoseHeading()).getRadians()) > Units.degreesToRadians(5)) {
                 continue;
             }
     

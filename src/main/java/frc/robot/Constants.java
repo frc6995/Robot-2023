@@ -57,9 +57,9 @@ public class Constants {
 
         public enum ModuleConstants {
             FL("FL", 18, 17, 6, 5.645746 - 0.001, HW, HW),
-            FR("FR", 12, 11, 7, 3.798559, HW, -HW),
-            BL("BL", 16, 15, 8, 1.793807 - 0.007, -HW, HW),
-            BR("BR", 14, 13, 9, 5.649191 - 0.003, -HW, -HW);
+            FR("FR", 12, 11, 7, 3.798559 - 0.005, HW, -HW),
+            BL("BL", 16, 15, 8, 1.793807 - 0.007 + 0.072, -HW, HW),
+            BR("BR", 14, 13, 9, 5.649191 - 0.003 - 0.011, -HW, -HW);
     
             public final String name;
             public final int driveMotorID;
@@ -443,6 +443,7 @@ public class Constants {
         public static final double LED_SOLID_YELLOW = 0.69;
         public static final double LED_SOLID_VIOLET = 0.91;
         public static final double LED_STROBE_GOLD = -0.07;
+        public static final double LED_STROBE_WHITE = -0.05;
 
         public static final int PWM_PORT_LED = 0;
     }

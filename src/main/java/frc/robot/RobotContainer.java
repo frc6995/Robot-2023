@@ -152,7 +152,7 @@ public class RobotContainer {
         m_autoSelector.addOption("Cone Bal.-Bump Side", eighteenPointAuto(3));
         m_autoSelector.addOption("Cone Bal.-HP Side", eighteenPointAuto(5));
         //No Bump:
-        m_autoSelector.addOption("2 Cone", fifteenPointAuto());
+        m_autoSelector.addOption("High Link", fifteenPointAuto());
         m_autoSelector.addOption("2 Cone Bal.", twentysevenPointAuto());
         // m_autoSelector.addOption("Cone Over+Back - HP", overBackAuto(5));
         // m_autoSelector.addOption("Cone Over+Back - Bump", overBackAuto(3));
@@ -334,7 +334,8 @@ public class RobotContainer {
         Commands.sequence(
             Commands.deadline(
                 m_intakeS.setGamePieceC(()->isCube).andThen(m_intakeS.intakeUntilBeamBreakC()).asProxy(),
-                m_armS.goToPositionIndefiniteC(position)
+                m_armS.goToPositionIndefiniteC(position),
+                Commands.run(()->LightS.getInstance().requestState(States.Intaking)).asProxy()
 
             ),
             Commands.parallel(
@@ -560,7 +561,11 @@ public class RobotContainer {
                             )
                         ).withTimeout(0.75).asProxy()
                     ),
-                    m_intakeS.extendAndIntakeC().asProxy().until(m_intakeS::hitBeamBreak)
+                    sequence(
+                        Commands.waitSeconds(1),
+                        m_intakeS.extendAndIntakeC().asProxy().until(m_intakeS::hitBeamBreak)
+                    )
+                    
                 )
                 
             )

@@ -164,7 +164,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
    */
 
   public void outtake() {
-    intake( (isExtended() ? -9 : -Constants.IntakeConstants.INTAKE_VOLTAGE * 2));
+    intake( (isExtended() ? -8 : -Constants.IntakeConstants.INTAKE_VOLTAGE * 2));
   }
 
   /**
