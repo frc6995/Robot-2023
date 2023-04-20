@@ -351,6 +351,11 @@ public class Constants {
             WRIST_MAX_ANGLE - Units.degreesToRadians(5),
             Units.inchesToMeters(9.4));
         public static final ArmPosition SCORE_HIGH_CUBE_POSITION = new ArmPosition(
+            0.658 - Units.degreesToRadians(10),
+            1.2,
+            (Math.PI/2)-1,
+            Units.inchesToMeters(9.4));
+        public static final ArmPosition SHOOT_HIGH_CUBE_POSITION = new ArmPosition(
             STOW_POSITION.pivotRadians - 0.2,
             STOW_POSITION.armLength + 0.5,
             (Math.PI/2)-STOW_POSITION.pivotRadians + 0.2,

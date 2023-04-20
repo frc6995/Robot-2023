@@ -574,14 +574,14 @@ public class RobotContainer {
         ).andThen(
             parallel(
                 m_armS.stowC().asProxy().andThen(Commands.waitSeconds(0)).andThen(
-                    m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CUBE_POSITION).asProxy().withTimeout(3))
+                    m_armS.goToPositionC(ArmConstants.SHOOT_HIGH_CUBE_POSITION).asProxy().withTimeout(3))
                     ,
                 m_drivebaseS.pathPlannerCommand(backOutPath.get(2)).asProxy().andThen(
                     alignToSelectedScoring().asProxy().until(m_alignSafeToPlaceCube)
                 )
 
             )
-            .andThen(m_intakeS.outtakeC().asProxy().withTimeout(1))
+            .andThen(m_intakeS.shootC().asProxy().withTimeout(1))
         );
     }
 

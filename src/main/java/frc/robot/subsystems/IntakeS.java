@@ -164,7 +164,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
    */
 
   public void outtake() {
-    intake( (isExtended() ? -8 : -Constants.IntakeConstants.INTAKE_VOLTAGE * 2));
+    intake( (isExtended() ? -Constants.IntakeConstants.INTAKE_VOLTAGE * 2 : -Constants.IntakeConstants.INTAKE_VOLTAGE * 2));
   }
 
   /**
@@ -246,7 +246,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
   }
 
   public Command shootC() {
-    return runEnd(()->intake(-12), this::stop);
+    return runEnd(()->intake(-8), this::stop);
   }
 
   /**
