@@ -29,6 +29,7 @@ import static frc.robot.Constants.DriveConstants.STEER_P;
 import static frc.robot.Constants.DriveConstants.WHEEL_ENC_COUNTS_PER_WHEEL_REV;
 import static frc.robot.Constants.DriveConstants.WHEEL_RADIUS_M;
 import frc.robot.Robot;
+import frc.robot.util.SparkMaxUtil;
 import frc.robot.util.TimingTracer;
 import frc.robot.util.sim.SparkMaxAbsoluteEncoderWrapper;
 import frc.robot.util.sim.SparkMaxEncoderWrapper;
@@ -84,6 +85,8 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         m_steerMotor = new CANSparkMax(moduleConstants.rotationMotorID, MotorType.kBrushless);
         m_driveMotor.restoreFactoryDefaults(false);
         m_steerMotor.restoreFactoryDefaults(false);
+        m_steerMotor.setCANTimeout(50);
+        m_driveMotor.setCANTimeout(50);
         scheduleConfigCommands();
 
         // //m_driveMotor.setSmartCurrentLimit(35);
@@ -189,7 +192,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
 
     public void scheduleConfigCommands() {
         CommandScheduler.getInstance().schedule(
-            Commands.waitSeconds(m_moduleConstants.driveMotorID * 0.04).ignoringDisable(true).andThen(
+            Commands.waitSeconds(m_moduleConstants.driveMotorID * 0.1).ignoringDisable(true).andThen(
                 ()->{
                     m_driveMotor.setSmartCurrentLimit(50);
                     m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 25);
@@ -219,7 +222,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
             ).ignoringDisable(true)
         );
         CommandScheduler.getInstance().schedule(
-            Commands.waitSeconds(m_moduleConstants.rotationMotorID * 0.04).ignoringDisable(true).andThen(
+            Commands.waitSeconds(m_moduleConstants.rotationMotorID * 0.1).ignoringDisable(true).andThen(
                 
                 Commands.runOnce(
                 ()->{
@@ -228,7 +231,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
-                    var error = m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 15);
+                    SparkMaxUtil.confirm(()->m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 15));
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
                     m_steerMotor.getEncoder().setPositionConversionFactor(2.0 * Math.PI * AZMTH_REVS_PER_ENC_REV);
                     m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setPositionConversionFactor(Math.PI*2);
@@ -236,7 +239,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
                     m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setZeroOffset(m_moduleConstants.magEncoderOffset);
                     m_steerMotor.setIdleMode(IdleMode.kBrake);
                     m_steerMotor.burnFlash();
-                    System.out.println(" config'd steer" + m_moduleConstants.rotationMotorID + error.toString());
+                    //System.out.println(" config'd steer" + m_moduleConstants.rotationMotorID + error.toString());
                 })
             ).ignoringDisable(true)
         

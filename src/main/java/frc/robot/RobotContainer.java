@@ -557,9 +557,9 @@ public class RobotContainer {
                     .andThen(
                         m_drivebaseS.run(
                             ()->m_drivebaseS.drive(
-                                new ChassisSpeeds(0, 0, AllianceWrapper.isRed() ? 2 : -2)
+                                new ChassisSpeeds(0, 0, AllianceWrapper.isRed() ? 3 : -3)
                             )
-                        ).withTimeout(0.75).asProxy()
+                        ).withTimeout(0.5).asProxy()
                     ),
                     sequence(
                         Commands.waitSeconds(1),

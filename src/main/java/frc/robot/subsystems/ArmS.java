@@ -4,6 +4,7 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMax.SoftLimitDirection;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -87,6 +88,7 @@ import frc.robot.Robot;
 import frc.robot.commands.arm.GoToPositionC;
 import frc.robot.commands.arm.HoldCurrentPositionC;
 import frc.robot.util.NomadMathUtil;
+import frc.robot.util.SparkMaxUtil;
 import frc.robot.util.TimingTracer;
 import frc.robot.util.sim.SparkMaxAbsoluteEncoderWrapper;
 import frc.robot.util.sim.SparkMaxEncoderWrapper;
@@ -364,7 +366,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         = new LinearPlantInversionFeedforward<>(m_pivotPlant, 0.02);
 
     private ProfiledPIDController m_pivotController = new ProfiledPIDController(
-        4, 0, 0.00, new Constraints(PIVOT_MAX_VELOCITY,PIVOT_MAX_ACCEL));
+        2, 0, 0.00, new Constraints(PIVOT_MAX_VELOCITY,PIVOT_MAX_ACCEL));
 
     private double armStartAngle = PIVOT_ENCODER_OFFSET;
 
@@ -382,6 +384,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         m_pivotFollowerMotor.restoreFactoryDefaults();
         m_pivotMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setPositionConversionFactor(1);
         m_pivotMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setVelocityConversionFactor(1);
+        m_pivotMotor.setCANTimeout(50);
         // m_pivotMotor.setSoftLimit(SoftLimitDirection.kForward, (float) MAX_ARM_ANGLE);
         // m_pivotMotor.setSoftLimit(SoftLimitDirection.kReverse, (float) MIN_ARM_ANGLE);
         m_pivotMotor.setInverted(true);
@@ -395,7 +398,7 @@ public class ArmS extends SubsystemBase implements Loggable {
                 m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
                 m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
                 m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
-                m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
+                SparkMaxUtil.confirm(()->m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20));
                 m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
                 m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 45);
                 m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);

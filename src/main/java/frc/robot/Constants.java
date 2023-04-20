@@ -56,10 +56,10 @@ public class Constants {
         static private double HW = WHEEL_BASE_WIDTH_M/2.0;
 
         public enum ModuleConstants {
-            FL("FL", 18, 17, 6, 5.645746 - 0.001, HW, HW),
-            FR("FR", 12, 11, 7, 3.798559 - 0.005, HW, -HW),
-            BL("BL", 16, 15, 8, 1.793807 - 0.007 + 0.072, -HW, HW),
-            BR("BR", 14, 13, 9, 5.649191 - 0.003 - 0.011, -HW, -HW);
+            FL("FL", 18, 17, 6, 5.645746 - 0.001 + 0.014 - 0.004 - 0.005 + 0.007, HW, HW),
+            FR("FR", 12, 11, 7, 3.798559 - 0.005 + 0.002+ 0.0006 - 0.001, HW, -HW),
+            BL("BL", 16, 15, 8, 1.793807 - 0.007 + 0.072 -0.066 - 0.002 + 0.006 - 0.001, -HW, HW),
+            BR("BR", 14, 13, 9, 5.649191 - 0.003 - 0.011 + 0.008 - 0.005 + 0.002 + 0.002, -HW, -HW);
     
             public final String name;
             public final int driveMotorID;
