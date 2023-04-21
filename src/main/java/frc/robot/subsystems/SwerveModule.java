@@ -14,9 +14,12 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+
 import static frc.robot.Constants.DriveConstants.AZMTH_REVS_PER_ENC_REV;
 import static frc.robot.Constants.DriveConstants.DRIVE_D;
 import static frc.robot.Constants.DriveConstants.DRIVE_FF_CONST;
@@ -80,6 +83,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
     // }
 
     public SwerveModule( ModuleConstants moduleConstants) {
+        
         m_moduleConstants = moduleConstants;
         m_driveMotor = new CANSparkMax(moduleConstants.driveMotorID, MotorType.kBrushless);
         m_steerMotor = new CANSparkMax(moduleConstants.rotationMotorID, MotorType.kBrushless);
@@ -87,7 +91,9 @@ public class SwerveModule extends SubsystemBase implements Loggable{
         m_steerMotor.restoreFactoryDefaults(false);
         m_steerMotor.setCANTimeout(50);
         m_driveMotor.setCANTimeout(50);
+        m_loggingName = "SwerveModule-" + moduleConstants.name + "-[" + m_driveMotor.getDeviceId() + ',' + m_steerMotor.getDeviceId() + ']';
         scheduleConfigCommands();
+        new Trigger(()->Math.abs(getEncoderDiscrepancy()) > 0.5 && DriverStation.isEnabled()).debounce(0.5).whileTrue(Commands.runOnce(()->DriverStation.reportError("Check steer slip on " + m_loggingName, false)).andThen(Commands.waitSeconds(5)));
 
         // //m_driveMotor.setSmartCurrentLimit(35);
         // m_steerMotor.setSmartCurrentLimit(25);
@@ -184,7 +190,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
             DRIVE_P, 0, 
             DRIVE_D);
         // Give this module a unique name on the dashboard so we have four separate sub-tabs.
-        m_loggingName = "SwerveModule-" + moduleConstants.name + "-[" + m_driveMotor.getDeviceId() + ',' + m_steerMotor.getDeviceId() + ']';
+        
         resetDistance();
         
         
@@ -233,6 +239,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
                     SparkMaxUtil.confirm(()->m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 15));
                     m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
+                    m_steerMotor.setSmartCurrentLimit(30);
                     m_steerMotor.getEncoder().setPositionConversionFactor(2.0 * Math.PI * AZMTH_REVS_PER_ENC_REV);
                     m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setPositionConversionFactor(Math.PI*2);
                     m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setVelocityConversionFactor(Math.PI*2 * 60);
@@ -432,7 +439,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
     }
     @Log
     public double getEncoderDiscrepancy() {
-        return (m_currentSteerEncoderAngle % (2 * Math.PI)) - m_currentAngle;
+        return Math.IEEEremainder((m_currentSteerEncoderAngle % (2 * Math.PI)) - m_currentAngle, 2 * Math.PI);
     }
     @Log
     public double calibrationOffset() {

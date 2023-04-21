@@ -366,11 +366,11 @@ public class ArmS extends SubsystemBase implements Loggable {
         = new LinearPlantInversionFeedforward<>(m_pivotPlant, 0.02);
 
     private ProfiledPIDController m_pivotController = new ProfiledPIDController(
-        2, 0, 0.00, new Constraints(PIVOT_MAX_VELOCITY,PIVOT_MAX_ACCEL));
+        4, 0, 0.00, new Constraints(PIVOT_MAX_VELOCITY,PIVOT_MAX_ACCEL));
 
     private double armStartAngle = PIVOT_ENCODER_OFFSET;
 
-    /**
+    /**z
      * Initialize pivot: 
      * Sets position conversion factor in rotations for pivot motor</p>
      * Sets velocity conversion factor in rotations/second for pivot motor</p>
