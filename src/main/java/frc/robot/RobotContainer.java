@@ -153,6 +153,7 @@ public class RobotContainer {
         m_autoSelector.addOption("Cone Bal.-HP Side", eighteenPointAuto(5));
         //No Bump:
         m_autoSelector.addOption("High Link", fifteenPointAuto());
+        m_autoSelector.addOption("2 Cone+Stay", twoConeStowAuto());
         m_autoSelector.addOption("2 Cone Bal.", twentysevenPointAuto());
         // m_autoSelector.addOption("Cone Over+Back - HP", overBackAuto(5));
         // m_autoSelector.addOption("Cone Over+Back - Bump", overBackAuto(3));
@@ -541,7 +542,9 @@ public class RobotContainer {
         );
     }
 
-
+    public Command twoConeStowAuto() {
+        return twoConeAuto(false).andThen(m_armS.stowC().asProxy());
+    }
 
 
     public Command fifteenPointAuto(){
