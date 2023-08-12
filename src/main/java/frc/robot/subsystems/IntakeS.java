@@ -29,12 +29,13 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 import frc.robot.Constants.IntakeConstants;
+import frc.robot.util.sparkmax.SparkMax;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
 public class IntakeS extends SubsystemBase implements Loggable {
-  private final CANSparkMax intakeMotor = new CANSparkMax(Constants.IntakeConstants.INTAKE_CAN_ID, MotorType.kBrushless);
-  private final CANSparkMax intakeFollowerMotor = new CANSparkMax(Constants.IntakeConstants.INTAKE_FOLLOWER_CAN_ID, MotorType.kBrushless);
+  private final SparkMax intakeMotor = new SparkMax(Constants.IntakeConstants.INTAKE_CAN_ID, MotorType.kBrushless);
+  private final SparkMax intakeFollowerMotor = new SparkMax(Constants.IntakeConstants.INTAKE_FOLLOWER_CAN_ID, MotorType.kBrushless);
   private final SparkMaxLimitSwitch m_beamBreak = intakeFollowerMotor.getReverseLimitSwitch(Type.kNormallyClosed);
   @Log
   private boolean isExtended = false;
@@ -70,8 +71,8 @@ public class IntakeS extends SubsystemBase implements Loggable {
     
     intakeMotor.setSmartCurrentLimit(10, 10);
     intakeFollowerMotor.follow(intakeMotor, false);
-    intakeMotor.burnFlash();
-    intakeFollowerMotor.burnFlash();
+    //intakeMotor.burnFlash();
+    //intakeFollowerMotor.burnFlash();
 
     distanceSensor.setRangingMode(RangingMode.Short, 999);
     distanceSensor.setRangeOfInterest(9,9,11,11);

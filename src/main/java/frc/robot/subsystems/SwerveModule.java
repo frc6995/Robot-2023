@@ -16,6 +16,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.util.sparkmax.SparkMax;
 import static frc.robot.Constants.DriveConstants.AZMTH_REVS_PER_ENC_REV;
 import static frc.robot.Constants.DriveConstants.DRIVE_D;
 import static frc.robot.Constants.DriveConstants.DRIVE_FF_CONST;
@@ -36,8 +37,8 @@ import io.github.oblarg.oblog.annotations.Log;
 
 public class SwerveModule extends SubsystemBase implements Loggable{
 
-    private final CANSparkMax m_driveMotor;
-    private final CANSparkMax m_steerMotor;
+    private final SparkMax m_driveMotor;
+    private final SparkMax m_steerMotor;
 
     // These wrappers handle sim value holding, as well as circumventing the Spark MAX velocity signal delay
     // by integrating position. Credit for the latter to 6328. 
@@ -79,8 +80,8 @@ public class SwerveModule extends SubsystemBase implements Loggable{
 
     public SwerveModule( ModuleConstants moduleConstants) {
         m_moduleConstants = moduleConstants;
-        m_driveMotor = new CANSparkMax(moduleConstants.driveMotorID, MotorType.kBrushless);
-        m_steerMotor = new CANSparkMax(moduleConstants.rotationMotorID, MotorType.kBrushless);
+        m_driveMotor = new SparkMax(moduleConstants.driveMotorID, MotorType.kBrushless);
+        m_steerMotor = new SparkMax(moduleConstants.rotationMotorID, MotorType.kBrushless);
         m_driveMotor.restoreFactoryDefaults(false);
         m_steerMotor.restoreFactoryDefaults(false);
         scheduleConfigCommands();
@@ -212,7 +213,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
                     );
 
                     m_driveMotor.setIdleMode(IdleMode.kBrake);
-                    m_driveMotor.burnFlash();
+                    //m_driveMotor.burnFlash();
                     updateEncoders();
                 }
             ).ignoringDisable(true)
@@ -234,7 +235,7 @@ public class SwerveModule extends SubsystemBase implements Loggable{
                     m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setVelocityConversionFactor(Math.PI*2 * 60);
                     m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle).setZeroOffset(m_moduleConstants.magEncoderOffset);
                     m_steerMotor.setIdleMode(IdleMode.kBrake);
-                    m_steerMotor.burnFlash();
+                    //m_steerMotor.burnFlash();
                     System.out.println(" config'd steer" + m_moduleConstants.rotationMotorID + error.toString());
                 })
             ).ignoringDisable(true)

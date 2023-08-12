@@ -49,6 +49,7 @@ import frc.robot.subsystems.LightS.States;
 import frc.robot.util.AllianceWrapper;
 import frc.robot.util.NomadMathUtil;
 import frc.robot.util.TimingTracer;
+import frc.robot.util.sparkmax.SparkMax;
 import io.github.oblarg.oblog.annotations.Log;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 
@@ -83,6 +84,7 @@ public class RobotContainer {
     SendableChooser<Command> m_autoSelector = new SendableChooser<Command>();
 
     public RobotContainer() {
+        SparkMax.burnFlashInSync();
         PhotonCamera usbCam = new PhotonCamera("USB_Camera");
         usbCam.setDriverMode(true);
         m_keypad = new CommandOperatorKeypad(2, (pose)->{

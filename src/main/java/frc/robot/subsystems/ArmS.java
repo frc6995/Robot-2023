@@ -90,6 +90,7 @@ import frc.robot.util.NomadMathUtil;
 import frc.robot.util.TimingTracer;
 import frc.robot.util.sim.SparkMaxAbsoluteEncoderWrapper;
 import frc.robot.util.sim.SparkMaxEncoderWrapper;
+import frc.robot.util.sparkmax.SparkMax;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -188,7 +189,7 @@ public class ArmS extends SubsystemBase implements Loggable {
     // }
 
     // region extend
-    private final CANSparkMax m_extendMotor = new CANSparkMax(EXTEND_MOTOR_ID, MotorType.kBrushless);
+    private final SparkMax m_extendMotor = new SparkMax(EXTEND_MOTOR_ID, MotorType.kBrushless);
     private final SparkMaxEncoderWrapper m_extendEncoderWrapper = new SparkMaxEncoderWrapper(m_extendMotor);
     //@Log(methodName="isPressed")
     private final SparkMaxLimitSwitch m_extendHomingSwitch = m_extendMotor.getReverseLimitSwitch(Type.kNormallyClosed);
@@ -225,7 +226,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         m_extendHomingSwitch.enableLimitSwitch(true);
         m_extendMotor.setIdleMode(IdleMode.kCoast);
         m_extendMotor.setSmartCurrentLimit(40);
-        m_extendMotor.burnFlash();
+        //m_extendMotor.burnFlash();
         m_extendEncoderWrapper.setPosition(MIN_ARM_LENGTH);
         m_extendController.reset(MIN_ARM_LENGTH);
         m_extendMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 25);
@@ -243,7 +244,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         }).ignoringDisable(true);
         new Trigger(m_extendHomingSwitch::isPressed).debounce(0.04).and(new Trigger(DriverStation::isDisabled))
         .onTrue(homingCommand);
-        m_extendMotor.burnFlash();
+        //m_extendMotor.burnFlash();
     }
 
     public void extendPeriodic(){}
@@ -349,8 +350,8 @@ public class ArmS extends SubsystemBase implements Loggable {
     // endregion
 
     // region pivot
-    private final CANSparkMax m_pivotMotor = new CANSparkMax(PIVOT_MOTOR_ID, MotorType.kBrushless);
-    private final CANSparkMax m_pivotFollowerMotor = new CANSparkMax(PIVOT_FOLLOWER_MOTOR_ID, MotorType.kBrushless);
+    private final SparkMax m_pivotMotor = new SparkMax(PIVOT_MOTOR_ID, MotorType.kBrushless);
+    private final SparkMax m_pivotFollowerMotor = new SparkMax(PIVOT_FOLLOWER_MOTOR_ID, MotorType.kBrushless);
     //@Log(methodName="getPosition")
     private final SparkMaxAbsoluteEncoderWrapper m_pivotEncoderWrapper = new SparkMaxAbsoluteEncoderWrapper(m_pivotMotor, 0);
 
@@ -408,7 +409,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         
                 m_pivotController.reset(getContinuousRangeAngle());
                 m_pivotController.setTolerance(0.05, 0.05);
-                m_pivotMotor.burnFlash();
+                //m_pivotMotor.burnFlash();
             })).ignoringDisable(true)
             
         );
@@ -599,7 +600,7 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     // region wrist
     private final double wristMOI = HAND_MASS_KILOS * HAND_LENGTH * HAND_LENGTH / 3.0;
-    private final CANSparkMax m_wristMotor = new CANSparkMax(WRIST_MOTOR_ID,MotorType.kBrushless);
+    private final SparkMax m_wristMotor = new SparkMax(WRIST_MOTOR_ID,MotorType.kBrushless);
     private final LinearSystem<N2, N1, N1> m_wristPlant = LinearSystemId.createSingleJointedArmSystem(
         DCMotor.getNEO(1), wristMOI, 1.0/WRIST_ROTATIONS_PER_MOTOR_ROTATION);
 
@@ -636,7 +637,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         m_wristMotor.setInverted(true);
         m_wristController.reset(getWristAngle().getRadians());
         m_wristController.setTolerance(0.05, 0.05);
-        m_wristMotor.burnFlash();
+        //m_wristMotor.burnFlash();
     }
 
     /**
