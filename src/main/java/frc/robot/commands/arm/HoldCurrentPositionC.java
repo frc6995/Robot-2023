@@ -31,7 +31,7 @@ public class HoldCurrentPositionC extends CommandBase {
   @Override
   public void execute() {
     m_armS.setExtendLength(position.armLength);
-    m_armS.setPivotAngle(position.pivotRadians);
+    m_armS.setAngle(position.pivotRadians);
     m_armS.setWristAngle(position.wristRadians);
   }
 

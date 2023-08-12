@@ -125,7 +125,7 @@ public class GoToPositionC extends CommandBase {
 
     var currentTargetPosition = m_waypoints.get(currentTarget);
     m_armS.setExtendLength(m_armS.constrainLength(currentTargetPosition.armLength));
-    m_armS.setPivotAngle(currentTargetPosition.pivotRadians);
+    m_armS.setAngle(currentTargetPosition.pivotRadians);
     m_armS.setWristAngle(currentTargetPosition.wristRadians);
   }
 

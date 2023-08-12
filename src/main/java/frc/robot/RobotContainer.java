@@ -2,6 +2,7 @@ package frc.robot;
 import java.io.Console;
 
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.photonvision.PhotonCamera;
@@ -68,7 +69,7 @@ public class RobotContainer {
     @Log
     private double loopTime = 0;
     private final IntakeS m_intakeS = new IntakeS();
-    private final ArmS m_armS = new ArmS(m_intakeS::getHandLength);
+    private final ArmS m_armS;
 
     @Log
     private final Field2d m_field = new Field2d();
@@ -81,8 +82,9 @@ public class RobotContainer {
     private boolean m_isCubeSelected = true;
     
     SendableChooser<Command> m_autoSelector = new SendableChooser<Command>();
-
-    public RobotContainer() {
+    
+    public RobotContainer(Consumer<Runnable> addPeriodic) {
+        m_armS = new ArmS(addPeriodic, m_intakeS::getHandLength);
         PhotonCamera usbCam = new PhotonCamera("USB_Camera");
         usbCam.setDriverMode(true);
         m_keypad = new CommandOperatorKeypad(2, (pose)->{

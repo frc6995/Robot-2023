@@ -32,7 +32,7 @@ public class Robot extends TimedRobot {
         }
 
         LiveWindow.disableAllTelemetry();
-        robotContainer = new RobotContainer();
+        robotContainer = new RobotContainer((fn)->this.addPeriodic(fn, kDefaultPeriod));
         Logger.configureLoggingAndConfig(robotContainer, false);
         // new Trigger(DriverStation::isDSAttached).or(new Trigger(DriverStation::isFMSAttached))
         // .onTrue(new InstantCommand(()->AllianceWrapper.setAlliance(DriverStation.getAlliance())));
