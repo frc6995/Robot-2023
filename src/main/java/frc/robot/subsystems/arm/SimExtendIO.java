@@ -7,6 +7,7 @@ import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.simulation.TiltedElevatorSim;
@@ -34,13 +35,20 @@ public class SimExtendIO extends ExtendIO {
         EXTEND_DRUM_RADIUS,
         MIN_ARM_LENGTH, MAX_ARM_LENGTH, true);
 
+    private double m_inputVolts;
     public SimExtendIO(Consumer<Runnable> addPeriodic) {
         super(addPeriodic);
-        //m_extendSim.setState(VecBuilder.fill(STOW_POSITION.armLength, 0));
+        m_extendSim.setState(VecBuilder.fill(STOW_POSITION.armLength, 0));
+        m_extendSim.update(0.0001);
         addPeriodic.accept(this::simulationPeriodic);
+        resetController();
     }
 
     private void simulationPeriodic() {
+        if (DriverStation.isDisabled()) {
+            m_inputVolts = 0;
+            m_extendSim.setInputVoltage(0);
+        }
         m_extendSim.setAngleFromHorizontal(m_angleSupplier.getAsDouble());
 
         m_extendSim.update(TimingTracer.getLoopTime());
@@ -53,7 +61,10 @@ public class SimExtendIO extends ExtendIO {
 
     @Override
     public void setVolts(double volts) {
-        m_extendSim.setInputVoltage(NomadMathUtil.subtractkS(MathUtil.clamp(volts, -12, 12), ARM_EXTEND_KS));
+
+        m_inputVolts = NomadMathUtil.subtractkS(MathUtil.clamp(volts, -12, 12), ARM_EXTEND_KS);
+        if (DriverStation.isDisabled()) {m_inputVolts = 0;}
+        m_extendSim.setInputVoltage(m_inputVolts);
     }
 
     @Override
@@ -63,13 +74,19 @@ public class SimExtendIO extends ExtendIO {
 
     @Override
     public boolean isHomed() {
-        return m_extendSim.hasHitLowerLimit();
+        // limit switch button is maybe 5 mm tall
+        return getLength() <= MIN_ARM_LENGTH + 0.005;
     }
 
     @Override
     public void onHome() {
         super.onHome();
         m_extendSim.setState(VecBuilder.fill(MIN_ARM_LENGTH, 0));
+    }
+    @Override
+    public double getVolts() {
+        // TODO Auto-generated method stub
+        return m_inputVolts;
     }
     
 }

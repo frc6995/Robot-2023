@@ -53,8 +53,11 @@ import frc.robot.subsystems.arm.ExtendIO;
 import frc.robot.subsystems.arm.PivotIO;
 import frc.robot.subsystems.arm.RealExtendIO;
 import frc.robot.subsystems.arm.RealPivotIO;
+import frc.robot.subsystems.arm.RealWristIO;
 import frc.robot.subsystems.arm.SimExtendIO;
 import frc.robot.subsystems.arm.SimPivotIO;
+import frc.robot.subsystems.arm.SimWristIO;
+import frc.robot.subsystems.arm.WristIO;
 import frc.robot.util.NomadMathUtil;
 import frc.robot.util.TimingTracer;
 import frc.robot.util.sim.SparkMaxAbsoluteEncoderWrapper;
@@ -69,27 +72,24 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     private ExtendIO m_extender;
     private PivotIO m_pivot;
-    private double m_pivotAngle = 0;
-    private double m_pivotVelocity = 0;
-    private double m_wristAngle = 0;
-    private double m_wristVelocity = 0;
-    private double m_extendLength = 0;
-    private double m_extendVelocity = 0;
+    private WristIO m_wrist;
 
-    //public ArmConstraintsManager setpointManager = new ArmConstraintsManager(VISUALIZER);
     public ArmS(Consumer<Runnable> addPeriodic, Supplier<Double> handLengthSupplier) {
         this.handLengthSupplier = handLengthSupplier;
         if (RobotBase.isReal()) {
             m_extender = new RealExtendIO(addPeriodic);
             m_pivot = new RealPivotIO(addPeriodic);
+            m_wrist = new RealWristIO(addPeriodic);
         }
         else {
             m_extender = new SimExtendIO(addPeriodic);
             m_pivot = new SimPivotIO(addPeriodic);
+            m_wrist = new SimWristIO(addPeriodic);
         }
         m_extender.setAngleSupplier(m_pivot::getContinuousRangeAngle);
+        m_wrist.setPivotAngleSupplier(m_pivot::getContinuousRangeAngle);
         m_pivot.setExtendLengthSupplier(m_extender::getLength);
-        // Reset
+        // Homing setup for extension
         new Trigger(DriverStation::isEnabled).onTrue(Commands.runOnce(m_extender::resetController).ignoringDisable(true));
         Command homingCommand = Commands.runOnce(()->{
             m_extender.onHome();
@@ -97,12 +97,9 @@ public class ArmS extends SubsystemBase implements Loggable {
         }).ignoringDisable(true);
         new Trigger(m_extender::isHomed).debounce(0.04).and(new Trigger(DriverStation::isDisabled))
             .onTrue(homingCommand);
-        initWrist();
-        initSimulation();
+        
         initVisualizer();
         
-        //SmartDashboard.putData(MECH_VISUALIZER);
-        //SmartDashboard.putData(VISUALIZER);
         setDefaultCommand(new HoldCurrentPositionC(this));
         VISUALIZER.getObject("positions").setPoses(
             SCORE_HIGH_CONE_POSITION.asPose(),
@@ -120,12 +117,6 @@ public class ArmS extends SubsystemBase implements Loggable {
         //setDefaultCommand(followJointSpaceTargetC());
     }
 
-    private void updateEncoders() {
-        //m_pivotVelocity = m_pivotEncoderWrapper.getVelocity() * 2 * Math.PI / 60;
-        m_wristAngle = MathUtil.angleModulus(m_wristEncoderWrapper.getPosition());
-        //m_wristVelocity = m_wristEncoderWrapper.getVelocity();
-    }
-
     public double constrainLength(double length) {
         return constrainLength(length, m_pivot.getContinuousRangeAngle());
     }
@@ -141,31 +132,8 @@ public class ArmS extends SubsystemBase implements Loggable {
     }
 
     public void periodic() {
-        updateEncoders();  
         updateVisualizer();
     }
-
-    /**
-     * Finds the position of the hand relative to the robot in 3d space
-     * @return returns position of the hand in 3d space
-     */
-
-    // public Transform3d getGamePieceTransform() {
-    //     var pivotPose = new Pose2d(ARM_PIVOT_TRANSLATION, getAngle());
-    //     var wristPose = pivotPose.transformBy(
-    //         new Transform2d(new Translation2d(getLengthMeters(), 0), getWristAngle())
-    //     );
-    //     var piecePose = wristPose.transformBy(new Transform2d(new Translation2d(HAND_LENGTH / 2, 0), new Rotation2d()));
-    //     var transform3d = new Transform3d(
-    //         new Translation3d(piecePose.getX(), 0, piecePose.getY()),
-    //         new Rotation3d(0, -piecePose.getRotation().getRadians() ,0)
-    //     );
-    //     return transform3d;
-    // }
-
-    // region extend
-
-
 
     /**
      * Sets extender motor voltage to voltage parameter
@@ -203,7 +171,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         m_extender.resetController();
     }
     public void resetPivot() {
-        m_extender.resetController();
+        m_pivot.resetController();
     }
 
     // endregion
@@ -225,56 +193,6 @@ public class ArmS extends SubsystemBase implements Loggable {
     // endregion
 
     // region wrist
-    private final double wristMOI = HAND_MASS_KILOS * HAND_LENGTH * HAND_LENGTH / 3.0;
-    private final CANSparkMax m_wristMotor = new CANSparkMax(WRIST_MOTOR_ID,MotorType.kBrushless);
-    private final LinearSystem<N2, N1, N1> m_wristPlant = LinearSystemId.createSingleJointedArmSystem(
-        DCMotor.getNEO(1), wristMOI, 1.0/WRIST_ROTATIONS_PER_MOTOR_ROTATION);
-
-    private final LinearPlantInversionFeedforward<N2, N1, N1> m_wristFeedforward
-        = new LinearPlantInversionFeedforward<>(m_wristPlant, 0.02);
-    
-    private final SparkMaxAbsoluteEncoderWrapper m_wristEncoderWrapper = new SparkMaxAbsoluteEncoderWrapper(m_wristMotor, WRIST_ENCODER_OFFSET);
-    private final ProfiledPIDController m_wristController = new ProfiledPIDController(
-        2, 0, 0, new Constraints(4, 8));
-    /**
-     * initializes wrist:
-     * sets position conversion factor for the wrist motor in rotations,</p>
-     * sets velocity conversion factor for the wrist motor in rotations per second,</p>
-     * sets soft limit for the maximum wrist angle, </p>
-     * sets soft limit for the minimum wrist angle, </p>
-     * sets encoder position to 0, </p>
-     * resets the wrist profiled PID controller, </p>
-     * sets the position and velocity tolerances for the profiled PID controller
-     */
-
-    public void initWrist() {
-        m_wristMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setPositionConversionFactor(2 * Math.PI);
-        m_wristMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setVelocityConversionFactor(2 * Math.PI/ 60);
-        m_wristMotor.getAbsoluteEncoder(SparkMaxAbsoluteEncoder.Type.kDutyCycle).setInverted(true);
-        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
-        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
-        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
-        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
-        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 25);
-        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
-        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
-        // m_wristMotor.setSoftLimit(SoftLimitDirection.kForward, (float) WRIST_MAX_ANGLE);
-        // m_wristMotor.setSoftLimit(SoftLimitDirection.kReverse, (float) WRIST_MIN_ANGLE);
-        m_wristMotor.setInverted(true);
-        m_wristController.reset(getWristAngle().getRadians());
-        m_wristController.setTolerance(0.05, 0.05);
-        m_wristMotor.burnFlash();
-    }
-
-    /**
-     * returns the wrist angle in radians
-     * @return angle of the wrist as a Rotation2d
-     */
-
-    public Rotation2d getWristAngle() {
-        return Rotation2d.fromRadians(getContinuousWristAngle());
-    }
-
     /**
      * returns the wrist angle in radians
      * @return angle of the wrist in radians
@@ -282,7 +200,7 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     @Log
     public double getContinuousWristAngle() {
-        return m_wristAngle;
+        return m_wrist.getAngle();
     }
 
     // /**
@@ -294,49 +212,8 @@ public class ArmS extends SubsystemBase implements Loggable {
     //     return m_wristVelocity;
     // }
 
-    /**
-     * sets the wrist velocity in radians per second to velocity parameter
-     * @param velocityRadPerSec desired velocity in radians per second
-     */
-
-    public void setWristVelocity(double velocityRadPerSec) {
-        setWristVolts(
-            m_wristFeedforward.calculate(VecBuilder.fill(0, velocityRadPerSec)).get(0, 0)
-            + getWristkGVolts()
-
-        );
-    }
-
     public void resetWrist() {
-        double angle = getContinuousWristAngle();
-        m_wristController.reset(angle);
-        m_wristController.setGoal(angle);
-    }
-
-    /**
-     * sets voltage of wrist motor to volts parameter
-     * @param volts desired motor voltage
-     */
-
-    public void setWristVolts(double volts) {
-        if (getContinuousWristAngle() > WRIST_MAX_ANGLE && volts > 0) {
-            volts = 0;
-        }
-        if (getContinuousWristAngle() < WRIST_MIN_ANGLE && volts < 0) {
-            volts = 0;
-        }
-
-        m_wristMotor.setVoltage(MathUtil.clamp(volts, -12, 12));
-    }
-
-    /**
-     * @return voltage required to counteract the force of gravity on the hand
-     */
-
-    public double getWristkGVolts() {
-        // angle relative to world horizontal
-        // = pivot angle + wrist angle
-        return WRIST_KG * Math.cos(m_pivot.getContinuousRangeAngle() + getContinuousWristAngle());
+        m_wrist.resetController();
     }
 
     /**
@@ -345,13 +222,7 @@ public class ArmS extends SubsystemBase implements Loggable {
      */
 
     public void setWristAngle(double targetAngle) {
-        targetAngle = MathUtil.angleModulus(targetAngle);
-        setWristVelocity(
-            m_wristController.calculate(
-                getContinuousWristAngle(), targetAngle
-            )
-            + m_wristController.getSetpoint().velocity / 3
-        );
+        m_wrist.setAngle(targetAngle);
     }
 
     /**
@@ -360,7 +231,7 @@ public class ArmS extends SubsystemBase implements Loggable {
      */
 
     public Command holdWristC() {
-        return run(()->setWristVolts(getWristkGVolts()));
+        return run(m_wrist::openLoopHold);
     }
     // endregion
 
@@ -442,54 +313,6 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     // endregion
 
-    // region simulation
-
-    private final VariableLengthArmSim m_wristSim = new VariableLengthArmSim(
-        m_wristPlant,
-        DCMotor.getNEO(1),
-        1.0 / WRIST_ROTATIONS_PER_MOTOR_ROTATION,
-        wristMOI, HAND_LENGTH,
-        WRIST_MIN_ANGLE, WRIST_MAX_ANGLE, HAND_MASS_KILOS, true);
-    
-    /**
-     * initializes simulation:
-     * sets velocity of pivot joint in simulation to 0, </p>
-     * sets arm telescoping velocity in simulation to 0, </p>
-     * sets wrist angle in simulation to 0, </p>
-     * sets wrist velocity in simulation to 0, </p>
-     * sets the angle that gravity acts on the arm in simulation to -90 degrees relative to the field
-     */
-
-    private void initSimulation() {;
-        m_wristSim.setState(VecBuilder.fill(STOW_POSITION.wristRadians,0));
-        //as the arm raises from 0 to pi/2, the gravity on the wrist goes from -pi/2 to -pi
-        m_wristSim.setGravityAngle(-Math.PI/2 - m_pivot.getAngle().getRadians());
-    }
-
-     /**
-     * runs every code loop in simulation, called in simulation periodic: </p>
-     * updates the gravity angle of wrist in simulation, </p>
-     * sets wrist input voltage in simulation to applied output, </p>
-     * updates the wrist simulation by 0.02 seconds, </p>
-     * updates encoder positions in simulations, </p>
-     * updates encoder velocity in simulation
-     */
-
-    public void wristSimulationPeriodic() {
-        m_wristSim.setGravityAngle(-Math.PI/2 - m_pivot.getAngle().getRadians());
-        m_wristSim.setInputVoltage(MathUtil.clamp(DriverStation.isEnabled() ? m_wristMotor.getAppliedOutput() : 0, -12, 12));
-        m_wristSim.update(TimingTracer.getLoopTime());
-        m_wristEncoderWrapper.setSimPosition(m_wristSim.getAngleRads());
-        m_wristEncoderWrapper.setSimVelocity(m_wristSim.getVelocityRadPerSec());
-
-    }
-
-    public void simulationPeriodic() {
-        wristSimulationPeriodic();
-        
-    }
-    // endregion
-
     // region visualizer
 
     /**
@@ -511,14 +334,24 @@ public class ArmS extends SubsystemBase implements Loggable {
      */
 
     public void updateVisualizer() {
-        VISUALIZER.getObject("Current").setPose(new Pose2d(m_pivot.getContinuousRangeAngle(), m_extender.getLength(), getWristAngle()));
-        VISUALIZER.getObject("setpoint").setPose(new Pose2d(m_pivot.getSetpoint().position, m_extender.getSetpoint().position, Rotation2d.fromRadians(m_wristController.getSetpoint().position)));
-        VISUALIZER.getObject("goal").setPose(new Pose2d(m_pivot.getGoal().position, m_extender.getGoal().position, Rotation2d.fromRadians(m_wristController.getGoal().position)));
+        VISUALIZER.getObject("Current").setPose(new Pose2d(
+            m_pivot.getContinuousRangeAngle(),
+            m_extender.getLength(),
+            new Rotation2d(m_wrist.getAngle())
+        ));
+        VISUALIZER.getObject("setpoint").setPose(new Pose2d(
+            m_pivot.getSetpoint().position,
+            m_extender.getSetpoint().position,
+            Rotation2d.fromRadians(m_wrist.getSetpoint().position)));
+        VISUALIZER.getObject("goal").setPose(new Pose2d(
+            m_pivot.getGoal().position,
+            m_extender.getGoal().position,
+            Rotation2d.fromRadians(m_wrist.getGoal().position)));
 
 
         MECH_VISUALIZER_ARM.setAngle(Units.radiansToDegrees(m_pivot.getContinuousRangeAngle()) - 90);
         MECH_VISUALIZER_ARM.setLength(m_extender.getLength());
-        MECH_VISUALIZER_HAND.setAngle(getWristAngle());
+        MECH_VISUALIZER_HAND.setAngle(Units.radiansToDegrees(m_wrist.getAngle()));
         MECH_VISUALIZER_HAND.setLength(handLengthSupplier.get());
     }
 
@@ -563,6 +396,3 @@ public class ArmS extends SubsystemBase implements Loggable {
     }
 
 }
-
-
-

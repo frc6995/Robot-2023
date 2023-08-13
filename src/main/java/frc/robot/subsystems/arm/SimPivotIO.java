@@ -26,18 +26,23 @@ public class SimPivotIO extends PivotIO {
         ARM_MASS_KILOS,
         true
     );
+
+    private double m_inputVolts;
     
     public SimPivotIO(Consumer<Runnable> addPeriodic) {
         super(addPeriodic);
         addPeriodic.accept(this::simulationPeriodic);
         m_pivotSim.setState(VecBuilder.fill(STOW_POSITION.pivotRadians,0));
-        //TODO Auto-generated constructor stub
+        // we need this to calculate outputs
+        m_pivotSim.update(0.0001);
+        resetController();
     }
 
     @Override
     protected void setVolts(double volts) {
         volts = MathUtil.clamp(DriverStation.isEnabled() ? volts : 0, -12, 12);
-        m_pivotSim.setInputVoltage(NomadMathUtil.subtractkS(volts, PIVOT_KS)); 
+        m_inputVolts = NomadMathUtil.subtractkS(volts, PIVOT_KS);
+        m_pivotSim.setInputVoltage(m_inputVolts); 
     }
 
     private void simulationPeriodic() {
@@ -49,6 +54,10 @@ public class SimPivotIO extends PivotIO {
     public double getContinuousRangeAngle() {
         // TODO Auto-generated method stub
         return continuousRangeAngleModulus(m_pivotSim.getAngleRads());
+    }
+
+    public double getVolts() {
+        return m_inputVolts;
     }
     
 }

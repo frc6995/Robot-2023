@@ -51,6 +51,7 @@ public class RealExtendIO extends ExtendIO {
         m_extendMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
         m_extendMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
         addPeriodic.accept(this::periodic);
+        resetController();
     }
 
 
@@ -82,5 +83,8 @@ public class RealExtendIO extends ExtendIO {
         m_encoder.setPosition(MIN_ARM_LENGTH);
         m_extendMotor.setIdleMode(IdleMode.kBrake);
     }
-    
+    @Override
+    public double getVolts() {
+        return m_extendMotor.getAppliedOutput();
+    }
 }

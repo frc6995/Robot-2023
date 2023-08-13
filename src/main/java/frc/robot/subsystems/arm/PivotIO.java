@@ -17,6 +17,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
 import io.github.oblarg.oblog.Loggable;
+import io.github.oblarg.oblog.annotations.Log;
 
 import static frc.robot.Constants.ArmConstants.*;
 
@@ -45,13 +46,26 @@ public abstract class PivotIO implements Loggable {
         m_extendLengthSupplier = extendLengthSupplier;
     }
 
+    public void resetController() {
+        m_pivotController.reset(getContinuousRangeAngle());
+        m_pivotController.setGoal(getContinuousRangeAngle());
+    }
     public State getSetpoint() {
         return m_pivotController.getSetpoint();
+    }
+    @Log
+    public double getSetpointPosition() {
+        return getSetpoint().position;
     }
     public State getGoal() {
         return m_pivotController.getGoal();
     }
-
+    @Log
+    public double getGoalPosition(){
+        return getGoal().position;
+    }
+    @Log
+    public abstract double getVolts();
     protected abstract void setVolts(double volts);
      /**
      * Sets voltage of pivot motor to the volts parameter
@@ -79,7 +93,7 @@ public abstract class PivotIO implements Loggable {
         double position = getContinuousRangeAngle();
         return Rotation2d.fromRadians(position);
     }
-
+    @Log
     public abstract double getContinuousRangeAngle();
 
     public double continuousRangeAngleModulus(double targetAngle) {
@@ -181,5 +195,9 @@ public abstract class PivotIO implements Loggable {
         double frac = (m_extendLengthSupplier.getAsDouble() - MIN_ARM_LENGTH) / (MAX_ARM_LENGTH - MIN_ARM_LENGTH);
         result += frac * (maxkG - minkG);
         return result;
+    }
+
+    public String configureLogName() {
+        return "Pivot";
     }
 }

@@ -43,6 +43,7 @@ public class RealPivotIO extends PivotIO {
         m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
         m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
         addPeriodic.accept(this::updateEncoder);
+        resetController();
     }
 
     private void updateEncoder() {
@@ -58,6 +59,10 @@ public class RealPivotIO extends PivotIO {
     public double getContinuousRangeAngle() {
         // TODO Auto-generated method stub
         return m_position;
+    }
+
+    public double getVolts() {
+        return m_pivotMotor.getAppliedOutput();
     }
     
 }

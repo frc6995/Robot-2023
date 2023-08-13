@@ -1,4 +1,11 @@
 {
+  "HALProvider": {
+    "Other Devices": {
+      "window": {
+        "visible": false
+      }
+    }
+  },
   "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo",
@@ -44,10 +51,7 @@
         },
         "right": 1088,
         "top": 36,
-        "width": 16.541748046875,
-        "window": {
-          "visible": true
-        }
+        "width": 16.541748046875
       },
       "/SmartDashboard/SendableChooser[0]": {
         "window": {
@@ -74,8 +78,10 @@
       },
       "Shuffleboard": {
         "ArmS": {
+          "Extend": {
+            "open": true
+          },
           "MECH_VISUALIZER": {
-            "open": true,
             "root": {
               "base": {
                 "arm": {
@@ -86,7 +92,13 @@
               "open": true
             }
           },
-          "VISUALIZER": {
+          "Pivot": {
+            "open": true
+          },
+          "SimPivotIO": {
+            "open": true
+          },
+          "Wrist": {
             "open": true
           },
           "open": true
@@ -117,7 +129,7 @@
     "Plot <0>": {
       "plots": [
         {
-          "height": 570,
+          "height": 249,
           "series": [
             {
               "color": [
@@ -126,34 +138,7 @@
                 0.6901960968971252,
                 1.0
               ],
-              "id": "NT:/Shuffleboard/ArmS/getPivotVolts"
-            },
-            {
-              "color": [
-                0.8666667342185974,
-                0.5176470875740051,
-                0.32156863808631897,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/getExtendVolts"
-            },
-            {
-              "color": [
-                0.3333333432674408,
-                0.658823549747467,
-                0.4078431725502014,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/getLengthMeters"
-            },
-            {
-              "color": [
-                0.7686275243759155,
-                0.30588236451148987,
-                0.32156863808631897,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/IntakeS/getIntakeVolts"
+              "id": "NT:/Shuffleboard/ArmS/Extend/getVolts"
             }
           ]
         }
@@ -185,7 +170,7 @@
     "Plot <2>": {
       "plots": [
         {
-          "height": 184,
+          "height": 251,
           "series": [
             {
               "color": [
@@ -194,7 +179,52 @@
                 0.6901960968971252,
                 1.0
               ],
-              "id": "NT:/Shuffleboard/DrivebaseS/SwerveModule-BR-[14,13]/getVelocitySetpoint"
+              "id": "NT:/Shuffleboard/ArmS/Extend/getLength"
+            },
+            {
+              "color": [
+                0.8666667342185974,
+                0.5176470875740051,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/Extend/getSetpointPosition"
+            },
+            {
+              "color": [
+                0.3333333432674408,
+                0.658823549747467,
+                0.4078431725502014,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/Extend/isHomed"
+            },
+            {
+              "color": [
+                0.7686275243759155,
+                0.30588236451148987,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/Extend/getGoalPosition"
+            },
+            {
+              "color": [
+                0.5058823823928833,
+                0.44705885648727417,
+                0.7019608020782471,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/Extend/isInTolerance"
+            },
+            {
+              "color": [
+                0.5764706134796143,
+                0.4705882668495178,
+                0.3764706254005432,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/Extend/minLength"
             }
           ]
         }
