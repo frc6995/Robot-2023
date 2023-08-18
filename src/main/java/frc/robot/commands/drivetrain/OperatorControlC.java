@@ -145,7 +145,7 @@ public class OperatorControlC extends CommandBase {
             lastHoldHeading = true;
         }
 
-        var correctedHeading = m_drive.getPoseHeading().plus(Rotation2d.fromRadians(rot * 0.09));
+        var correctedHeading = m_drive.getPoseHeading();
         if (AllianceWrapper.getAlliance() == Alliance.Red) {
             correctedHeading = correctedHeading.plus(Rotation2d.fromRadians(Math.PI));
         }

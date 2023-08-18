@@ -92,11 +92,13 @@ public class Constants {
         /** ks, kv, ka */ 
         public static final double[] DRIVE_FF_CONST = {0.14315, 2.1567, 0.57};
 
-        public static final double STEER_P = 2.5;
-        public static final double STEER_D = 0.0;
+        public static final double STEER_P = 2.3584;
+        public static final double STEER_D = 0.01;
+        // 12 volts / (5676rpm *2pi radPerRev  / 60 spm / 12.8 revsPerWheelRev)
+        public static final double STEER_KV = 12.0/ (5676 * (2*Math.PI)/60/12.8);
     
-        public static final double DRIVE_P = 2;//9;
-        public static final double DRIVE_D = 0.05;
+        public static final double DRIVE_P = 23;//9;
+        public static final double DRIVE_D = 0;
 
 
         public static final double MAX_MODULE_SPEED_FPS = 19;

@@ -75,7 +75,7 @@ public class SimExtendIO extends ExtendIO {
     @Override
     public boolean isHomed() {
         // limit switch button is maybe 5 mm tall
-        return getLength() <= MIN_ARM_LENGTH + 0.005;
+        return getLength() <= MIN_ARM_LENGTH;
     }
 
     @Override

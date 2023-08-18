@@ -20,14 +20,13 @@
           "visible": true
         }
       },
-      "/Shuffleboard/ArmS/VISUALIZER": {
-        "window": {
-          "visible": true
-        }
-      },
       "/Shuffleboard/RobotContainer/m_field": {
         "Robot": {
           "style": "Box/Image"
+        },
+        "_modules": {
+          "length": 0.4000000059604645,
+          "width": 0.4000000059604645
         },
         "bluePoses": {
           "length": 0.7900000214576721,
@@ -46,12 +45,23 @@
           "style": "Hidden",
           "width": 0.4000000059604645
         },
+        "odometry": {
+          "width": 0.800000011920929
+        },
         "redPoses": {
           "style": "Hidden"
         },
         "right": 1088,
         "top": 36,
-        "width": 16.541748046875
+        "width": 16.541748046875,
+        "window": {
+          "visible": true
+        },
+        "zmodules": {
+          "length": 0.4000000059604645,
+          "style": "Hidden",
+          "width": 0.4000000059604645
+        }
       },
       "/SmartDashboard/SendableChooser[0]": {
         "window": {
@@ -100,11 +110,34 @@
           },
           "Wrist": {
             "open": true
-          },
-          "open": true
+          }
         },
         "DrivebaseS": {
+          "SimSwerveDriveIO": {
+            "SwerveModule-BL-[16,15]": {
+              "open": true
+            },
+            "SwerveModule-BR-[14,13]": {
+              "open": true
+            },
+            "SwerveModule-FL-[18,17]": {
+              "open": true
+            },
+            "SwerveModule-FR-[12,11]": {
+              "open": true
+            },
+            "open": true
+          },
           "SwerveModule-BR-[14,13]": {
+            "open": true
+          },
+          "io": {
+            "BL-[16,15]": {
+              "open": true
+            },
+            "FL-[18,17]": {
+              "open": true
+            },
             "open": true
           },
           "open": true
@@ -129,7 +162,12 @@
     "Plot <0>": {
       "plots": [
         {
-          "height": 249,
+          "axis": [
+            {
+              "autoFit": true
+            }
+          ],
+          "height": 540,
           "series": [
             {
               "color": [
@@ -138,7 +176,34 @@
                 0.6901960968971252,
                 1.0
               ],
-              "id": "NT:/Shuffleboard/ArmS/Extend/getVolts"
+              "id": "NT:/Shuffleboard/DrivebaseS/SimSwerveDriveIO/SwerveModule-BL-[16,15]/getSteerVoltage"
+            },
+            {
+              "color": [
+                0.8666667342185974,
+                0.5176470875740051,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/DrivebaseS/SimSwerveDriveIO/SwerveModule-BL-[16,15]/getAngle"
+            },
+            {
+              "color": [
+                0.3333333432674408,
+                0.658823549747467,
+                0.4078431725502014,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/DrivebaseS/SimSwerveDriveIO/SwerveModule-BL-[16,15]/getSteerGoal"
+            },
+            {
+              "color": [
+                0.7686275243759155,
+                0.30588236451148987,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/DrivebaseS/SimSwerveDriveIO/SwerveModule-BL-[16,15]/getSteerSetpoint"
             }
           ]
         }
@@ -152,7 +217,7 @@
               "autoFit": true
             }
           ],
-          "height": 332,
+          "height": 404,
           "series": [
             {
               "color": [
@@ -161,16 +226,78 @@
                 0.6901960968971252,
                 1.0
               ],
-              "id": "NT:/Shuffleboard/RobotContainer/loopTime"
+              "id": "NT:/Shuffleboard/DrivebaseS/io/FL-[18,17]/getSteerGoal"
+            },
+            {
+              "color": [
+                0.8666667342185974,
+                0.5176470875740051,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/DrivebaseS/io/FL-[18,17]/getAngle"
+            },
+            {
+              "color": [
+                0.3333333432674408,
+                0.658823549747467,
+                0.4078431725502014,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/DrivebaseS/io/FL-[18,17]/getSteerSetpoint"
             }
           ]
+        },
+        {
+          "axis": [
+            {
+              "autoFit": true
+            }
+          ],
+          "height": 404,
+          "lockPrevX": true,
+          "series": [
+            {
+              "color": [
+                0.8666667342185974,
+                0.5176470875740051,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/DrivebaseS/io/BL-[16,15]/getAngle"
+            },
+            {
+              "color": [
+                0.8666667342185974,
+                0.5176470875740051,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/DrivebaseS/io/BL-[16,15]/getSteerGoal"
+            },
+            {
+              "color": [
+                0.3333333432674408,
+                0.658823549747467,
+                0.4078431725502014,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/DrivebaseS/io/BL-[16,15]/getSteerSetpoint"
+            }
+          ],
+          "showPause": false
         }
       ]
     },
     "Plot <2>": {
       "plots": [
         {
-          "height": 251,
+          "axis": [
+            {
+              "autoFit": true
+            }
+          ],
+          "height": 268,
           "series": [
             {
               "color": [
@@ -210,13 +337,51 @@
             },
             {
               "color": [
+                0.5764706134796143,
+                0.4705882668495178,
+                0.3764706254005432,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/Extend/minLength"
+            },
+            {
+              "color": [
+                0.2980392277240753,
+                0.44705885648727417,
+                0.6901960968971252,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/Pivot/isInTolerance"
+            },
+            {
+              "color": [
+                0.5058823823928833,
+                0.44705885648727417,
+                0.7019608020782471,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/Wrist/isInTolerance"
+            },
+            {
+              "color": [
                 0.5058823823928833,
                 0.44705885648727417,
                 0.7019608020782471,
                 1.0
               ],
               "id": "NT:/Shuffleboard/ArmS/Extend/isInTolerance"
-            },
+            }
+          ]
+        },
+        {
+          "axis": [
+            {
+              "autoFit": true
+            }
+          ],
+          "height": 268,
+          "lockPrevX": true,
+          "series": [
             {
               "color": [
                 0.5764706134796143,
@@ -224,11 +389,102 @@
                 0.3764706254005432,
                 1.0
               ],
-              "id": "NT:/Shuffleboard/ArmS/Extend/minLength"
+              "id": "NT:/Shuffleboard/ArmS/Pivot/getPivotkG"
+            },
+            {
+              "color": [
+                0.8666667342185974,
+                0.5176470875740051,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/Pivot/getContinuousRangeAngle"
+            },
+            {
+              "color": [
+                0.3333333432674408,
+                0.658823549747467,
+                0.4078431725502014,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/Pivot/getGoalPosition"
+            },
+            {
+              "color": [
+                0.7686275243759155,
+                0.30588236451148987,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/Pivot/getSetpointPosition"
             }
-          ]
+          ],
+          "showPause": false
+        },
+        {
+          "axis": [
+            {
+              "autoFit": true
+            }
+          ],
+          "height": 268,
+          "lockPrevX": true,
+          "series": [
+            {
+              "color": [
+                0.3333333432674408,
+                0.658823549747467,
+                0.4078431725502014,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/Wrist/getSetpointPosition"
+            },
+            {
+              "color": [
+                0.7686275243759155,
+                0.30588236451148987,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/Wrist/getGoalPosition"
+            },
+            {
+              "color": [
+                0.5058823823928833,
+                0.44705885648727417,
+                0.7019608020782471,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/Wrist/getAngle"
+            },
+            {
+              "color": [
+                0.7686275243759155,
+                0.30588236451148987,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/Wrist/getVolts"
+            }
+          ],
+          "showPause": false
         }
       ]
+    },
+    "Plot <3>": {
+      "plots": [
+        {
+          "axis": [
+            {
+              "autoFit": true
+            }
+          ],
+          "height": 201
+        }
+      ],
+      "window": {
+        "visible": false
+      }
     }
   }
 }

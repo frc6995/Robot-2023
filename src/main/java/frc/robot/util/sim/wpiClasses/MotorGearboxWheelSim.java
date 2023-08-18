@@ -64,4 +64,8 @@ class MotorGearboxWheelSim {
         return curGroundForce_N;
     }
 
+    public void setPosition_Rev(double positionRev){
+        wheelRotations_rad = 2 * Math.PI * positionRev;
+    }
+
 }

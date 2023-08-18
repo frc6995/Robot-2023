@@ -1,7 +1,15 @@
 package frc.robot.subsystems.arm;
 
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.controller.LinearQuadraticRegulator;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.math.system.LinearSystem;
+import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import frc.robot.util.TimingTracer;
@@ -19,12 +27,26 @@ public abstract class ExtendIO implements Loggable {
     public String configureLogName() {
         return "Extend";
     }
-    protected final ProfiledPIDController m_extendController =
-    new ProfiledPIDController(8,0,0,
-        new Constraints(1.3, 1.5),
+    // protected final ProfiledPIDController m_extendController =
+    // new ProfiledPIDController(8,0,0,
+    //     new Constraints(1.3, 1.5),
+    //     0.02
+    // );
+    protected final LinearSystem<N2, N1, N1> m_extendPlant =
+    LinearSystemId.identifyPositionSystem(
+        ARM_EXTEND_KV,
+        0.01);
+    protected final LinearQuadraticRegulator<N2, N1, N1> m_extendController = new LinearQuadraticRegulator<N2, N1, N1>(
+        m_extendPlant,
+        VecBuilder.fill(0.001, 0.001),
+        VecBuilder.fill(12),
         0.02
     );
-
+    private double m_minimumInput;
+    private double m_maximumInput;
+    private TrapezoidProfile.State m_goal = new TrapezoidProfile.State();
+    private TrapezoidProfile.State m_setpoint = new TrapezoidProfile.State();
+    private TrapezoidProfile.Constraints m_constraints = new Constraints(1.3, 1.5);
     protected final SimpleMotorFeedforward m_extendFeedforward
     = new SimpleMotorFeedforward(ARM_EXTEND_KS, ARM_EXTEND_KV, 0.01);
 
@@ -34,7 +56,10 @@ public abstract class ExtendIO implements Loggable {
     public final double minLength = MIN_ARM_LENGTH;
 
     public ExtendIO(Consumer<Runnable> addPeriodic) {
-        m_extendController.reset(MIN_ARM_LENGTH);
+        m_extendController.reset();
+        m_setpoint = new State(MIN_ARM_LENGTH, 0);m_setpoint = new State(MIN_ARM_LENGTH, 0);
+        m_goal = new State(MIN_ARM_LENGTH, 0);
+
     }
 
     public void setAngleSupplier(DoubleSupplier supplier) {
@@ -47,10 +72,7 @@ public abstract class ExtendIO implements Loggable {
      */
      public void setVelocity(double velocityMetersPerSecond) {
         setVolts(
-            m_extendFeedforward.calculate(
-                getVelocity(),
-                velocityMetersPerSecond, TimingTracer.getLoopTime()
-            )
+            m_extendFeedforward.calculate(getVelocity())
             + ARM_EXTEND_KG_VERTICAL * Math.sin(m_angleSupplier.getAsDouble())
         );
     }
@@ -65,19 +87,32 @@ public abstract class ExtendIO implements Loggable {
      */
 
     public void setLength(double lengthMeters) {  
-        if (isInTolerance()) {setVelocity(0); return;}
-        setVelocity(
-            m_extendController.calculate(getLength(), lengthMeters)
-            + m_extendController.getSetpoint().velocity
+        //if (isInTolerance()) {setVelocity(0); return;}
+        m_goal = new State(lengthMeters, 0);
+        var profile = new TrapezoidProfile(m_constraints, m_goal, m_setpoint);
+        m_setpoint = profile.calculate(getPeriod());
+        State nextSetpoint = profile.calculate(getPeriod() * 2.0);
+        setVolts(
+            m_extendController.calculate(
+                VecBuilder.fill(getLength(), 0),
+                VecBuilder.fill(m_setpoint.position, 0)
+            ).get(0, 0) +
+            (m_extendFeedforward.calculate(m_setpoint.velocity, nextSetpoint.velocity, getPeriod()) * 1.21)
+            + ARM_EXTEND_KG_VERTICAL * Math.sin(m_angleSupplier.getAsDouble())
         );
     }
 
+    public double getPeriod() {
+        return 0.02;
+    }
+
     public void resetController() {
-        m_extendController.reset(getLength());
+        m_extendController.reset();
+        m_setpoint = new State(getLength(), 0 );
     }
 
     public State getSetpoint() {
-        return m_extendController.getSetpoint();
+        return m_setpoint;
     }
     @Log
     public double getSetpointPosition() {
@@ -88,7 +123,7 @@ public abstract class ExtendIO implements Loggable {
         return getSetpoint().velocity;
     }
     public State getGoal() {
-        return m_extendController.getGoal();
+        return m_goal;
     }
     @Log
     public double getGoalPosition() {
@@ -102,7 +137,7 @@ public abstract class ExtendIO implements Loggable {
     public abstract double getVolts();
     @Log
     public boolean isInTolerance() {
-        return m_extendController.atSetpoint();
+        return Math.abs(getLength() - getGoalPosition()) < 0.03;
     }
     public abstract void setVolts(double volts);
     @Log
@@ -112,7 +147,8 @@ public abstract class ExtendIO implements Loggable {
     @Log
     public abstract boolean isHomed();
     public void onHome() {
-        m_extendController.reset(MIN_ARM_LENGTH);
+        m_extendController.reset();
+        m_setpoint = new State(MIN_ARM_LENGTH, 0);
     }
 
 }

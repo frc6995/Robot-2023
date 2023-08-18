@@ -61,7 +61,7 @@ public class RobotContainer {
     private final CommandXboxController m_driverController = new CommandXboxController(InputDevices.GAMEPAD_PORT);
     //private final CommandXboxController m_operatorController = new CommandXboxController(1);
     private final CommandOperatorKeypad m_keypad;
-    private final DrivebaseS m_drivebaseS = new DrivebaseS();
+    private final DrivebaseS m_drivebaseS;
     
     @Log
     private double lightSpeed = 0;
@@ -84,9 +84,22 @@ public class RobotContainer {
     SendableChooser<Command> m_autoSelector = new SendableChooser<Command>();
     
     public RobotContainer(Consumer<Runnable> addPeriodic) {
+        m_drivebaseS = new DrivebaseS(addPeriodic);
+        m_alignSafeToPlaceCube = new Trigger(()->{
+            Transform2d error = new Transform2d(m_targetAlignmentPose, m_drivebaseS.getPose());
+            return 
+                Math.abs(error.getRotation().getRadians()) < Units.degreesToRadians(3) &&
+                Math.abs(error.getX()) < 0.1 &&
+                Math.abs(error.getY()) < 0.1;
+        });
+    
         m_armS = new ArmS(addPeriodic, m_intakeS::getHandLength);
+
+
         PhotonCamera usbCam = new PhotonCamera("USB_Camera");
         usbCam.setDriverMode(true);
+
+
         m_keypad = new CommandOperatorKeypad(2, (pose)->{
             m_targetAlignmentPose = pose;
             m_field.getObject("Selection").setPose(pose);
@@ -153,14 +166,7 @@ public class RobotContainer {
     }
 
     @Log(methodName = "getAsBoolean")
-    private Trigger m_alignSafeToPlaceCube = new Trigger(()->{
-        Transform2d error = new Transform2d(m_targetAlignmentPose, m_drivebaseS.getPose());
-        return 
-            Math.abs(error.getRotation().getRadians()) < Units.degreesToRadians(3) &&
-            Math.abs(error.getX()) < 0.1 &&
-            Math.abs(error.getY()) < 0.1;
-
-    });
+    private Trigger m_alignSafeToPlaceCube;
 
     public void configureButtonBindings() {
         m_driverController.a().toggleOnTrue(
@@ -248,7 +254,6 @@ public class RobotContainer {
         m_drivebaseS.resetRelativeRotationEncoders();
     }
     public void onDisabled() {
-        m_drivebaseS.scheduleConfigCommands();
     }
 
     public Command armIntakeCG(ArmPosition position, boolean isCube) {
@@ -273,10 +278,10 @@ public class RobotContainer {
     }
     public Command autoScoreSequenceCG() {
         return sequence(
-                new GoToPositionC(m_armS, ()->m_targetArmPosition),
+                m_armS.goToPositionC(()->m_targetArmPosition),
                 either(
                     sequence(
-                        m_intakeS.outtakeC().withTimeout(0.4),
+                        m_intakeS.outtakeC().withTimeout(0.4).deadlineWith(m_armS.holdPositionC()),
                         m_armS.stowC()
                     ),
                 none(), 

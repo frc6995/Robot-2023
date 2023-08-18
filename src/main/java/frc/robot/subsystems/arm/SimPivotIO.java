@@ -17,7 +17,7 @@ public class SimPivotIO extends PivotIO {
     
     private final VariableLengthArmSim m_pivotSim = new VariableLengthArmSim(
         m_pivotPlant,
-        DCMotor.getNEO(1),
+        DCMotor.getNEO(2),
         1.0/ARM_ROTATIONS_PER_MOTOR_ROTATION,
         1.0 / 3.0 * ARM_MASS_KILOS * MIN_ARM_LENGTH * MIN_ARM_LENGTH,
         MIN_ARM_LENGTH,
@@ -46,6 +46,9 @@ public class SimPivotIO extends PivotIO {
     }
 
     private void simulationPeriodic() {
+        if (DriverStation.isDisabled()) {
+            m_pivotSim.setInputVoltage(0);
+        }
         m_pivotSim.setCGRadius(getPivotCGRadius());
         m_pivotSim.setMOI(getPivotMOI());
         m_pivotSim.update(TimingTracer.getLoopTime());

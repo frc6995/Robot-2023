@@ -49,5 +49,9 @@ class SimpleMotorWithMassModel {
         return curDisplacement_Rev;
     }
 
+    void setPosition_Rev(double positionRev) {
+        curDisplacement_Rev = positionRev;
+    }
+
 
 }

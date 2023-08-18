@@ -42,6 +42,9 @@ public class SimWristIO extends WristIO {
      */
 
     private void periodic() {
+        if (DriverStation.isDisabled()) {
+            m_wristSim.setInputVoltage(0);
+        }
         m_wristSim.setGravityAngle(-Math.PI/2 - m_pivotAngleSupplier.getAsDouble());
         m_wristSim.update(TimingTracer.getLoopTime());
     }

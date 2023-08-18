@@ -142,7 +142,7 @@ public class ArmS extends SubsystemBase implements Loggable {
      */
     public Command extendC(DoubleSupplier voltage){
         return run(()->{m_extender.setVolts(voltage.getAsDouble());})
-        .finallyDo((interrupted)->m_extender.setVolts(0));
+        .finallyDo((interrupted)->m_extender.setVolts(0)).asProxy();
     }
 
     public void setExtendLength(double lengthMeters) {
@@ -179,15 +179,23 @@ public class ArmS extends SubsystemBase implements Loggable {
     // region pivot
 
     public Command goToPositionC(ArmPosition position) {
-        return new GoToPositionC(this, ()->position);
+        return goToPositionC(()->position);
+    }
+
+    public Command goToPositionC(Supplier<ArmPosition> position) {
+        return new GoToPositionC(this, position).asProxy();
     }
 
     public Command goToPositionIndefiniteC(ArmPosition position) {
-        return new GoToPositionC(this, ()->position, false);
+        return goToPositionIndefiniteC(()->position);
+    }
+
+    public Command goToPositionIndefiniteC(Supplier<ArmPosition> position) {
+        return new GoToPositionC(this, position, false).asProxy();
     }
 
     public Command holdPositionC(){
-        return new HoldCurrentPositionC(this);
+        return new HoldCurrentPositionC(this).asProxy();
     }
 
     // endregion
@@ -231,7 +239,7 @@ public class ArmS extends SubsystemBase implements Loggable {
      */
 
     public Command holdWristC() {
-        return run(m_wrist::openLoopHold);
+        return run(m_wrist::openLoopHold).asProxy();
     }
     // endregion
 
@@ -257,7 +265,7 @@ public class ArmS extends SubsystemBase implements Loggable {
             m_pivot.setAngle(offset.getAngle().getRadians());
             m_extender.setLength(offset.getNorm());
             setWristAngle(-offset.getAngle().getRadians());
-        });
+        }).asProxy();
     }
 
     // public Command scoreHighConeC() {
@@ -271,10 +279,10 @@ public class ArmS extends SubsystemBase implements Loggable {
     //     return followJointSpaceTargetC(()->SCORE_HIGH_CONE_POSITION);
     // }
     public Command stowC() {
-        return new GoToPositionC(this, ()->STOW_POSITION);
+        return goToPositionC(()->STOW_POSITION);
     }
     public Command stowIndefiniteC() {
-        return new GoToPositionC(this, ()->STOW_POSITION, false);
+        return goToPositionIndefiniteC(()->STOW_POSITION);
     }
 
     public Command followJointSpaceTargetC() {
@@ -290,7 +298,7 @@ public class ArmS extends SubsystemBase implements Loggable {
             m_pivot.setAngle(armAngle);
             m_extender.setLength(targetPoint.getY());
             setWristAngle(wristAngle);
-        });
+        }).asProxy();
     }
 
     public Command followJointSpaceTargetC(Supplier<ArmPosition> positionSupplier) {
@@ -307,7 +315,7 @@ public class ArmS extends SubsystemBase implements Loggable {
             setWristAngle(position.wristRadians);
         }
         )
-        );
+        ).asProxy();
     }
 
 
