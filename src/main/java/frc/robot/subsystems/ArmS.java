@@ -244,7 +244,7 @@ public class ArmS extends SubsystemBase implements Loggable {
     // endregion
 
     public ArmPosition getArmPosition() {
-        return new ArmPosition(m_pivot.getContinuousRangeAngle(), m_extender.getLength(), getContinuousWristAngle(), HAND_LENGTH);
+        return new ArmPosition(m_pivot.getContinuousRangeAngle(), m_extender.getLength(), getContinuousWristAngle());
     }
     // region factories
 
@@ -389,12 +389,10 @@ public class ArmS extends SubsystemBase implements Loggable {
         public final double pivotRadians;
         public final double armLength;
         public final double wristRadians;
-        public final double handLength;
-        public ArmPosition(double pivotRadians, double armLength, double wristRadians, double handLength) {
+        public ArmPosition(double pivotRadians, double armLength, double wristRadians) {
             this.pivotRadians = pivotRadians;
             this.armLength = armLength;
             this.wristRadians = wristRadians;
-            this.handLength = handLength;
         }
 
         public Pose2d asPose() {
