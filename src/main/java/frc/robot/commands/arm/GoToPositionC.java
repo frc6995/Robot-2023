@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import static frc.robot.Constants.ArmConstants.*;
@@ -49,7 +50,7 @@ public class GoToPositionC extends CommandBase {
   }
   @Override
   public void initialize() {
-
+    SmartDashboard.putBoolean("armMoving", true);
     // TODO Auto-generated method stub
     super.initialize();
     currentTarget = 0;
@@ -97,8 +98,7 @@ public class GoToPositionC extends CommandBase {
         m_waypoints.add(new ArmPosition(
           m_startPosition.pivotRadians,
           firstRetractLength,
-          m_targetPosition.wristRadians,
-          m_startPosition.handLength
+          m_targetPosition.wristRadians
         ));
       }
       
@@ -106,7 +106,7 @@ public class GoToPositionC extends CommandBase {
       m_waypoints.add(new ArmPosition(
         m_targetPosition.pivotRadians,
         targetLength,
-        m_targetPosition.wristRadians, m_startPosition.handLength));
+        m_targetPosition.wristRadians));
       //step 3, extend/retract to target length
       m_waypoints.add(m_targetPosition);
     }
@@ -137,6 +137,10 @@ public class GoToPositionC extends CommandBase {
       && Math.abs(m_targetPosition.wristRadians - actualPosition.wristRadians) < Units.degreesToRadians(5)
     );
     return atSetpoint && m_shouldFinish;
+  }
+
+  public void end(boolean interrupted) {
+    SmartDashboard.putBoolean("armMoving", false);
   }
   private boolean isAtSetpoint (ArmPosition setpoint) {
     

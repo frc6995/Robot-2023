@@ -46,6 +46,7 @@ public abstract class PivotIO implements Loggable {
 
     public PivotIO(Consumer<Runnable> addPeriodic) {
         addPeriodic.accept(this::updatePivotPlant);
+        addPeriodic.accept(this::runPID);
     }
 
     public void setExtendLengthSupplier(DoubleSupplier extendLengthSupplier) {
@@ -53,7 +54,11 @@ public abstract class PivotIO implements Loggable {
     }
 
     public void resetController() {
+        m_pivotController.reset();
         m_setpoint = new State(getContinuousRangeAngle(), 0);
+        
+    }
+    public void resetGoal() {
         m_goal = new State(getContinuousRangeAngle(), 0);
     }
 
@@ -205,13 +210,7 @@ public abstract class PivotIO implements Loggable {
      * @param targetAngle desired angle in radians
      */
 
-    public void setAngle(double targetAngle) {
-        // We need to convert this to -90 to 270.
-        // We don't want continuous input, but we need the rollover point to be outside
-        // our range of motion.
-
-        targetAngle = continuousRangeAngleModulus(targetAngle);
-        m_goal = new State(targetAngle, 0);
+    private void runPID() {
         var profile = new TrapezoidProfile(m_constraints, m_goal, m_setpoint);
         m_setpoint = profile.calculate(0.02);
         var nextSetpoint = profile.calculate(0.04);
@@ -226,6 +225,16 @@ public abstract class PivotIO implements Loggable {
                                 VecBuilder.fill(0, m_setpoint.velocity),
                                 VecBuilder.fill(0, nextSetpoint.velocity))
                                 .get(0, 0) * 1.21);
+    }
+
+    public void setAngle(double targetAngle) {
+        // We need to convert this to -90 to 270.
+        // We don't want continuous input, but we need the rollover point to be outside
+        // our range of motion.
+
+        targetAngle = continuousRangeAngleModulus(targetAngle);
+        m_goal = new State(targetAngle, 0);
+        
     }
 
     /**

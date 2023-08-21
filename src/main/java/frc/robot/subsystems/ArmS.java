@@ -100,7 +100,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         
         initVisualizer();
         
-        setDefaultCommand(new HoldCurrentPositionC(this));
+        //setDefaultCommand(new HoldCurrentPositionC(this));
         VISUALIZER.getObject("positions").setPoses(
             SCORE_HIGH_CONE_POSITION.asPose(),
             SCORE_MID_CONE_POSITION.asPose(),
@@ -133,6 +133,15 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     public void periodic() {
         updateVisualizer();
+    }
+
+    public void resetAllControllers() {
+        resetExtender();
+        resetPivot();
+        resetWrist();
+        m_extender.resetGoal();
+        m_pivot.resetGoal();
+        m_wrist.resetGoal();
     }
 
     /**

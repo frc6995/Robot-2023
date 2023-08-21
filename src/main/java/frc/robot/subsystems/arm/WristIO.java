@@ -43,6 +43,7 @@ public abstract class WristIO implements Loggable {
     public WristIO(Consumer<Runnable> addPeriodic) {
         m_goal = new State(STOW_POSITION.wristRadians, 0);
         m_setpoint = new State(STOW_POSITION.wristRadians, 0);
+        addPeriodic.accept(this::runPID);
     }
 
     public void setPivotAngleSupplier (DoubleSupplier pivotAngleSupplier) {
@@ -61,14 +62,21 @@ public abstract class WristIO implements Loggable {
     }
 
     public void resetController() {
+        m_wristController.reset();
         double angle = getAngle();
         m_setpoint = new State(angle, 0);
-        m_goal = new State(angle, 0);
+    }
+
+    public void resetGoal() {
+        m_goal = new State(getAngle(), 0);
     }
 
     public void setAngle(double angleRad) {
         angleRad = MathUtil.angleModulus(angleRad);
         m_goal = new State(angleRad, 0);
+    }
+
+    private void runPID() {
         var profile = new TrapezoidProfile(m_constraints, m_goal, m_setpoint);
         m_setpoint = profile.calculate(0.02);
         var nextSetpoint = profile.calculate(0.04);

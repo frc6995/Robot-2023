@@ -252,6 +252,7 @@ public class RobotContainer {
 
     public void onEnabled(){
         m_drivebaseS.resetRelativeRotationEncoders();
+        m_armS.resetAllControllers();
     }
     public void onDisabled() {
     }

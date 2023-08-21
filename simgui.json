@@ -34,7 +34,15 @@
         },
         "bottom": 544,
         "driveTarget": {
-          "style": "Box/Image"
+          "color": [
+            161.39236450195313,
+            0.0,
+            255.0,
+            255.0
+          ],
+          "length": 0.8999999761581421,
+          "style": "Box/Image",
+          "width": 0.8999999761581421
         },
         "height": 8.013679504394531,
         "image": "C:\\Users\\jashu\\git\\Robot-2023\\resources\\2023-field.png",
@@ -155,6 +163,9 @@
           "open": true
         },
         "open": true
+      },
+      "photonvision": {
+        "open": true
       }
     }
   },
@@ -245,6 +256,24 @@
                 1.0
               ],
               "id": "NT:/Shuffleboard/DrivebaseS/io/FL-[18,17]/getSteerSetpoint"
+            },
+            {
+              "color": [
+                0.7686275243759155,
+                0.30588236451148987,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/SmartDashboard/armMoving"
+            },
+            {
+              "color": [
+                0.5058823823928833,
+                0.44705885648727417,
+                0.7019608020782471,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/DrivebaseS/io/FL-[18,17]/getRelativeAngle"
             }
           ]
         },
@@ -283,6 +312,15 @@
                 1.0
               ],
               "id": "NT:/Shuffleboard/DrivebaseS/io/BL-[16,15]/getSteerSetpoint"
+            },
+            {
+              "color": [
+                0.7686275243759155,
+                0.30588236451148987,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/DrivebaseS/io/BL-[16,15]/getRelativeAngle"
             }
           ],
           "showPause": false
@@ -292,11 +330,6 @@
     "Plot <2>": {
       "plots": [
         {
-          "axis": [
-            {
-              "autoFit": true
-            }
-          ],
           "height": 268,
           "series": [
             {
@@ -370,15 +403,19 @@
                 1.0
               ],
               "id": "NT:/Shuffleboard/ArmS/Extend/isInTolerance"
+            },
+            {
+              "color": [
+                0.8000000715255737,
+                0.7254902124404907,
+                0.4549019932746887,
+                1.0
+              ],
+              "id": "NT:/SmartDashboard/armMoving"
             }
           ]
         },
         {
-          "axis": [
-            {
-              "autoFit": true
-            }
-          ],
           "height": 268,
           "lockPrevX": true,
           "series": [

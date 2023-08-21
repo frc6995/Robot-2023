@@ -12,6 +12,7 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
+import edu.wpi.first.math.util.Units;
 import frc.robot.util.TimingTracer;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
@@ -57,8 +58,9 @@ public abstract class ExtendIO implements Loggable {
 
     public ExtendIO(Consumer<Runnable> addPeriodic) {
         m_extendController.reset();
-        m_setpoint = new State(MIN_ARM_LENGTH, 0);m_setpoint = new State(MIN_ARM_LENGTH, 0);
+        m_setpoint = new State(MIN_ARM_LENGTH, 0);
         m_goal = new State(MIN_ARM_LENGTH, 0);
+        addPeriodic.accept(this::runPID);
 
     }
 
@@ -89,6 +91,9 @@ public abstract class ExtendIO implements Loggable {
     public void setLength(double lengthMeters) {  
         //if (isInTolerance()) {setVelocity(0); return;}
         m_goal = new State(lengthMeters, 0);
+
+    }
+    private void runPID() {
         var profile = new TrapezoidProfile(m_constraints, m_goal, m_setpoint);
         m_setpoint = profile.calculate(getPeriod());
         State nextSetpoint = profile.calculate(getPeriod() * 2.0);
@@ -109,6 +114,9 @@ public abstract class ExtendIO implements Loggable {
     public void resetController() {
         m_extendController.reset();
         m_setpoint = new State(getLength(), 0 );
+    }
+    public void resetGoal() {
+        m_goal = new State(getLength(), 0 );
     }
 
     public State getSetpoint() {
@@ -137,7 +145,7 @@ public abstract class ExtendIO implements Loggable {
     public abstract double getVolts();
     @Log
     public boolean isInTolerance() {
-        return Math.abs(getLength() - getGoalPosition()) < 0.03;
+        return Math.abs(getLength() - getGoalPosition()) < Units.inchesToMeters(0.5);
     }
     public abstract void setVolts(double volts);
     @Log
