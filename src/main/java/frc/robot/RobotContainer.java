@@ -37,9 +37,6 @@ import frc.robot.Constants.ArmConstants;
 import frc.robot.Constants.InputDevices;
 import frc.robot.POIManager.POIS;
 import frc.robot.commands.arm.GoToPositionC;
-import frc.robot.commands.arm.HoldCurrentPositionC;
-import frc.robot.commands.drivetrain.OperatorControlC;
-import frc.robot.commands.drivetrain.OperatorControlHeadingC;
 import frc.robot.driver.CommandOperatorKeypad;
 import frc.robot.subsystems.ArmS;
 import frc.robot.subsystems.DrivebaseS;
@@ -48,6 +45,7 @@ import frc.robot.subsystems.LightS;
 import frc.robot.subsystems.ArmS.ArmPosition;
 import frc.robot.subsystems.LightS.States;
 import frc.robot.util.AllianceWrapper;
+import frc.robot.util.InputAxis;
 import frc.robot.util.NomadMathUtil;
 import frc.robot.util.TimingTracer;
 import io.github.oblarg.oblog.annotations.Log;
@@ -80,7 +78,21 @@ public class RobotContainer {
     private ArmPosition m_targetArmPosition = ArmConstants.STOW_POSITION;
     private Pose2d m_targetAlignmentPose = new Pose2d(1.909, 1.072, Rotation2d.fromRadians(Math.PI));
     private boolean m_isCubeSelected = true;
-    
+
+    private InputAxis m_fwdXAxis = new InputAxis("Forward", m_driverController::getLeftY)
+        .withDeadband(0.2)
+        .withInvert(true)
+        .withSlewRate(3)
+        .withSquaring(true);
+    private InputAxis m_fwdYAxis = new InputAxis("Strafe", m_driverController::getLeftX)
+        .withDeadband(0.2)
+        .withInvert(true)
+        .withSlewRate(3)
+        .withSquaring(true);
+    private InputAxis m_rotAxis = new InputAxis("Rotate", m_driverController::getRightX)
+        .withDeadband(0.2)
+        .withInvert(true)
+        .withSlewRate(3);
     SendableChooser<Command> m_autoSelector = new SendableChooser<Command>();
     
     public RobotContainer(Consumer<Runnable> addPeriodic) {
@@ -107,25 +119,11 @@ public class RobotContainer {
         m_keypad.setpointCommand(0, 0).schedule();
         m_target.setPose(new Pose2d(1.909, 1.072, Rotation2d.fromRadians(Math.PI)));
         
-        
         m_drivebaseS.setDefaultCommand(
-            new OperatorControlC(
-                m_driverController::getLeftY,
-                m_driverController::getLeftX,
-                m_driverController::getRightX,
-                ()->{
-                    double downfield = (AllianceWrapper.getAlliance() == Alliance.Red) ? 
-                    Math.PI : 0.0;
-                    if (m_driverController.start().getAsBoolean()) {
-                        return downfield;
-                    }
-                    else {
-                        return m_drivebaseS.getPoseHeading().getRadians();
-                    }
-                },
-                m_driverController.start(),
-                m_drivebaseS
-            )
+            m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis)
+        );
+        m_driverController.start().whileTrue(
+            m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()->0)
         );
 
         configureButtonBindings();
@@ -282,7 +280,7 @@ public class RobotContainer {
                 m_armS.goToPositionC(()->m_targetArmPosition),
                 either(
                     sequence(
-                        m_intakeS.outtakeC().withTimeout(0.4).deadlineWith(m_armS.holdPositionC()),
+                        m_intakeS.outtakeC().withTimeout(0.4),
                         m_armS.stowC()
                     ),
                 none(), 

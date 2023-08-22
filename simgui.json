@@ -147,13 +147,9 @@
               "open": true
             },
             "open": true
-          },
-          "open": true
+          }
         },
-        "IntakeS": {
-          "open": true
-        },
-        "RobotContainer": {
+        "Forward": {
           "open": true
         },
         "open": true
@@ -278,11 +274,6 @@
           ]
         },
         {
-          "axis": [
-            {
-              "autoFit": true
-            }
-          ],
           "height": 404,
           "lockPrevX": true,
           "series": [
@@ -321,6 +312,15 @@
                 1.0
               ],
               "id": "NT:/Shuffleboard/DrivebaseS/io/BL-[16,15]/getRelativeAngle"
+            },
+            {
+              "color": [
+                0.5058823823928833,
+                0.44705885648727417,
+                0.7019608020782471,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/Forward/outputValue"
             }
           ],
           "showPause": false
@@ -330,7 +330,8 @@
     "Plot <2>": {
       "plots": [
         {
-          "height": 268,
+          "height": 200,
+          "legendLocation": 1,
           "series": [
             {
               "color": [
@@ -367,56 +368,11 @@
                 1.0
               ],
               "id": "NT:/Shuffleboard/ArmS/Extend/getGoalPosition"
-            },
-            {
-              "color": [
-                0.5764706134796143,
-                0.4705882668495178,
-                0.3764706254005432,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/Extend/minLength"
-            },
-            {
-              "color": [
-                0.2980392277240753,
-                0.44705885648727417,
-                0.6901960968971252,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/Pivot/isInTolerance"
-            },
-            {
-              "color": [
-                0.5058823823928833,
-                0.44705885648727417,
-                0.7019608020782471,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/Wrist/isInTolerance"
-            },
-            {
-              "color": [
-                0.5058823823928833,
-                0.44705885648727417,
-                0.7019608020782471,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/Extend/isInTolerance"
-            },
-            {
-              "color": [
-                0.8000000715255737,
-                0.7254902124404907,
-                0.4549019932746887,
-                1.0
-              ],
-              "id": "NT:/SmartDashboard/armMoving"
             }
           ]
         },
         {
-          "height": 268,
+          "height": 200,
           "lockPrevX": true,
           "series": [
             {
@@ -464,7 +420,7 @@
               "autoFit": true
             }
           ],
-          "height": 268,
+          "height": 200,
           "lockPrevX": true,
           "series": [
             {
@@ -502,6 +458,49 @@
                 1.0
               ],
               "id": "NT:/Shuffleboard/ArmS/Wrist/getVolts"
+            }
+          ],
+          "showPause": false
+        },
+        {
+          "height": 200,
+          "lockPrevX": true,
+          "series": [
+            {
+              "color": [
+                0.7686275243759155,
+                0.30588236451148987,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "NT:/SmartDashboard/armMoving"
+            },
+            {
+              "color": [
+                0.5058823823928833,
+                0.44705885648727417,
+                0.7019608020782471,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/Wrist/isInTolerance"
+            },
+            {
+              "color": [
+                0.2980392277240753,
+                0.44705885648727417,
+                0.6901960968971252,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/Pivot/isInTolerance"
+            },
+            {
+              "color": [
+                0.5058823823928833,
+                0.44705885648727417,
+                0.7019608020782471,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/Extend/isInTolerance"
             }
           ],
           "showPause": false

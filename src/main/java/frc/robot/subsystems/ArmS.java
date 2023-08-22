@@ -48,7 +48,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import static frc.robot.Constants.ArmConstants.*;
 import frc.robot.Robot;
 import frc.robot.commands.arm.GoToPositionC;
-import frc.robot.commands.arm.HoldCurrentPositionC;
 import frc.robot.subsystems.arm.ExtendIO;
 import frc.robot.subsystems.arm.PivotIO;
 import frc.robot.subsystems.arm.RealExtendIO;
@@ -201,10 +200,6 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     public Command goToPositionIndefiniteC(Supplier<ArmPosition> position) {
         return new GoToPositionC(this, position, false);
-    }
-
-    public Command holdPositionC(){
-        return new HoldCurrentPositionC(this);
     }
 
     // endregion

@@ -43,7 +43,7 @@ public class Constants {
         static public final double MAX_ROTATE_SPEED_RAD_PER_SEC = Units.degreesToRadians(720.0);
         static public final double MAX_TRANSLATE_ACCEL_MPS2 = MAX_FWD_REV_SPEED_MPS/0.125; //0-full time of 0.25 second
         static public final double MAX_ROTATE_ACCEL_RAD_PER_SEC_2 = MAX_ROTATE_SPEED_RAD_PER_SEC/0.25; //0-full time of 0.25 second
-        
+        static public final double MAX_LINEAR_SPEED = Units.feetToMeters(11);
     // HELPER ORGANIZATION CONSTANTS
         static public final int FL = 0; // Front Left Module Index
         static public final int FR = 1; // Front Right Module Index

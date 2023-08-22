@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import com.pathplanner.lib.PathConstraints;
@@ -35,8 +36,6 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import static frc.robot.Constants.DriveConstants.AZMTH_ENC_COUNTS_PER_MODULE_REV;
-import static frc.robot.Constants.DriveConstants.AZMTH_REVS_PER_ENC_REV;
 import static frc.robot.Constants.DriveConstants.BL;
 import static frc.robot.Constants.DriveConstants.BR;
 import static frc.robot.Constants.DriveConstants.FL;
@@ -49,28 +48,15 @@ import frc.robot.subsystems.drive.RealSwerveDriveIO;
 import frc.robot.subsystems.drive.SimSwerveDriveIO;
 import frc.robot.subsystems.drive.SwerveDriveIO;
 import frc.robot.Constants;
-import frc.robot.POIManager;
 import frc.robot.Robot;
-import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.PoseEstimator;
 
-import static frc.robot.Constants.DriveConstants.NUM_MODULES;
-import static frc.robot.Constants.DriveConstants.ROBOT_MASS_kg;
-import static frc.robot.Constants.DriveConstants.ROBOT_MOI_KGM2;
-import static frc.robot.Constants.DriveConstants.WHEEL_BASE_WIDTH_M;
-import static frc.robot.Constants.DriveConstants.WHEEL_ENC_COUNTS_PER_WHEEL_REV;
-import static frc.robot.Constants.DriveConstants.WHEEL_RADIUS_M;
-import static frc.robot.Constants.DriveConstants.WHEEL_REVS_PER_ENC_REV;
+import static frc.robot.Constants.DriveConstants.*;
+
 import frc.robot.Constants.VisionConstants;
-import frc.robot.NavX.AHRS;
-import frc.robot.POIManager.POIS;
-import frc.robot.Robot;
-import frc.robot.subsystems.LightS.States;
 import frc.robot.util.AllianceWrapper;
+import frc.robot.util.InputAxis;
 import frc.robot.util.NomadMathUtil;
-import frc.robot.util.sim.SimGyroSensorModel;
-import frc.robot.util.sim.wpiClasses.QuadSwerveSim;
-import frc.robot.util.sim.wpiClasses.SwerveModuleSim;
 import frc.robot.util.trajectory.PPChasePoseCommand;
 import frc.robot.util.trajectory.PPHolonomicDriveController;
 import frc.robot.util.trajectory.PPSwerveControllerCommand;
@@ -594,5 +580,92 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
                         getFieldRelativeLinearSpeedsMPS(),
                         new PathConstraints(2, 3)),
                 this);
+    }
+
+    public Command manualDriveC(
+        InputAxis fwdXAxis,
+        InputAxis fwdYAxis,
+        InputAxis rotAxis
+    ) {
+        return runOnce(()->{
+            // fwdXAxis.resetSlewRate();
+            // fwdYAxis.resetSlewRate();
+            // rotAxis.resetSlewRate();
+        }).andThen(
+            run(
+            ()->{
+                                /**
+                 * Units are given in meters per second radians per second
+                 * Since joysticks give output from -1 to 1, we multiply the outputs by the max speed
+                 * Otherwise, our max speed would be 1 meter per second and 1 radian per second
+                 */
+
+                double fwdX = fwdXAxis.getAsDouble();
+                double fwdY = fwdYAxis.getAsDouble();
+                final double MAX_TURN_SPEED = Units.degreesToRadians(360);
+
+                double driveDirectionRadians = Math.atan2(fwdY, fwdX);
+                double driveMagnitude = Math.hypot(fwdX, fwdY) * MAX_LINEAR_SPEED;
+                fwdX = driveMagnitude * Math.cos(driveDirectionRadians);
+                fwdY = driveMagnitude * Math.sin(driveDirectionRadians);
+
+                double rot;
+                rot = rotAxis.getAsDouble();
+                rot *= MAX_TURN_SPEED;
+                var correctedHeading = getPoseHeading();
+                if (AllianceWrapper.getAlliance() == Alliance.Red) {
+                    correctedHeading = correctedHeading.plus(Rotation2d.fromRadians(Math.PI));
+                }
+                drive(ChassisSpeeds.fromFieldRelativeSpeeds(
+                    fwdX, fwdY, rot,
+                    //Fudge factor here
+                    correctedHeading
+                ));
+            })
+        );
+    }
+
+    public Command manualHeadingDriveC(
+        InputAxis fwdXAxis,
+        InputAxis fwdYAxis,
+        DoubleSupplier headingBlueRelative
+    ) {
+        return runOnce(()->{
+            fwdXAxis.resetSlewRate();
+            fwdYAxis.resetSlewRate();
+            m_profiledThetaController.reset(getPoseHeading().getRadians(), 0);
+        }).andThen(run(
+            ()->{
+                                /**
+                 * Units are given in meters per second radians per second
+                 * Since joysticks give output from -1 to 1, we multiply the outputs by the max speed
+                 * Otherwise, our max speed would be 1 meter per second and 1 radian per second
+                 */
+
+                double fwdX = fwdXAxis.getAsDouble();
+                double fwdY = fwdYAxis.getAsDouble();
+                final double MAX_TURN_SPEED = Units.degreesToRadians(360);
+
+                double driveDirectionRadians = Math.atan2(fwdY, fwdX);
+                double driveMagnitude = Math.hypot(fwdX, fwdY) * MAX_LINEAR_SPEED;
+                fwdX = driveMagnitude * Math.cos(driveDirectionRadians);
+                fwdY = driveMagnitude * Math.sin(driveDirectionRadians);
+
+                double rot;
+
+                double downfield = (AllianceWrapper.getAlliance() == Alliance.Red) ? 
+                    Math.PI : 0.0;
+                rot = m_profiledThetaController.calculate(getPoseHeading().getRadians(), headingBlueRelative.getAsDouble() + downfield);
+                var correctedHeading = getPoseHeading();
+                if (AllianceWrapper.getAlliance() == Alliance.Red) {
+                    correctedHeading = correctedHeading.plus(Rotation2d.fromRadians(Math.PI));
+                }
+                drive(ChassisSpeeds.fromFieldRelativeSpeeds(
+                    fwdX, fwdY, rot,
+                    //Fudge factor here
+                    correctedHeading
+                ));
+            })
+        );
     }
 }
