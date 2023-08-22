@@ -76,13 +76,15 @@ public abstract class WristIO implements Loggable {
         m_goal = new State(angleRad, 0);
     }
 
+    public abstract double getVelocity();
+
     private void runPID() {
         var profile = new TrapezoidProfile(m_constraints, m_goal, m_setpoint);
         m_setpoint = profile.calculate(0.02);
         var nextSetpoint = profile.calculate(0.04);
         setVolts(
             m_wristController.calculate(
-                        VecBuilder.fill(getAngle(), 0),
+                        VecBuilder.fill(getAngle(), getVelocity()),
                         VecBuilder.fill(m_setpoint.position, 0)).get(0, 0)
                         + getWristkG()
                         + m_wristFeedforward.calculate(

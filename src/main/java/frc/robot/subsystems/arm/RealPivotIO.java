@@ -44,6 +44,7 @@ public class RealPivotIO extends PivotIO {
         m_pivotFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
         addPeriodic.accept(this::updateEncoder);
         resetController();
+        resetGoal();
     }
 
     private void updateEncoder() {

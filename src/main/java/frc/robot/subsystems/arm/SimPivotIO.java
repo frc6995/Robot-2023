@@ -36,6 +36,7 @@ public class SimPivotIO extends PivotIO {
         // we need this to calculate outputs
         m_pivotSim.update(0.0001);
         resetController();
+        resetGoal();
     }
 
     @Override

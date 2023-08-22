@@ -52,6 +52,7 @@ public class RealExtendIO extends ExtendIO {
         m_extendMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
         addPeriodic.accept(this::periodic);
         resetController();
+        resetGoal();
     }
 
 

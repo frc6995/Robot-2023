@@ -42,6 +42,7 @@ public class SimExtendIO extends ExtendIO {
         m_extendSim.update(0.0001);
         addPeriodic.accept(this::simulationPeriodic);
         resetController();
+        resetGoal();
     }
 
     private void simulationPeriodic() {

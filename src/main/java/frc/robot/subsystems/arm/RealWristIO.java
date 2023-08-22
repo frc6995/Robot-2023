@@ -23,7 +23,7 @@ public class RealWristIO extends WristIO {
         m_encoder.setVelocityConversionFactor(2 * Math.PI/ 60);
         m_encoder.setInverted(true);
         m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
-        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
+        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 20);
         m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
         m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
         m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 25);
@@ -31,6 +31,7 @@ public class RealWristIO extends WristIO {
         m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
         m_wristMotor.setInverted(true);
         resetController();
+        resetGoal();
     }
     
     @Override
@@ -47,6 +48,11 @@ public class RealWristIO extends WristIO {
     protected void setVoltsInternal(double volts) {
         m_wristMotor.setVoltage(MathUtil.clamp(volts, -12, 12));
         
+    }
+    @Override
+    public double getVelocity() {
+        // TODO Auto-generated method stub
+        return m_encoder.getVelocity();
     }
     
 }

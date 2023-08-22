@@ -28,6 +28,7 @@ public class SimWristIO extends WristIO {
         //as the arm raises from 0 to pi/2, the gravity on the wrist goes from -pi/2 to -pi
         m_wristSim.setGravityAngle(-Math.PI/2 - m_pivotAngleSupplier.getAsDouble());
         resetController();
+        resetGoal();
     }
 
     @Override
@@ -58,6 +59,10 @@ public class SimWristIO extends WristIO {
     @Override
     public double getVolts() {
         return m_inputVolts;
+    }
+    @Override
+    public double getVelocity() {
+        return m_wristSim.getVelocityRadPerSec();
     }
     
 }
