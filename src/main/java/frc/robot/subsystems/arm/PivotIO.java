@@ -43,6 +43,8 @@ public abstract class PivotIO implements Loggable {
             0.02);
 
     private DoubleSupplier m_extendLengthSupplier = () -> MIN_ARM_LENGTH;
+    @Log
+    private double m_length = m_extendLengthSupplier.getAsDouble();
 
     public PivotIO(Consumer<Runnable> addPeriodic) {
         addPeriodic.accept(this::updatePivotPlant);
@@ -177,15 +179,20 @@ public abstract class PivotIO implements Loggable {
      */
 
     public void updatePivotPlant() {
-        m_pivotPlant.getA().set(1, 1,
-                -1.0 / ARM_ROTATIONS_PER_MOTOR_ROTATION * 1.0 / ARM_ROTATIONS_PER_MOTOR_ROTATION
-                        * m_pivotGearbox.KtNMPerAmp
-                        / (m_pivotGearbox.KvRadPerSecPerVolt * m_pivotGearbox.rOhms * getPivotMOI()));
-        m_pivotPlant.getB().set(1, 0,
-                1.0 / ARM_ROTATIONS_PER_MOTOR_ROTATION * m_pivotGearbox.KtNMPerAmp
-                        / (m_pivotGearbox.rOhms * getPivotMOI()));
-        m_pivotController = new LinearQuadraticRegulator<N2, N1, N1>(
-            m_pivotPlant, VecBuilder.fill(0.05, 0.05), VecBuilder.fill(12), 0.02);
+        if (Math.abs(getLength() - m_length) > 0.005) {
+            m_pivotPlant.getA().set(1, 1,
+            -1.0 / ARM_ROTATIONS_PER_MOTOR_ROTATION * 1.0 / ARM_ROTATIONS_PER_MOTOR_ROTATION
+                    * m_pivotGearbox.KtNMPerAmp
+                    / (m_pivotGearbox.KvRadPerSecPerVolt * m_pivotGearbox.rOhms * getPivotMOI()));
+            m_pivotPlant.getB().set(1, 0,
+                    1.0 / ARM_ROTATIONS_PER_MOTOR_ROTATION * m_pivotGearbox.KtNMPerAmp
+                            / (m_pivotGearbox.rOhms * getPivotMOI()));
+            m_pivotController = new LinearQuadraticRegulator<N2, N1, N1>(
+                m_pivotPlant, VecBuilder.fill(0.05, 0.05), VecBuilder.fill(12), 0.02);
+            m_pivotFeedForward = new LinearPlantInversionFeedforward<>(
+                m_pivotPlant, 0.02);
+            m_length = getLength();
+        }
     }
 
     /**
