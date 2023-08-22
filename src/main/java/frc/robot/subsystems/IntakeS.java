@@ -21,6 +21,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -44,6 +45,8 @@ public class IntakeS extends SubsystemBase implements Loggable {
   private final TimeOfFlight distanceSensor = new TimeOfFlight(Constants.IntakeConstants.INTAKE_TOF_CAN_ID);
   private Trigger cubeDebouncedBeamBreak = new Trigger(this::hitBeamBreak);//.debounce(0.06);
   private Trigger coneDebouncedBeamBreak = new Trigger(this::hitBeamBreak);//.debounce(0.0);
+
+  private GenericHID simTrigger = new GenericHID(3);
     /** Creates a new IntakeS. */
   public IntakeS() {
 
@@ -121,7 +124,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
 
   @Log
   public boolean hitBeamBreak() {
-    return m_beamBreak.isPressed() || (Math.abs(getConeCenterOffsetDistance()) < 0.1);
+    return m_beamBreak.isPressed() || (Math.abs(getConeCenterOffsetDistance()) < 0.1) || simTrigger.getRawButton(1);
   }
 
   public double getHandLength() {

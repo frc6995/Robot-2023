@@ -431,4 +431,16 @@ public class Constants {
 
         public static final int PWM_PORT_LED = 0;
     }
+
+    public static final class LightStripConstants {
+        public static final double LED_BOUNCE_GREEN = 0.77;
+        public static final double LED_SINELON_OCEAN = -0.75;
+        public static final double LED_LIGHT_CHASE_RED = -0.31;
+        public static final double LED_PARTY_MODE = -0.43;
+        public static final double LED_SOLID_YELLOW = 0.69;
+        public static final double LED_SOLID_VIOLET = 0.91;
+        public static final double LED_STROBE_GOLD = -0.07;
+
+        public static final int PWM_PORT_LED = 0;
+    }
 }

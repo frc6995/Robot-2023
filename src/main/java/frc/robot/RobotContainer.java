@@ -41,9 +41,9 @@ import frc.robot.driver.CommandOperatorKeypad;
 import frc.robot.subsystems.ArmS;
 import frc.robot.subsystems.DrivebaseS;
 import frc.robot.subsystems.IntakeS;
-import frc.robot.subsystems.LightS;
+import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.ArmS.ArmPosition;
-import frc.robot.subsystems.LightS.States;
+import frc.robot.subsystems.LightStripS.States;
 import frc.robot.util.AllianceWrapper;
 import frc.robot.util.InputAxis;
 import frc.robot.util.NomadMathUtil;
@@ -236,13 +236,13 @@ public class RobotContainer {
 
     public void periodic() {
         //System.out.println(m_autoSelector.getSelected().getRequirements().toString());
-        lightSpeed = LightS.getInstance().getSpeed();
+        //lightSpeed = LightStripS.getInstance().getSpeed();
         TimingTracer.update();
         loopTime = TimingTracer.getLoopTime();
         //SmartDashboard.putNumber("loopTime", TimingTracer.getLoopTime());
-        LightS.getInstance().requestState(m_isCubeSelected? States.RequestingCube : States.RequestingCone);
+        LightStripS.getInstance().requestState(m_isCubeSelected? States.RequestingCube : States.RequestingCone);
         /* Trace the loop duration and plot to shuffleboard */
-        LightS.getInstance().periodic();
+        LightStripS.getInstance().periodic();
         m_drivebaseS.drawRobotOnField(m_field);
         m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
         ///]m_field3d.setRobotPose(new Pose3d(m_drivebaseS.getPose().getX(), m_drivebaseS.getPose().getY(), 0, m_drivebaseS.getRotation3d()));
@@ -266,7 +266,7 @@ public class RobotContainer {
             Commands.parallel(
                 Commands.waitSeconds(0.75).andThen(m_intakeS.intakeC().withTimeout(0.75)).asProxy(),
                 m_armS.stowIndefiniteC(), 
-                Commands.run(()->LightS.getInstance().requestState(isCube ? States.IntakedCube : States.IntakedCone)).asProxy().withTimeout(0.75)
+                Commands.run(()->LightStripS.getInstance().requestState(isCube ? States.IntakedCube : States.IntakedCone)).asProxy().withTimeout(0.75)
             )
         );
     }
@@ -286,7 +286,7 @@ public class RobotContainer {
                 none(), 
                 ()->true)
             )
-            .deadlineWith(Commands.run(()->LightS.getInstance().requestState(States.Scoring)));
+            .deadlineWith(Commands.run(()->LightStripS.getInstance().requestState(States.Scoring)));
 
     }
 

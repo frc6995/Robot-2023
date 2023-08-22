@@ -42,7 +42,7 @@ import static frc.robot.Constants.DriveConstants.FL;
 import static frc.robot.Constants.DriveConstants.FR;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
 import frc.robot.POIManager.POIS;
-import frc.robot.subsystems.LightS.States;
+import frc.robot.subsystems.LightStripS.States;
 import frc.robot.subsystems.VisionWrapper.VisionMeasurement;
 import frc.robot.subsystems.drive.RealSwerveDriveIO;
 import frc.robot.subsystems.drive.SimSwerveDriveIO;

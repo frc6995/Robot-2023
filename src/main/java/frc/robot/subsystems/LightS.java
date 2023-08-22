@@ -7,6 +7,8 @@ package frc.robot.subsystems;
 import java.util.Set;
 import java.util.TreeSet;
 
+import edu.wpi.first.wpilibj.AddressableLED;
+import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import static frc.robot.Constants.LightConstants.*;
 
@@ -15,6 +17,7 @@ public class LightS {
   private static LightS m_instance = new LightS();
 
   private Spark spark = new Spark(PWM_PORT_LED);
+
 
   /** Creates a new LedS. */
   private LightS() {

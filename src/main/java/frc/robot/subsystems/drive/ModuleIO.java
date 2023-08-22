@@ -102,6 +102,7 @@ public abstract class ModuleIO implements Loggable {
     public void setDesiredState(SwerveModuleState state) {
         state = SwerveModuleState.optimize(state,new Rotation2d(getAngle()));
         double prevVelSetpoint = m_drivePIDController.getSetpoint();
+        if (m_moduleConstants.name.contains("F")) {state.speedMetersPerSecond = -state.speedMetersPerSecond;}
         setDriveVoltage(
                 m_drivePIDController.calculate(getDriveVelocity(), state.speedMetersPerSecond)
                         + m_driveFeedForward.calculate(prevVelSetpoint, state.speedMetersPerSecond, 0.02));

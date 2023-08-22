@@ -17,8 +17,8 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.DrivebaseS;
-import frc.robot.subsystems.LightS;
-import frc.robot.subsystems.LightS.States;
+import frc.robot.subsystems.LightStripS;
+import frc.robot.subsystems.LightStripS.States;
 import io.github.oblarg.oblog.Loggable;
 
 /**
@@ -143,7 +143,7 @@ public class PPChasePoseCommand extends CommandBase implements Loggable {
             
     
             m_outputChassisSpeedsRobotRelative.accept(targetChassisSpeeds);
-        LightS.getInstance().requestState(States.Climbing);
+        LightStripS.getInstance().requestState(States.Climbing);
     }
 
     @Override
