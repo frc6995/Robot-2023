@@ -192,7 +192,7 @@ public class ArmS extends SubsystemBase implements Loggable {
     }
 
     public Command goToPositionC(Supplier<ArmPosition> position) {
-        return new GoToPositionC(this, position).asProxy();
+        return new GoToPositionC(this, position);
     }
 
     public Command goToPositionIndefiniteC(ArmPosition position) {
@@ -200,11 +200,11 @@ public class ArmS extends SubsystemBase implements Loggable {
     }
 
     public Command goToPositionIndefiniteC(Supplier<ArmPosition> position) {
-        return new GoToPositionC(this, position, false).asProxy();
+        return new GoToPositionC(this, position, false);
     }
 
     public Command holdPositionC(){
-        return new HoldCurrentPositionC(this).asProxy();
+        return new HoldCurrentPositionC(this);
     }
 
     // endregion
@@ -242,14 +242,6 @@ public class ArmS extends SubsystemBase implements Loggable {
         m_wrist.setAngle(targetAngle);
     }
 
-    /**
-     * holds wrist at current angle relative to arm
-     * @return run command
-     */
-
-    public Command holdWristC() {
-        return run(m_wrist::openLoopHold).asProxy();
-    }
     // endregion
 
     public ArmPosition getArmPosition() {
@@ -274,7 +266,7 @@ public class ArmS extends SubsystemBase implements Loggable {
             m_pivot.setAngle(offset.getAngle().getRadians());
             m_extender.setLength(offset.getNorm());
             setWristAngle(-offset.getAngle().getRadians());
-        }).asProxy();
+        });
     }
 
     // public Command scoreHighConeC() {
@@ -292,22 +284,6 @@ public class ArmS extends SubsystemBase implements Loggable {
     }
     public Command stowIndefiniteC() {
         return goToPositionIndefiniteC(()->STOW_POSITION);
-    }
-
-    public Command followJointSpaceTargetC() {
-        return run(()->{
-            var currentTranslation = new Translation2d(m_pivot.getAngle().getRadians(), m_extender.getLength());
-            var targetPose = VISUALIZER.getObject("target").getPose();
-            var target = targetPose.getTranslation();
-            
-            var targetPoint = target; //pathTranslations.get(1);
-            double armAngle = targetPoint.getX();
-            boolean flipArm = armAngle > Math.PI/2;
-            double wristAngle = targetPose.getRotation().minus(m_pivot.getAngle()).getRadians();
-            m_pivot.setAngle(armAngle);
-            m_extender.setLength(targetPoint.getY());
-            setWristAngle(wristAngle);
-        }).asProxy();
     }
 
     public Command followJointSpaceTargetC(Supplier<ArmPosition> positionSupplier) {
