@@ -7,6 +7,9 @@ import frc.robot.util.drive.AsymmetricSlewRateLimiter;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
+/**
+ * An extension of DoubleSupplier designed for pre-processing driver controller axis inputs.
+ */
 public class InputAxis implements DoubleSupplier, Loggable {
     DoubleSupplier m_supplier;
     double deadband = 0;
@@ -71,10 +74,10 @@ public class InputAxis implements DoubleSupplier, Loggable {
     public double getAsDouble() {
         double value = m_supplier.getAsDouble();
         value *= multiplier;
-        //value = MathUtil.applyDeadband(value, deadband);
-        // if (this.square) {
-        //     value = Math.copySign(value*value, value);
-        // }
+        value = MathUtil.applyDeadband(value, deadband);
+        if (this.square) {
+            value = Math.copySign(value*value, value);
+        }
         value = limiter.calculate(value);
         outputValue = value;
         return value;

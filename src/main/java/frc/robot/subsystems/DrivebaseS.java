@@ -69,12 +69,19 @@ import io.github.oblarg.oblog.annotations.Log;
  * Handles all the odometry and base movement for the chassis
  */
 public class DrivebaseS extends SubsystemBase implements Loggable {
+    /**
+     * The abstract class for interfacing with the gyro and modules.
+     */
     private final SwerveDriveIO io;
 
+    /**
+     * The X controller used for autonomous movement.
+     */
     public final PIDController m_xController = new PIDController(3, 0, 0);
     public final PIDController m_yController = new PIDController(3, 0, 0);
     public final PIDController m_thetaController = new PIDController(3, 0, 0);
     // constraints determined from OperatorControlC slew settings.
+    // TODO replace this with a TrapezoidProfile delegating to m_thetaController?
     public final ProfiledPIDController m_profiledThetaController = new ProfiledPIDController(3, 0, 0,
             new Constraints(2 * Math.PI, 4 * Math.PI));
     public final PPHolonomicDriveController m_holonomicDriveController = new PPHolonomicDriveController(m_xController,
@@ -139,14 +146,18 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         m_odometry.update(getHeading(), getModulePositions());
         m_poseEstimator.update(getHeading(), getModulePositions());
 
+        /*
+         * Process all vision measurements taken since the last periodic iteration
+         */
         VisionMeasurement measurement;
         while ((measurement = m_visionWrapper.drainVisionMeasurement()) != null) {
             var estimation = measurement.estimation();
             var estimatedPose = estimation.estimatedPose;
-            // height of final pose
+            // Check height of final pose for sanity. Robot should never be more than 0.5 m off the ground.
             if (Math.abs(estimatedPose.getZ()) > 0.5) {
                 continue;
             }
+            // Skip single-tag measurements with too-high ambiguity.
             if (estimation.targetsUsed.size() < 2
                     && estimation.targetsUsed.get(0).getPoseAmbiguity() > PoseEstimator.POSE_AMBIGUITY_CUTOFF) {
                 continue;
@@ -159,6 +170,10 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         }
     }
 
+    /**
+     * Drive with the specified robot-relative ChassisSpeeds. All more complicated drive commands should eventually call this.
+     * @param speeds
+     */
     public void drive(ChassisSpeeds speeds) {
         // use kinematics (wheel placements) to convert overall robot state to array of
         // individual module states
@@ -182,18 +197,25 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
                     twist_vel.dx / dt, twist_vel.dy / dt, twist_vel.dtheta / dt);
             // make sure the wheels don't try to spin faster than the maximum speed possible
             states = m_kinematics.toSwerveModuleStates(speeds);
-            // SwerveDriveKinematics.desaturateWheelSpeeds(states, speeds,
-            // MAX_FWD_REV_SPEED_MPS,
-            // MAX_ROTATE_SPEED_RAD_PER_SEC,
-            // MAX_MODULE_SPEED_FPS);
+            SwerveDriveKinematics.desaturateWheelSpeeds(states, speeds,
+            MAX_FWD_REV_SPEED_MPS,
+            MAX_ROTATE_SPEED_RAD_PER_SEC,
+            MAX_MODULE_SPEED_FPS);
         }
         setModuleStates(states);
     }
 
+    /**
+        Drive field-relative, with no mirroring for alliance.
+    */
     public void driveFieldRelative(ChassisSpeeds fieldRelativeSpeeds) {
         drive(ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds, getPoseHeading()));
     }
 
+    /**
+     * Drive field relative, with +x always facing away from the alliance wall.
+     * @param fieldRelativeSpeeds
+     */
     public void driveAllianceRelative(ChassisSpeeds fieldRelativeSpeeds) {
         if (AllianceWrapper.getAlliance() == Alliance.Red) {
             drive(ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds,
@@ -269,10 +291,9 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
     }
 
     /*
-     * returns an array of SwerveModuleStates.
+     * Returns an array of SwerveModuleStates.
      * Front(left, right), Rear(left, right)
-     * This order is important to remain consistent across the codebase, or commands
-     * can get swapped around.
+     * This order is important to remain consistent across the codebase, due to conventions assumed in WPILib
      */
     public SwerveModuleState[] getModuleStates() {
 
@@ -291,12 +312,16 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
 
     /**
      * Return the current position of the robot on field
-     * Based on drive encoder and gyro reading
+     * Based on drive encoder, gyro reading and vision processing.
      */
     public Pose2d getPose() {
         return m_poseEstimator.getEstimatedPosition();
     }
 
+    /**
+     * Get the pose as estimated by non-vision-assisted odometry.
+     * @return
+     */
     public Pose2d getOdometryPose() {
         return m_odometry.getPoseMeters();
     }
@@ -311,6 +336,11 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         return io.getSimPose();
     }
 
+    /**
+     * Reset odometry to the starting point of the given trajectory, as mirrored according to the alliance.
+     * @param trajectory
+     * @return
+     */
     public Command resetPoseToBeginningC(PathPlannerTrajectory trajectory) {
         return Commands.runOnce(() -> resetPose(NomadMathUtil.mirrorPose(
                 new Pose2d(
@@ -326,11 +356,13 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      */
     public void resetPose(Pose2d pose) {
         io.resetPose(pose);
-        m_poseEstimator.resetPosition(getHeading(), getModulePositions(), pose);
-        m_odometry.resetPosition(getHeading(), getModulePositions(), pose);
+        m_poseEstimator.resetPosition(getPoseHeading(), getModulePositions(), pose);
+        m_odometry.resetPosition(getPoseHeading(), getModulePositions(), pose);
     }
 
-    // reset the measured distance driven for each module
+    /**
+     * Reset the measured distance driven for each module.
+     */
     public void resetDriveDistances() {
         io.resetDistances();
     }
@@ -343,6 +375,10 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         return io.getGyroHeading();
     }
 
+    /**
+     * @return the current navX heading (which will not match odometry after drift
+     *         or reset)
+     */
     @Log
     public double getHeadingDouble() {
         return getHeading().getRadians();
@@ -409,7 +445,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         // Draw a pose that is based on the robot pose, but shifted by the translation
         // of the module relative to robot center,
         // then rotated around its own center by the angle of the module.
-        // name starts with z for the draw order on the field display
+        // Name starts with z so it draws on top on the field display
         field.getObject("zmodules").setPoses(List.of(
                 getPose().transformBy(new Transform2d(ModuleConstants.FL.centerOffset, getModuleStates()[FL].angle)),
                 getPose().transformBy(new Transform2d(ModuleConstants.FR.centerOffset, getModuleStates()[FR].angle)),
@@ -418,20 +454,17 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
 
     }
 
+    /**
+     * Reset each module's relative encoder and steering controller against the absolute encoder.
+     */
     public void resetRelativeRotationEncoders() {
-        /*
-         * Note that we use the class name not a variable name.
-         * This way we pass a method of the general SwerveModule class to be called
-         * as each module.
-         * So this expands to:
-         * modules.get(0).initRotationOffset();
-         * modules.get(1).initRotationOffset();
-         * ...
-         */
         io.reinitRotationEncoders();
         io.resetModuleSteerControllers();
     }
 
+    /** 
+     * Reset error buildup on the three 
+    */
     public void resetPID() {
         m_xController.reset();
         m_yController.reset();
@@ -444,23 +477,6 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
     }
 
     /**** COMMANDS */
-    public Command driveTime(double speed, double time) {
-        return run(
-                () -> driveFieldRelative(
-                        new ChassisSpeeds(speed, 0, 0)))
-                .withTimeout(time);
-    }
-
-    public Command turnToHeading(Rotation2d heading) {
-        return run(() -> {
-            driveFieldRelative(
-                    new ChassisSpeeds(
-                            0, 0,
-                            m_thetaController.calculate(
-                                    getPoseHeading().getRadians(),
-                                    heading.getRadians())));
-        });
-    }
 
     public Command stopOnceC() {
         return runOnce(() -> this.drive(new ChassisSpeeds()));
@@ -470,6 +486,12 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         return run(() -> this.drive(new ChassisSpeeds()));
     }
 
+    /**
+     * Command factory to drive a PathPlanner path.
+     * Paths are assumed to be created on the blue side, and will be automatically flipped.
+     * @param path the path to run.
+     * @return
+     */
     public Command pathPlannerCommand(PathPlannerTrajectory path) {
         PPSwerveControllerCommand command = new PPSwerveControllerCommand(
                 path,
@@ -491,8 +513,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      * The returned PathPlannerTrajectory will go straight towards the target from
      * the robot pose.
      * The component of the current velocity that points toward the target will be
-     * used as the initial
-     * velocity of the trajectory.
+     * used as the initial velocity of the trajectory.
      * 
      * @param robotPose             the current robot pose
      * @param target                the target pose
@@ -565,6 +586,12 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
                 this);
     }
 
+    /**
+     * A command factory for auto-aligning to the charge station.
+     * Aligns to the centerline of the charge station, at the robot's current y-coordinate.
+     * Uses higher vel/accel constraints compared to normal auto-align
+     * @return
+     */
     public Command chargeStationAlignC() {
         return new PPChasePoseCommand(
                 () -> new Pose2d(
@@ -582,20 +609,27 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
                 this);
     }
 
+    /**
+     * Command factory for manual drive.
+     * @param fwdXAxis the InputAxis for downfield movement (+1 is away from driver POV)
+     * @param fwdYAxis the InputAxis for cross-field movement (+1 is left from driver POV)
+     * @param rotAxis the InputAxis for rotation (+1 is full spin CCW)
+     * @return A command for manual drive.
+     */
     public Command manualDriveC(
         InputAxis fwdXAxis,
         InputAxis fwdYAxis,
         InputAxis rotAxis
     ) {
         return runOnce(()->{
-            // fwdXAxis.resetSlewRate();
-            // fwdYAxis.resetSlewRate();
-            // rotAxis.resetSlewRate();
+            fwdXAxis.resetSlewRate();
+            fwdYAxis.resetSlewRate();
+            rotAxis.resetSlewRate();
         }).andThen(
             run(
             ()->{
-                                /**
-                 * Units are given in meters per second radians per second
+                /**
+                 * Units are given in meters per second and radians per second
                  * Since joysticks give output from -1 to 1, we multiply the outputs by the max speed
                  * Otherwise, our max speed would be 1 meter per second and 1 radian per second
                  */
@@ -604,6 +638,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
                 double fwdY = fwdYAxis.getAsDouble();
                 final double MAX_TURN_SPEED = Units.degreesToRadians(360);
 
+                // scale the desired translation vector by max linear speed.
                 double driveDirectionRadians = Math.atan2(fwdY, fwdX);
                 double driveMagnitude = Math.hypot(fwdX, fwdY) * MAX_LINEAR_SPEED;
                 fwdX = driveMagnitude * Math.cos(driveDirectionRadians);
@@ -612,23 +647,23 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
                 double rot;
                 rot = rotAxis.getAsDouble();
                 rot *= MAX_TURN_SPEED;
-                var correctedHeading = getPoseHeading();
-                if (AllianceWrapper.getAlliance() == Alliance.Red) {
-                    correctedHeading = correctedHeading.plus(Rotation2d.fromRadians(Math.PI));
-                }
-                drive(ChassisSpeeds.fromFieldRelativeSpeeds(
-                    fwdX, fwdY, rot,
-                    //Fudge factor here
-                    correctedHeading
-                ));
+
+                driveAllianceRelative(new ChassisSpeeds(fwdX, fwdY, rot));
             })
         );
     }
 
+    /**
+     * Command factory for manual drive with PID heading lock.
+     * @param fwdXAxis the InputAxis for downfield movement (+1 is away from driver POV)
+     * @param fwdYAxis the InputAxis for downfield movement (+1 is left from driver POV)
+     * @param headingAllianceRelative the heading to hold, relative to the alliance wall (0 faces away from driver station)
+     * @return A command for manual drive with heading lock.
+     */
     public Command manualHeadingDriveC(
         InputAxis fwdXAxis,
         InputAxis fwdYAxis,
-        DoubleSupplier headingBlueRelative
+        DoubleSupplier headingAllianceRelative
     ) {
         return runOnce(()->{
             fwdXAxis.resetSlewRate();
@@ -644,8 +679,6 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
 
                 double fwdX = fwdXAxis.getAsDouble();
                 double fwdY = fwdYAxis.getAsDouble();
-                final double MAX_TURN_SPEED = Units.degreesToRadians(360);
-
                 double driveDirectionRadians = Math.atan2(fwdY, fwdX);
                 double driveMagnitude = Math.hypot(fwdX, fwdY) * MAX_LINEAR_SPEED;
                 fwdX = driveMagnitude * Math.cos(driveDirectionRadians);
@@ -653,18 +686,11 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
 
                 double rot;
 
+                // 
                 double downfield = (AllianceWrapper.getAlliance() == Alliance.Red) ? 
                     Math.PI : 0.0;
-                rot = m_profiledThetaController.calculate(getPoseHeading().getRadians(), headingBlueRelative.getAsDouble() + downfield);
-                var correctedHeading = getPoseHeading();
-                if (AllianceWrapper.getAlliance() == Alliance.Red) {
-                    correctedHeading = correctedHeading.plus(Rotation2d.fromRadians(Math.PI));
-                }
-                drive(ChassisSpeeds.fromFieldRelativeSpeeds(
-                    fwdX, fwdY, rot,
-                    //Fudge factor here
-                    correctedHeading
-                ));
+                rot = m_profiledThetaController.calculate(getPoseHeading().getRadians(), headingAllianceRelative.getAsDouble() + downfield);
+                driveAllianceRelative(new ChassisSpeeds(fwdX, fwdY, rot));
             })
         );
     }

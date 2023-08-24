@@ -6,8 +6,12 @@ package frc.robot.subsystems;
 
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+
 import static frc.robot.Constants.LightConstants.*;
 
 public class LightS {
@@ -74,5 +78,9 @@ public class LightS {
     requestState(States.Default);
     spark.set(m_states.first().lightSpeed);
     m_states.removeAll(Set.of(States.values()));
+  }
+
+  public static Command stateC(Supplier<States> state) {
+    return Commands.run(()->LightS.getInstance().requestState(state.get()));
   }
 }

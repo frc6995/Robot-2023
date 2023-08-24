@@ -57,7 +57,6 @@ public class RobotContainer {
      * Establishes the controls and subsystems of the robot
      */
     private final CommandXboxController m_driverController = new CommandXboxController(InputDevices.GAMEPAD_PORT);
-    //private final CommandXboxController m_operatorController = new CommandXboxController(1);
     private final CommandOperatorKeypad m_keypad;
     private final DrivebaseS m_drivebaseS;
     
@@ -79,6 +78,7 @@ public class RobotContainer {
     private Pose2d m_targetAlignmentPose = new Pose2d(1.909, 1.072, Rotation2d.fromRadians(Math.PI));
     private boolean m_isCubeSelected = true;
 
+    
     private InputAxis m_fwdXAxis = new InputAxis("Forward", m_driverController::getLeftY)
         .withDeadband(0.2)
         .withInvert(true)
@@ -94,6 +94,13 @@ public class RobotContainer {
         .withInvert(true)
         .withSlewRate(3);
     SendableChooser<Command> m_autoSelector = new SendableChooser<Command>();
+
+    
+    /**
+     * Trigger that determines whether the drivebase is close enough to its target pose to score a cube.
+     */
+    @Log(methodName = "getAsBoolean")
+    private Trigger m_alignSafeToPlaceCube;
     
     public RobotContainer(Consumer<Runnable> addPeriodic) {
         m_drivebaseS = new DrivebaseS(addPeriodic);
@@ -105,31 +112,34 @@ public class RobotContainer {
                 Math.abs(error.getY()) < 0.1;
         });
     
-        m_armS = new ArmS(addPeriodic, m_intakeS::getHandLength);
+        m_armS = new ArmS(addPeriodic);
 
-
+        /**
+         * Set driver mode on the USB camera streamed through PhotonVision
+         */
         PhotonCamera usbCam = new PhotonCamera("USB_Camera");
         usbCam.setDriverMode(true);
 
 
+        // Create the keypad with the functions it needs to set desired scoring action.
         m_keypad = new CommandOperatorKeypad(2, (pose)->{
             m_targetAlignmentPose = pose;
             m_field.getObject("Selection").setPose(pose);
-        }, (position)->{m_targetArmPosition = position;}, (selectedCube)->{m_isCubeSelected = selectedCube;});
+        }, (position)->{m_targetArmPosition = position;},
+        (selectedCube)->{m_isCubeSelected = selectedCube;});
+        // Set scoring to right hybrid node.
         m_keypad.setpointCommand(0, 0).schedule();
-        m_target.setPose(new Pose2d(1.909, 1.072, Rotation2d.fromRadians(Math.PI)));
         
         m_drivebaseS.setDefaultCommand(
             m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis)
         );
+        // face downfield while Start is held
         m_driverController.start().whileTrue(
             m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()->0)
         );
 
         configureButtonBindings();
 
-        // m_driverController.start().whileTrue(m_drivebaseS.chargeStationBatteryFirstC());
-        // m_driverController.back().whileTrue(m_drivebaseS.chargeStationFrontFirstC());
 
         //Autonomous Option Selections:
         m_autoSelector.setDefaultOption("Cone Bal.-Bump Side", eighteenPointAuto(3));
@@ -153,9 +163,11 @@ public class RobotContainer {
         m_field.getObject("bluePoses").setPoses(POIManager.BLUE_COMMUNITY);
         m_field.getObject("redPoses").setPoses(POIManager.RED_COMMUNITY);
         SmartDashboard.putData(m_autoSelector);
-        //CameraServer.startAutomaticCapture().setResolution(320, 240);
     }
 
+    /**
+     * Command factory for 
+     */
     private Command alignToSelectedScoring() {
         return  m_drivebaseS.chasePoseC(
             ()->m_targetAlignmentPose.transformBy(m_isCubeSelected ? new Transform2d() : m_intakeS.getConeCenterOffset()
@@ -163,10 +175,8 @@ public class RobotContainer {
         );
     }
 
-    @Log(methodName = "getAsBoolean")
-    private Trigger m_alignSafeToPlaceCube;
-
     public void configureButtonBindings() {
+        // Align, score, and stow.
         m_driverController.a().toggleOnTrue(
                 alignToSelectedScoring().asProxy()
                 .until(
@@ -175,6 +185,7 @@ public class RobotContainer {
                 .andThen(autoScoreSequenceCG().asProxy())
            
             );
+        // Score and stow.
         m_driverController.b().toggleOnTrue(
             Commands.sequence(
                 m_intakeS.outtakeC().withTimeout(0.5),
@@ -208,12 +219,13 @@ public class RobotContainer {
         //     m_drivebaseS.chasePoseC(()->POIManager.ownPOI(POIS.CONE_RAMP)),
         //     ()->m_isCubeSelected));
 
-        m_keypad.stow().onTrue(m_intakeS.intakeC().withTimeout(0.25));
+        // Button on keypad for pulsing the intake in.
+        m_keypad.action().onTrue(m_intakeS.intakeC().withTimeout(0.25));
         m_keypad.enter().toggleOnTrue(
             autoScoreSequenceCG()
         );
     
-
+        // D-pad driving slowly relative to alliance wall.
         m_driverController.povCenter().negate().whileTrue(m_drivebaseS.run(()->{
                 double pov = Units.degreesToRadians(-m_driverController.getHID().getPOV());
                 double adjustSpeed = 0.5; // m/s
@@ -235,13 +247,12 @@ public class RobotContainer {
     }
 
     public void periodic() {
-        //System.out.println(m_autoSelector.getSelected().getRequirements().toString());
         lightSpeed = LightS.getInstance().getSpeed();
         TimingTracer.update();
-        loopTime = TimingTracer.getLoopTime();
-        //SmartDashboard.putNumber("loopTime", TimingTracer.getLoopTime());
-        LightS.getInstance().requestState(m_isCubeSelected? States.RequestingCube : States.RequestingCone);
         /* Trace the loop duration and plot to shuffleboard */
+        loopTime = TimingTracer.getLoopTime();
+        // update light strip priority list.
+        LightS.getInstance().requestState(m_isCubeSelected? States.RequestingCube : States.RequestingCone);
         LightS.getInstance().periodic();
         m_drivebaseS.drawRobotOnField(m_field);
         m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
@@ -255,18 +266,29 @@ public class RobotContainer {
     public void onDisabled() {
     }
 
+    /**
+     * Command factory for intaking a game piece.
+     * @param position The arm position
+     * @param isCube Whether the intake should be in cube mode or cone mode.
+     * @return
+     */
     public Command armIntakeCG(ArmPosition position, boolean isCube) {
         return 
         Commands.sequence(
+            // Start intaking, and stop when a piece is detected.
             Commands.deadline(
                 m_intakeS.setGamePieceC(()->isCube).andThen(m_intakeS.intakeUntilBeamBreakC()).asProxy(),
+                // move to arm position while intaking.
                 m_armS.goToPositionIndefiniteC(position)
 
             ),
             Commands.parallel(
+                // Wait a bit, then pulse the intake to ensure piece collection.
                 Commands.waitSeconds(0.75).andThen(m_intakeS.intakeC().withTimeout(0.75)).asProxy(),
+                // stow the arm
                 m_armS.stowIndefiniteC(), 
-                Commands.run(()->LightS.getInstance().requestState(isCube ? States.IntakedCube : States.IntakedCone)).asProxy().withTimeout(0.75)
+                // Flash the lights
+                LightS.stateC(()->isCube ? States.IntakedCube : States.IntakedCone).withTimeout(0.75)
             )
         );
     }
@@ -286,7 +308,7 @@ public class RobotContainer {
                 none(), 
                 ()->true)
             )
-            .deadlineWith(Commands.run(()->LightS.getInstance().requestState(States.Scoring)));
+            .deadlineWith(LightS.stateC(()->States.Scoring));
 
     }
 
