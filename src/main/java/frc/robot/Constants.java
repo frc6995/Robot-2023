@@ -192,14 +192,29 @@ public class Constants {
 
     public static final class VisionConstants{
 
-        public static final String CAM_2_NAME = "OV9281-2";
         public static final String CAM_1_NAME = "OV9281-1";
-        public static final Transform3d robotToCam2 = new Transform3d(
-            new Translation3d(Units.inchesToMeters(9.625), Units.inchesToMeters(8.75), Units.inchesToMeters(10.875)), 
-            new Rotation3d(Units.degreesToRadians(0) , Units.degreesToRadians(-12),Units.degreesToRadians(-46) ));
+        public static final String CAM_2_NAME = "OV9281-2";
+        public static final String CAM_3_NAME = "OV9281-3";
+        public static final String CAM_4_NAME = "OV9281-4";
+        private static final double CAM_HEIGHT = Units.inchesToMeters(16);
+        private static final double CAM_X = Units.inchesToMeters(3.5);
+        private static final double CAM_Y = Units.inchesToMeters(7.5);
+        private static final double CAM_PITCH = Units.degreesToRadians(-15);
+        private static final double CAM_YAW = Units.degreesToRadians(32);
+    
         public static final Transform3d robotToCam1 = new Transform3d(
-            new Translation3d(Units.inchesToMeters(9.625), Units.inchesToMeters(-8.75), Units.inchesToMeters(10.875)), 
-            new Rotation3d(Units.degreesToRadians(0) , Units.degreesToRadians(-12),Units.degreesToRadians(46) ));
+            new Translation3d(CAM_X, CAM_Y, CAM_HEIGHT), 
+            new Rotation3d(0, CAM_PITCH, CAM_YAW));
+        public static final Transform3d robotToCam2 = new Transform3d(
+            new Translation3d(CAM_X, -CAM_Y, CAM_HEIGHT), 
+            new Rotation3d(0, CAM_PITCH, -CAM_YAW));
+        public static final Transform3d robotToCam3 = new Transform3d(
+            new Translation3d(-CAM_X, CAM_Y, CAM_HEIGHT), 
+            new Rotation3d(0, CAM_PITCH, (Math.PI) - CAM_YAW));
+        public static final Transform3d robotToCam4 = new Transform3d(
+            new Translation3d(-CAM_X, -CAM_Y, CAM_HEIGHT), 
+            new Rotation3d(0, CAM_PITCH, (Math.PI) + CAM_YAW));
+        
         public static AprilTagFieldLayout TAG_FIELD_LAYOUT = 
         new AprilTagFieldLayout(
             List.of(
@@ -285,12 +300,12 @@ public class Constants {
         public static final Translation2d ARM_PIVOT_TRANSLATION = new Translation2d(0, Units.inchesToMeters(18.69));
         
         public static final double EXTEND_DRUM_RADIUS = 0.022238;
-        public static final double EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION = 1.0/16.0;
+        public static final double EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION = 1.0/9.0;
         public static final double EXTEND_METERS_PER_DRUM_ROTATION = Math.PI * 2 * EXTEND_DRUM_RADIUS * 2; // 2x distance
 
-        public static final double ARM_EXTEND_KG_VERTICAL = 0.3;
+        public static final double ARM_EXTEND_KG_VERTICAL = 0.3 * 9.0/16.0;
         public static final double ARM_EXTEND_KS = 0.1;
-        public static final double ARM_EXTEND_KV = 1.31/0.15;//12 /*v*//(5676 /*rpm */ * EXTEND_METERS_PER_DRUM_ROTATION * EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION / 60);
+        public static final double ARM_EXTEND_KV = 1.31/0.15 * (9.0 / 16.0);//12 /*v*//(5676 /*rpm */ * EXTEND_METERS_PER_DRUM_ROTATION * EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION / 60);
         /* PIVOT */
         public static final double MIN_ARM_ANGLE = 5.86 - 2*Math.PI;
         public static final double MAX_ARM_ANGLE = Math.PI + 0.42;
@@ -317,19 +332,39 @@ public class Constants {
         // I.e. 0 is straight out from the pivot.
         // positive angles match pivot (up and over, with 0 being straight out the robot front)
         public static final int WRIST_MOTOR_ID = 25;
-        public static final double WRIST_ROTATIONS_PER_MOTOR_ROTATION = 1.0/300.0;
+        public static final double WRIST_ROTATIONS_PER_MOTOR_ROTATION = 1.0/31.030;
         public static final double WRIST_ENCODER_OFFSET = 0.0972610;//5.382308 - Math.PI;//0.995;
         public static final double HAND_LENGTH = Units.inchesToMeters(8);
         public static final double HAND_MASS_KILOS = Units.lbsToKilograms(5);
       
-        public static final double WRIST_MIN_ANGLE = Units.degreesToRadians(-60);
-        public static final double WRIST_MAX_ANGLE = 1.5;
-        public static final double WRIST_KG = 5.744 * 1.6 * 5 / (300.0);
+        public static final double WRIST_MIN_ANGLE = Units.degreesToRadians(-127);
+        public static final double WRIST_MAX_ANGLE = Units.degreesToRadians(65);
+        public static final double WRIST_KG = 5.744 * 1.6 * 5 * 0.25 / (31.030);
+
+        public static class ArmPositions {
+            public static final ArmPosition STOW = new ArmPosition(
+                Units.degreesToRadians(180 - 75.4),
+                MIN_ARM_LENGTH,
+                WRIST_MIN_ANGLE
+            );
+            public static final ArmPosition PRESTOW = new ArmPosition(
+                Units.degreesToRadians(180 - 75.4),
+                MIN_ARM_LENGTH,
+                Units.degreesToRadians(-90)
+            );
+            public static final ArmPosition FRONT_PLATFORM_TIPPED = new ArmPosition(
+                Units.degreesToRadians(75.4), MIN_ARM_LENGTH,  Units.degreesToRadians(-70));
+            public static final ArmPosition FRONT_GROUND_CUBE = new ArmPosition(
+                Units.degreesToRadians(203),
+                Units.inchesToMeters(2.06),
+                Units.degreesToRadians(-26)
+                );
+        }
 
         public static final ArmPosition SCORE_HIGH_CONE_POSITION = new ArmPosition(
             0.658,
             1.429,
-            -Units.degreesToRadians(10));
+            -Units.degreesToRadians(90));
         public static final ArmPosition SCORE_HIGH_CUBE_POSITION = new ArmPosition(
         0.658 - Units.degreesToRadians(10),
         1.2,
@@ -346,10 +381,7 @@ public class Constants {
             0.658,
             0.628,
             0);
-        public static final ArmPosition STOW_POSITION = new ArmPosition(
-            Units.degreesToRadians(66),
-            MIN_ARM_LENGTH + Units.inchesToMeters(1),
-            WRIST_MAX_ANGLE - Units.degreesToRadians(5));
+        public static final ArmPosition STOW_POSITION = ArmPositions.STOW;
         public static final ArmPosition GROUND_CUBE_INTAKE_POSITION = new ArmPosition(
             -0.41,
             0.611,
@@ -375,11 +407,7 @@ public class Constants {
             WRIST_MAX_ANGLE - Units.degreesToRadians(1)
         );
 
-        public static final ArmPosition PLATFORM_CONE_INTAKE_POSITION = new ArmPosition(
-            1.130,
-            0.764,
-            MathUtil.angleModulus(Units.degreesToRadians(339.446))
-        );
+        public static final ArmPosition PLATFORM_CONE_INTAKE_POSITION = ArmPositions.FRONT_PLATFORM_TIPPED;
         public static final ArmPosition PLATFORM_CUBE_INTAKE_POSITION = new ArmPosition(
             1.130,
             0.764,

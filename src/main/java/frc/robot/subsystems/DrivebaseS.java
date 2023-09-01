@@ -102,6 +102,8 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
     private final SwerveDriveOdometry m_odometry;
     private final PhotonCameraWrapper m_camera1Wrapper;
     private final PhotonCameraWrapper m_camera2Wrapper;
+    private final PhotonCameraWrapper m_camera3Wrapper;
+    private final PhotonCameraWrapper m_camera4Wrapper;
 
     private final VisionWrapper m_visionWrapper = new VisionWrapper();
 
@@ -122,6 +124,8 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         m_yController.setTolerance(0.01);
         m_camera1Wrapper = new PhotonCameraWrapper(VisionConstants.CAM_1_NAME, VisionConstants.robotToCam1);
         m_camera2Wrapper = new PhotonCameraWrapper(VisionConstants.CAM_2_NAME, VisionConstants.robotToCam2);
+        m_camera3Wrapper = new PhotonCameraWrapper(VisionConstants.CAM_3_NAME, VisionConstants.robotToCam3);
+        m_camera4Wrapper = new PhotonCameraWrapper(VisionConstants.CAM_4_NAME, VisionConstants.robotToCam4);
 
     }
 
@@ -198,9 +202,10 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
             // make sure the wheels don't try to spin faster than the maximum speed possible
             states = m_kinematics.toSwerveModuleStates(speeds);
             SwerveDriveKinematics.desaturateWheelSpeeds(states, speeds,
+            Units.feetToMeters(19),
             MAX_FWD_REV_SPEED_MPS,
-            MAX_ROTATE_SPEED_RAD_PER_SEC,
-            MAX_MODULE_SPEED_FPS);
+            MAX_ROTATE_SPEED_RAD_PER_SEC
+            );
         }
         setModuleStates(states);
     }
@@ -356,8 +361,8 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      */
     public void resetPose(Pose2d pose) {
         io.resetPose(pose);
-        m_poseEstimator.resetPosition(getPoseHeading(), getModulePositions(), pose);
-        m_odometry.resetPosition(getPoseHeading(), getModulePositions(), pose);
+        m_poseEstimator.resetPosition(getHeading(), getModulePositions(), pose);
+        m_odometry.resetPosition(getHeading(), getModulePositions(), pose);
     }
 
     /**

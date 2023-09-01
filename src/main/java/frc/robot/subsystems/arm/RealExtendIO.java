@@ -22,7 +22,7 @@ public class RealExtendIO extends ExtendIO {
 
     private final SparkMax m_extendMotor = new SparkMax(EXTEND_MOTOR_ID, MotorType.kBrushless);
 
-    private final SparkMaxLimitSwitch m_homingSwitch = m_extendMotor.getReverseLimitSwitch(Type.kNormallyClosed);
+    private final SparkMaxLimitSwitch m_homingSwitch = m_extendMotor.getReverseLimitSwitch(Type.kNormallyOpen);
     private final RelativeEncoder m_encoder = m_extendMotor.getEncoder();
     private double m_position = MIN_ARM_LENGTH;
     private double m_velocity = 0;

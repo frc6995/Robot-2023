@@ -259,7 +259,7 @@ public class ArmS extends SubsystemBase implements Loggable {
     //     return followJointSpaceTargetC(()->SCORE_HIGH_CONE_POSITION);
     // }
     public Command stowC() {
-        return goToPositionC(()->STOW_POSITION);
+        return goToPositionC(()->ArmPositions.PRESTOW).andThen(goToPositionC(()->ArmPositions.STOW));
     }
     public Command stowIndefiniteC() {
         return goToPositionIndefiniteC(()->STOW_POSITION);

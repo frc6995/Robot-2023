@@ -29,6 +29,7 @@ public class GoToPositionC extends CommandBase {
   private double maxRotateLength = 0.64;
   private int currentTarget = 0;
   private boolean m_shouldFinish = true;
+
   /** Creates a new GoToPositionC. */
   public GoToPositionC(ArmS armS, Supplier<ArmPosition> positionSupplier) {
     m_armS = armS;
@@ -43,11 +44,10 @@ public class GoToPositionC extends CommandBase {
     m_shouldFinish = shouldEnd;
   }
 
-
-
   private double limitLength(double length) {
     return MathUtil.clamp(length, length, length);
   }
+
   @Override
   public void initialize() {
     SmartDashboard.putBoolean("armMoving", true);
@@ -62,10 +62,8 @@ public class GoToPositionC extends CommandBase {
     /**
      * 
      */
-    double rotateLength = 
-    MathUtil.clamp(Math.min(m_startPosition.armLength, m_targetPosition.armLength), MIN_ARM_LENGTH, maxRotateLength);
-
-
+    double rotateLength = MathUtil.clamp(Math.min(m_startPosition.armLength, m_targetPosition.armLength),
+        MIN_ARM_LENGTH, maxRotateLength);
 
     if (Math.abs(m_startPosition.armLength - m_targetPosition.armLength) > Units.inchesToMeters(1)) {
       needToStraighten = true;
@@ -77,47 +75,91 @@ public class GoToPositionC extends CommandBase {
 
     m_waypoints = new LinkedList<ArmPosition>();
     m_waypoints.add(m_startPosition);
-    {
-      double targetLength = m_targetPosition.armLength;
-      if (Math.abs(m_startPosition.pivotRadians - m_targetPosition.pivotRadians) > 0.15) {
-        needToRetract = true;
+    /*
+     * if only wrist needed:
+     * go directly to target
+     * if pivot needed:
+     * if
+     */
 
-      // Step 1, get within the safe length interval for rotating. If we can get to the target length, do it.
-      
-        double minStartLength = m_armS.getMinLength(m_startPosition.pivotRadians);
-        double firstRetractLength = m_startPosition.armLength;
-        // if (firstRetractLength > maxRotateLength) {
-        //   firstRetractLength = maxRotateLength;
-        // }
-        // if (targetLength < minStartLength) {
-        //   firstRetractLength = minStartLength;
-        // }
-        firstRetractLength = MathUtil.clamp(firstRetractLength, minStartLength, maxRotateLength);
-        targetLength = MathUtil.clamp(targetLength, minStartLength, maxRotateLength);
-        
-        m_waypoints.add(new ArmPosition(
-          m_startPosition.pivotRadians,
-          firstRetractLength,
-          m_targetPosition.wristRadians
-        ));
-      }
-      
-      //step 2, move wrist and pivot to target position. 
-      m_waypoints.add(new ArmPosition(
-        m_targetPosition.pivotRadians,
-        targetLength,
-        m_targetPosition.wristRadians));
-      //step 3, extend/retract to target length
-      m_waypoints.add(m_targetPosition);
+    double safeWrist = Units.degreesToRadians(90);
+    boolean pivotNeeded = (Math.abs(m_startPosition.pivotRadians - m_targetPosition.pivotRadians) > 0.15);
+    boolean retractBeforePivot = pivotNeeded && m_startPosition.armLength > maxRotateLength;
+    boolean extendAfterPivot = pivotNeeded && m_targetPosition.armLength > maxRotateLength;
+    // m_waypoints.add(new ArmPosition(m_startPosition.pivotRadians, m_startPosition.armLength,
+    //     MathUtil.clamp(m_startPosition.wristRadians, -safeWrist, safeWrist)));
+    if (retractBeforePivot) {
+      // straighten wrist
+
+      m_waypoints.add(new ArmPosition(m_startPosition.pivotRadians, maxRotateLength,
+          MathUtil.clamp(m_startPosition.wristRadians, -safeWrist, safeWrist)));
     }
-    
+    if (extendAfterPivot) {
+      m_waypoints.add(new ArmPosition(
+          m_targetPosition.pivotRadians, maxRotateLength,
+          MathUtil.clamp(m_targetPosition.wristRadians, -safeWrist, safeWrist)));
+    }
+    m_waypoints.add(new ArmPosition(
+        m_targetPosition.pivotRadians, m_targetPosition.armLength,
+        MathUtil.clamp(m_targetPosition.wristRadians, -safeWrist, safeWrist)));
+    m_waypoints.add(m_targetPosition);
+    // {
+    // double targetLength = m_targetPosition.armLength;
+    // if (Math.abs(m_startPosition.pivotRadians - m_targetPosition.pivotRadians) >
+    // 0.15) {
+    // needToRetract = true;
+
+    // // Step 1, get within the safe length interval for rotating. If we can get to
+    // the target length, do it.
+
+    // double minStartLength = m_armS.getMinLength(m_startPosition.pivotRadians);
+    // double firstRetractLength = m_startPosition.armLength;
+    // // if (firstRetractLength > maxRotateLength) {
+    // // firstRetractLength = maxRotateLength;
+    // // }
+    // // if (targetLength < minStartLength) {
+    // // firstRetractLength = minStartLength;
+    // // }
+    // firstRetractLength = MathUtil.clamp(firstRetractLength, minStartLength,
+    // maxRotateLength);
+    // targetLength = MathUtil.clamp(targetLength, minStartLength, maxRotateLength);
+    // boolean elevatorNeeded = Math.abs(m_startPosition.armLength -
+    // m_targetPosition.armLength) > 0.1;
+    // double wristWhileTelescoping= MathUtil.clamp(m_targetPosition.wristRadians,
+    // Units.degreesToRadians(-5), Units.degreesToRadians(5));
+
+    // if (elevatorNeeded) {
+    // m_waypoints.add(new ArmPosition(
+    // m_startPosition.pivotRadians,
+    // m_startPosition.armLength,
+    // wristWhileTelescoping
+    // ));
+    // }
+    // if (elevatorNeeded || ) {
+
+    // }
+    // m_waypoints.add(new ArmPosition(
+    // m_startPosition.pivotRadians,
+    // firstRetractLength,
+    // wristWhileTelescoping
+    // ));
+    // m_waypoints.add(new ArmPosition(
+    // m_targetPosition.pivotRadians,
+    // targetLength,
+    // wristWhileTelescoping));
+    // }
+
+    // //step 3, extend/retract to target length
+    // m_waypoints.add(m_targetPosition);
+    // }
+    // }
+
   }
 
   public void execute() {
     if (isAtSetpoint(m_targetPosition)) {
       currentTarget = m_waypoints.size() - 1;
-    }
-    else if (isAtSetpoint(m_waypoints.get(currentTarget))) {
+    } else if (isAtSetpoint(m_waypoints.get(currentTarget))) {
       if (currentTarget < m_waypoints.size() - 1) {
         currentTarget++;
       }
@@ -132,23 +174,24 @@ public class GoToPositionC extends CommandBase {
   public boolean isFinished() {
 
     var actualPosition = m_armS.getArmPosition();
-    var atSetpoint = (Math.abs(m_armS.constrainLength(m_targetPosition.armLength) - actualPosition.armLength) < Units.inchesToMeters(0.5)
-      && Math.abs(m_targetPosition.pivotRadians - actualPosition.pivotRadians) < Units.degreesToRadians(2)
-      && Math.abs(m_targetPosition.wristRadians - actualPosition.wristRadians) < Units.degreesToRadians(5)
-    );
+    var atSetpoint = (Math.abs(m_armS.constrainLength(m_targetPosition.armLength) - actualPosition.armLength) < Units
+        .inchesToMeters(0.5)
+        && Math.abs(m_targetPosition.pivotRadians - actualPosition.pivotRadians) < Units.degreesToRadians(2)
+        && Math.abs(m_targetPosition.wristRadians - actualPosition.wristRadians) < Units.degreesToRadians(5));
     return atSetpoint && m_shouldFinish;
   }
 
   public void end(boolean interrupted) {
     SmartDashboard.putBoolean("armMoving", false);
   }
-  private boolean isAtSetpoint (ArmPosition setpoint) {
-    
+
+  private boolean isAtSetpoint(ArmPosition setpoint) {
+
     var actualPosition = m_armS.getArmPosition();
-    var atSetpoint = (Math.abs(m_armS.constrainLength(setpoint.armLength) - actualPosition.armLength) < Units.inchesToMeters(2)
-      && Math.abs(setpoint.pivotRadians - actualPosition.pivotRadians) < 0.2
-      //&& Math.abs(setpoint.wristRadians - actualPosition.wristRadians) < Units.degreesToRadians(10)
-    );
+    var atSetpoint = (Math.abs(m_armS.constrainLength(setpoint.armLength) - actualPosition.armLength) < Units
+        .inchesToMeters(2)
+        && Math.abs(setpoint.pivotRadians - actualPosition.pivotRadians) < 0.2
+        && Math.abs(setpoint.wristRadians - actualPosition.wristRadians) < Units.degreesToRadians(5));
     return atSetpoint;
   }
 }

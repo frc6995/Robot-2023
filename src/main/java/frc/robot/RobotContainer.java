@@ -207,7 +207,7 @@ public class RobotContainer {
             ArmConstants.RAMP_CONE_INTAKE_POSITION, ()->m_isCubeSelected));
 
         m_driverController.rightTrigger().toggleOnTrue(armIntakeSelectedCG(
-            ArmConstants.GROUND_CUBE_INTAKE_POSITION, 
+            ArmConstants.ArmPositions.FRONT_GROUND_CUBE, 
             ArmConstants.GROUND_CONE_INTAKE_POSITION, ()->m_isCubeSelected));
             
         m_driverController.leftBumper().toggleOnTrue(armIntakeSelectedCG(
@@ -318,7 +318,7 @@ public class RobotContainer {
     public Command eighteenPointAuto(int blueColumn){
         
         return Commands.sequence(
-            m_intakeS.retractC().asProxy(),
+            m_intakeS.setGamePieceC(()->false).asProxy(),
 
             Commands.runOnce(
                 ()->m_drivebaseS.resetPose(
@@ -373,7 +373,7 @@ public class RobotContainer {
     public Command ninePointAuto(){
         
         return Commands.sequence(
-            m_intakeS.retractC().asProxy(),
+            m_intakeS.setGamePieceC(()->false).asProxy(),
 
             Commands.runOnce(
                 ()->m_drivebaseS.resetPose(
@@ -401,7 +401,7 @@ public class RobotContainer {
     private Command twoConeAuto() {
         var pathGroup = PathPlanner.loadPathGroup("27 Point", new PathConstraints(2, 2), new PathConstraints(4, 3));
         return Commands.sequence(
-            m_intakeS.retractC().asProxy(),
+            m_intakeS.setGamePieceC(()->false).asProxy(),
             m_keypad.blueSetpointCommand(8, 2),
             m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
             Commands.deadline(
@@ -440,7 +440,7 @@ public class RobotContainer {
     private Command bumpTwoConeAuto() {
         var pathGroup = PathPlanner.loadPathGroup("Bump 27 Point", new PathConstraints(1.5, 2));
         return Commands.sequence(
-            m_intakeS.retractC().asProxy(),
+            m_intakeS.setGamePieceC(()->false).asProxy(),
             m_keypad.blueSetpointCommand(0, 2),
             m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
             Commands.deadline(

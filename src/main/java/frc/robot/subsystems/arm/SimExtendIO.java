@@ -24,16 +24,13 @@ import java.util.function.Function;
 
 public class SimExtendIO extends ExtendIO {
 
-    private final LinearSystem<N2, N1, N1> m_extendPlant =
-    LinearSystemId.identifyPositionSystem(
-        ARM_EXTEND_KV,
-        0.01);
+
     private final TiltedElevatorSim m_extendSim = new TiltedElevatorSim(
         m_extendPlant,
         DCMotor.getNEO(1),
         EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION,
         EXTEND_DRUM_RADIUS,
-        MIN_ARM_LENGTH, MAX_ARM_LENGTH, true);
+        MIN_ARM_LENGTH, MAX_ARM_LENGTH, false);
 
     private double m_inputVolts;
     public SimExtendIO(Consumer<Runnable> addPeriodic) {
@@ -63,7 +60,7 @@ public class SimExtendIO extends ExtendIO {
     @Override
     public void setVolts(double volts) {
 
-        m_inputVolts = NomadMathUtil.subtractkS(MathUtil.clamp(volts, -12, 12), ARM_EXTEND_KS);
+        m_inputVolts = NomadMathUtil.subtractkS(MathUtil.clamp(volts, -12, 12), ARM_EXTEND_KS) - ARM_EXTEND_KG_VERTICAL * Math.sin(m_angleSupplier.getAsDouble());
         if (DriverStation.isDisabled()) {m_inputVolts = 0;}
         m_extendSim.setInputVoltage(m_inputVolts);
     }
