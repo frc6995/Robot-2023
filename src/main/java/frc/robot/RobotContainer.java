@@ -20,6 +20,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.WPIUtilJNI;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -44,6 +45,7 @@ import frc.robot.subsystems.IntakeS;
 import frc.robot.subsystems.LightS;
 import frc.robot.subsystems.ArmS.ArmPosition;
 import frc.robot.subsystems.LightS.States;
+import frc.robot.util.Alert;
 import frc.robot.util.AllianceWrapper;
 import frc.robot.util.InputAxis;
 import frc.robot.util.NomadMathUtil;
@@ -103,6 +105,11 @@ public class RobotContainer {
     private Trigger m_alignSafeToPlaceCube;
     
     public RobotContainer(Consumer<Runnable> addPeriodic) {
+        if (RobotBase.isSimulation()) {
+            CameraServer.startAutomaticCapture();
+            PhotonCamera.setVersionCheckEnabled(false);
+        }
+        addPeriodic.accept(Alert::periodic);
         m_drivebaseS = new DrivebaseS(addPeriodic);
         m_alignSafeToPlaceCube = new Trigger(()->{
             Transform2d error = new Transform2d(m_targetAlignmentPose, m_drivebaseS.getPose());

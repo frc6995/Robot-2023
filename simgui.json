@@ -91,6 +91,14 @@
       }
     },
     "transitory": {
+      "CameraPublisher": {
+        "USB Camera 0": {
+          "PropertyInfo": {
+            "open": true
+          },
+          "open": true
+        }
+      },
       "DriverDisplay": {
         "open": true
       },
@@ -118,8 +126,7 @@
           },
           "Wrist": {
             "open": true
-          },
-          "open": true
+          }
         },
         "DrivebaseS": {
           "SimSwerveDriveIO": {
@@ -156,7 +163,8 @@
         },
         "Rotate": {
           "open": true
-        }
+        },
+        "open": true
       },
       "SmartDashboard": {
         "SendableChooser[0]": {
