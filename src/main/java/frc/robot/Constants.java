@@ -443,7 +443,7 @@ public class Constants {
         public static final double INTAKE_VOLTAGE = 6.995 / 3.0;
         public static final int INTAKE_EXTEND = 0;
         public static final int INTAKE_RETRACT= 1;
-        public static final int INTAKE_FOLLOWER_CAN_ID = 31 ;
+
         public static final int INTAKE_TOF_CAN_ID = 32;
         public static final double INTAKE_CENTERED_CONE_DISTANCE = 130.0;
     }

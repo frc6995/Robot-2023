@@ -126,7 +126,8 @@
           },
           "Wrist": {
             "open": true
-          }
+          },
+          "open": true
         },
         "DrivebaseS": {
           "SimSwerveDriveIO": {

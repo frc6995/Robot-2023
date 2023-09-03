@@ -20,6 +20,8 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.util.Alert;
+import frc.robot.util.Alert.AlertType;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -35,6 +37,8 @@ public abstract class WristIO implements Loggable {
     private State m_goal = new State();
 
     protected boolean isHoming= false;
+    @Log
+    protected boolean hasHomed = false;
     protected final LinearPlantInversionFeedforward<N2, N1, N1> m_wristFeedforward
         = new LinearPlantInversionFeedforward<>(m_wristPlant, 0.02);
     protected final Constraints m_constraints = new Constraints(4, 12);
@@ -43,10 +47,13 @@ public abstract class WristIO implements Loggable {
     new LinearQuadraticRegulator<>(m_wristPlant, VecBuilder.fill(0.01, 0.01), VecBuilder.fill(12), 0.02);
 
     protected DoubleSupplier m_pivotAngleSupplier = ()->0;
+    protected Alert m_wristNotHomedAlert = new Alert("Wrist", "Not Homed", AlertType.ERROR);
+
     public WristIO(Consumer<Runnable> addPeriodic) {
         m_goal = new State(STOW_POSITION.wristRadians, 0);
         m_setpoint = new State(STOW_POSITION.wristRadians, 0);
         addPeriodic.accept(this::runPID);
+        addPeriodic.accept(()->m_wristNotHomedAlert.set(!hasHomed));
         new Trigger(()->isHoming && getHomed()).onTrue(Commands.runOnce(this::endHome));
     }
 
@@ -88,8 +95,10 @@ public abstract class WristIO implements Loggable {
 
     public void endHome() {
         isHoming = false;
+        hasHomed = true;
         resetState(WRIST_MIN_ANGLE);
         resetController();
+        m_setpoint=new State(WRIST_MIN_ANGLE, 0);
     }
 
     private void runPID() {
