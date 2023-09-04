@@ -9,7 +9,10 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
+import edu.wpi.first.math.util.Units;
 import frc.robot.Robot;
+import frc.robot.util.Alert;
+import frc.robot.util.Alert.AlertType;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -39,11 +42,13 @@ public abstract class ModuleIO implements Loggable {
     // steering PID controller
     // drive PID controller
     protected final ModuleConstants m_moduleConstants;
+    private final Alert m_pinionSlipAlert;
 
     public ModuleIO(ModuleConstants moduleConstants) {
         m_moduleConstants = moduleConstants;
         m_loggingName = moduleConstants.name + "-[" + moduleConstants.driveMotorID + ','
                 + moduleConstants.rotationMotorID + ']';
+        m_pinionSlipAlert = new Alert(moduleConstants.name, "Check pinion slip", AlertType.ERROR);
         m_steerPIDController = new PIDController(
                 10 / (Math.PI/2), 0.0, STEER_D);
         // Tell the PID controller that it can move across the -pi to pi rollover point.
@@ -54,6 +59,10 @@ public abstract class ModuleIO implements Loggable {
         m_drivePIDController = new PIDController(
                 DRIVE_P, 0,
                 DRIVE_D);
+    }
+
+    public void updateAlerts() {
+        m_pinionSlipAlert.set(Math.abs(getPinionSlip()) > Units.degreesToRadians(10));
     }
 
     public String configureLogName() {

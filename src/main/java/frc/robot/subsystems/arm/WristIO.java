@@ -18,6 +18,10 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.util.Alert;
+import frc.robot.util.Alert.AlertType;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -32,18 +36,25 @@ public abstract class WristIO implements Loggable {
     private State m_setpoint = new State();
     private State m_goal = new State();
 
+    protected boolean isHoming= false;
+    @Log
+    protected boolean hasHomed = false;
     protected final LinearPlantInversionFeedforward<N2, N1, N1> m_wristFeedforward
         = new LinearPlantInversionFeedforward<>(m_wristPlant, 0.02);
-        private final Constraints m_constraints = new Constraints(2, 6);
+    protected final Constraints m_constraints = new Constraints(4, 12);
     
     protected final LinearQuadraticRegulator<N2, N1, N1> m_wristController = 
     new LinearQuadraticRegulator<>(m_wristPlant, VecBuilder.fill(0.01, 0.01), VecBuilder.fill(12), 0.02);
 
     protected DoubleSupplier m_pivotAngleSupplier = ()->0;
+    protected Alert m_wristNotHomedAlert = new Alert("Wrist", "Not Homed", AlertType.ERROR);
+
     public WristIO(Consumer<Runnable> addPeriodic) {
         m_goal = new State(STOW_POSITION.wristRadians, 0);
         m_setpoint = new State(STOW_POSITION.wristRadians, 0);
         addPeriodic.accept(this::runPID);
+        addPeriodic.accept(()->m_wristNotHomedAlert.set(!hasHomed));
+        new Trigger(()->isHoming && getHomed()).onTrue(Commands.runOnce(this::endHome));
     }
 
     public void setPivotAngleSupplier (DoubleSupplier pivotAngleSupplier) {
@@ -76,34 +87,40 @@ public abstract class WristIO implements Loggable {
         m_goal = new State(angleRad, 0);
     }
 
-    public abstract double getVelocity();
+    public abstract void resetState(double position);
+    public void startHome() {
+        isHoming = true;
+        resetState(WRIST_MAX_ANGLE + WRIST_MAX_ANGLE - WRIST_MIN_ANGLE);
+    }
+
+    public void endHome() {
+        isHoming = false;
+        hasHomed = true;
+        resetState(WRIST_MIN_ANGLE);
+        resetController();
+        m_setpoint=new State(WRIST_MIN_ANGLE, 0);
+    }
 
     private void runPID() {
-        var profile = new TrapezoidProfile(m_constraints, m_goal, m_setpoint);
+        var profile = new TrapezoidProfile(getConstraints(), m_goal, m_setpoint);
         m_setpoint = profile.calculate(0.02);
         var nextSetpoint = profile.calculate(0.04);
         setVolts(
             m_wristController.calculate(
                         VecBuilder.fill(getAngle(), getVelocity()),
-                        VecBuilder.fill(m_setpoint.position, 0)).get(0, 0)
+                        VecBuilder.fill(m_setpoint.position, m_setpoint.velocity)).get(0, 0)
                         + getWristkG()
                         + m_wristFeedforward.calculate(
                                 VecBuilder.fill(0, m_setpoint.velocity),
                                 VecBuilder.fill(0, nextSetpoint.velocity))
-                                .get(0, 0));
+                                .get(0, 0) * 1.1);
     }
 
     public void openLoopHold() {
         setVolts(getWristkG());
     }
-    /**
-     * 0 is straight out from the arm, parallel to it.
-     * @return the wrist angle from -pi radians to pi radians
-     */
-    @Log
-    public abstract double getAngle();
-    @Log
-    public abstract double getVolts();
+
+
     private void setVolts(double volts) {
         if (getAngle() > WRIST_MAX_ANGLE && volts > 0) {
             volts = 0;
@@ -128,7 +145,7 @@ public abstract class WristIO implements Loggable {
     public double getGoalPosition() {
         return getGoal().position;
     }
-    protected abstract void setVoltsInternal(double volts);
+
 
     public String configureLogName() {
         return "Wrist";
@@ -138,4 +155,20 @@ public abstract class WristIO implements Loggable {
     public boolean isInTolerance() {
         return Math.abs(getAngle() - getGoalPosition()) < 0.05;
     }
+
+    public abstract double getVelocity();
+    protected abstract void setVoltsInternal(double volts);
+    /**
+     * 0 is straight out from the arm, parallel to it.
+     * @return the wrist angle from -pi radians to pi radians
+     */
+    @Log
+    public abstract double getAngle();
+    @Log
+    public abstract double getVolts();
+    @Log
+    public abstract boolean getHomed();
+    public Constraints getConstraints() {
+        return m_constraints;
+    };
 }

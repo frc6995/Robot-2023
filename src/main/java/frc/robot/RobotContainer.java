@@ -20,6 +20,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.WPIUtilJNI;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -44,6 +45,7 @@ import frc.robot.subsystems.IntakeS;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.ArmS.ArmPosition;
 import frc.robot.subsystems.LightStripS.States;
+import frc.robot.util.Alert;
 import frc.robot.util.AllianceWrapper;
 import frc.robot.util.InputAxis;
 import frc.robot.util.NomadMathUtil;
@@ -57,7 +59,6 @@ public class RobotContainer {
      * Establishes the controls and subsystems of the robot
      */
     private final CommandXboxController m_driverController = new CommandXboxController(InputDevices.GAMEPAD_PORT);
-    //private final CommandXboxController m_operatorController = new CommandXboxController(1);
     private final CommandOperatorKeypad m_keypad;
     private final DrivebaseS m_drivebaseS;
     
@@ -79,6 +80,7 @@ public class RobotContainer {
     private Pose2d m_targetAlignmentPose = new Pose2d(1.909, 1.072, Rotation2d.fromRadians(Math.PI));
     private boolean m_isCubeSelected = true;
 
+    
     private InputAxis m_fwdXAxis = new InputAxis("Forward", m_driverController::getLeftY)
         .withDeadband(0.2)
         .withInvert(true)
@@ -94,8 +96,20 @@ public class RobotContainer {
         .withInvert(true)
         .withSlewRate(3);
     SendableChooser<Command> m_autoSelector = new SendableChooser<Command>();
+
+    
+    /**
+     * Trigger that determines whether the drivebase is close enough to its target pose to score a cube.
+     */
+    @Log(methodName = "getAsBoolean")
+    private Trigger m_alignSafeToPlaceCube;
     
     public RobotContainer(Consumer<Runnable> addPeriodic) {
+        if (RobotBase.isSimulation()) {
+            CameraServer.startAutomaticCapture();
+            PhotonCamera.setVersionCheckEnabled(false);
+        }
+        addPeriodic.accept(Alert::periodic);
         m_drivebaseS = new DrivebaseS(addPeriodic);
         m_alignSafeToPlaceCube = new Trigger(()->{
             Transform2d error = new Transform2d(m_targetAlignmentPose, m_drivebaseS.getPose());
@@ -105,31 +119,34 @@ public class RobotContainer {
                 Math.abs(error.getY()) < 0.1;
         });
     
-        m_armS = new ArmS(addPeriodic, m_intakeS::getHandLength);
+        m_armS = new ArmS(addPeriodic);
 
-
+        /**
+         * Set driver mode on the USB camera streamed through PhotonVision
+         */
         PhotonCamera usbCam = new PhotonCamera("USB_Camera");
         usbCam.setDriverMode(true);
 
 
+        // Create the keypad with the functions it needs to set desired scoring action.
         m_keypad = new CommandOperatorKeypad(2, (pose)->{
             m_targetAlignmentPose = pose;
             m_field.getObject("Selection").setPose(pose);
-        }, (position)->{m_targetArmPosition = position;}, (selectedCube)->{m_isCubeSelected = selectedCube;});
+        }, (position)->{m_targetArmPosition = position;},
+        (selectedCube)->{m_isCubeSelected = selectedCube;});
+        // Set scoring to right hybrid node.
         m_keypad.setpointCommand(0, 0).schedule();
-        m_target.setPose(new Pose2d(1.909, 1.072, Rotation2d.fromRadians(Math.PI)));
         
         m_drivebaseS.setDefaultCommand(
             m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis)
         );
+        // face downfield while Start is held
         m_driverController.start().whileTrue(
             m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()->0)
         );
 
         configureButtonBindings();
 
-        // m_driverController.start().whileTrue(m_drivebaseS.chargeStationBatteryFirstC());
-        // m_driverController.back().whileTrue(m_drivebaseS.chargeStationFrontFirstC());
 
         //Autonomous Option Selections:
         m_autoSelector.setDefaultOption("Cone Bal.-Bump Side", eighteenPointAuto(3));
@@ -153,9 +170,11 @@ public class RobotContainer {
         m_field.getObject("bluePoses").setPoses(POIManager.BLUE_COMMUNITY);
         m_field.getObject("redPoses").setPoses(POIManager.RED_COMMUNITY);
         SmartDashboard.putData(m_autoSelector);
-        //CameraServer.startAutomaticCapture().setResolution(320, 240);
     }
 
+    /**
+     * Command factory for 
+     */
     private Command alignToSelectedScoring() {
         return  m_drivebaseS.chasePoseC(
             ()->m_targetAlignmentPose.transformBy(m_isCubeSelected ? new Transform2d() : m_intakeS.getConeCenterOffset()
@@ -163,10 +182,8 @@ public class RobotContainer {
         );
     }
 
-    @Log(methodName = "getAsBoolean")
-    private Trigger m_alignSafeToPlaceCube;
-
     public void configureButtonBindings() {
+        // Align, score, and stow.
         m_driverController.a().toggleOnTrue(
                 alignToSelectedScoring().asProxy()
                 .until(
@@ -175,6 +192,7 @@ public class RobotContainer {
                 .andThen(autoScoreSequenceCG().asProxy())
            
             );
+        // Score and stow.
         m_driverController.b().toggleOnTrue(
             Commands.sequence(
                 m_intakeS.outtakeC().withTimeout(0.5),
@@ -196,7 +214,7 @@ public class RobotContainer {
             ArmConstants.RAMP_CONE_INTAKE_POSITION, ()->m_isCubeSelected));
 
         m_driverController.rightTrigger().toggleOnTrue(armIntakeSelectedCG(
-            ArmConstants.GROUND_CUBE_INTAKE_POSITION, 
+            ArmConstants.ArmPositions.FRONT_GROUND_CUBE, 
             ArmConstants.GROUND_CONE_INTAKE_POSITION, ()->m_isCubeSelected));
             
         m_driverController.leftBumper().toggleOnTrue(armIntakeSelectedCG(
@@ -208,12 +226,13 @@ public class RobotContainer {
         //     m_drivebaseS.chasePoseC(()->POIManager.ownPOI(POIS.CONE_RAMP)),
         //     ()->m_isCubeSelected));
 
-        m_keypad.stow().onTrue(m_intakeS.intakeC().withTimeout(0.25));
+        // Button on keypad for pulsing the intake in.
+        m_keypad.action().onTrue(m_intakeS.intakeC().withTimeout(0.25));
         m_keypad.enter().toggleOnTrue(
             autoScoreSequenceCG()
         );
     
-
+        // D-pad driving slowly relative to alliance wall.
         m_driverController.povCenter().negate().whileTrue(m_drivebaseS.run(()->{
                 double pov = Units.degreesToRadians(-m_driverController.getHID().getPOV());
                 double adjustSpeed = 0.5; // m/s
@@ -255,16 +274,26 @@ public class RobotContainer {
     public void onDisabled() {
     }
 
+    /**
+     * Command factory for intaking a game piece.
+     * @param position The arm position
+     * @param isCube Whether the intake should be in cube mode or cone mode.
+     * @return
+     */
     public Command armIntakeCG(ArmPosition position, boolean isCube) {
         return 
         Commands.sequence(
+            // Start intaking, and stop when a piece is detected.
             Commands.deadline(
                 m_intakeS.setGamePieceC(()->isCube).andThen(m_intakeS.intakeUntilBeamBreakC()).asProxy(),
+                // move to arm position while intaking.
                 m_armS.goToPositionIndefiniteC(position)
 
             ),
             Commands.parallel(
+                // Wait a bit, then pulse the intake to ensure piece collection.
                 Commands.waitSeconds(0.75).andThen(m_intakeS.intakeC().withTimeout(0.75)).asProxy(),
+                // stow the arm
                 m_armS.stowIndefiniteC(), 
                 Commands.run(()->LightStripS.getInstance().requestState(isCube ? States.IntakedCube : States.IntakedCone)).asProxy().withTimeout(0.75)
             )
@@ -296,7 +325,7 @@ public class RobotContainer {
     public Command eighteenPointAuto(int blueColumn){
         
         return Commands.sequence(
-            m_intakeS.retractC().asProxy(),
+            m_intakeS.setGamePieceC(()->false).asProxy(),
 
             Commands.runOnce(
                 ()->m_drivebaseS.resetPose(
@@ -351,7 +380,7 @@ public class RobotContainer {
     public Command ninePointAuto(){
         
         return Commands.sequence(
-            m_intakeS.retractC().asProxy(),
+            m_intakeS.setGamePieceC(()->false).asProxy(),
 
             Commands.runOnce(
                 ()->m_drivebaseS.resetPose(
@@ -379,7 +408,7 @@ public class RobotContainer {
     private Command twoConeAuto() {
         var pathGroup = PathPlanner.loadPathGroup("27 Point", new PathConstraints(2, 2), new PathConstraints(4, 3));
         return Commands.sequence(
-            m_intakeS.retractC().asProxy(),
+            m_intakeS.setGamePieceC(()->false).asProxy(),
             m_keypad.blueSetpointCommand(8, 2),
             m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
             Commands.deadline(
@@ -418,7 +447,7 @@ public class RobotContainer {
     private Command bumpTwoConeAuto() {
         var pathGroup = PathPlanner.loadPathGroup("Bump 27 Point", new PathConstraints(1.5, 2));
         return Commands.sequence(
-            m_intakeS.retractC().asProxy(),
+            m_intakeS.setGamePieceC(()->false).asProxy(),
             m_keypad.blueSetpointCommand(0, 2),
             m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
             Commands.deadline(

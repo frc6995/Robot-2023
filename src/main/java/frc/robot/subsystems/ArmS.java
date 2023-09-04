@@ -67,14 +67,12 @@ import io.github.oblarg.oblog.annotations.Log;
 public class ArmS extends SubsystemBase implements Loggable {
     
     public final Field2d VISUALIZER = new Field2d();
-    private Supplier<Double> handLengthSupplier;
 
     private ExtendIO m_extender;
     private PivotIO m_pivot;
     private WristIO m_wrist;
 
-    public ArmS(Consumer<Runnable> addPeriodic, Supplier<Double> handLengthSupplier) {
-        this.handLengthSupplier = handLengthSupplier;
+    public ArmS(Consumer<Runnable> addPeriodic) {
         if (RobotBase.isReal()) {
             m_extender = new RealExtendIO(addPeriodic);
             m_pivot = new RealPivotIO(addPeriodic);
@@ -184,8 +182,6 @@ public class ArmS extends SubsystemBase implements Loggable {
 
     // endregion
 
-    // region pivot
-
     public Command goToPositionC(ArmPosition position) {
         return goToPositionC(()->position);
     }
@@ -202,9 +198,6 @@ public class ArmS extends SubsystemBase implements Loggable {
         return new GoToPositionC(this, position, false);
     }
 
-    // endregion
-
-    // region wrist
     /**
      * returns the wrist angle in radians
      * @return angle of the wrist in radians
@@ -215,21 +208,12 @@ public class ArmS extends SubsystemBase implements Loggable {
         return m_wrist.getAngle();
     }
 
-    // /**
-    //  * @return the current velocity of the wrist in rotations per minute
-    //  */
-
-    // @Log
-    // public double getWristVelocity() {
-    //     return m_wristVelocity;
-    // }
-
     public void resetWrist() {
         m_wrist.resetController();
     }
 
     /**
-     * sets wrist angle in radiands to target angle parameter (straight out relative to arm is 0)
+     * sets wrist angle in radians to target angle parameter (straight out relative to arm is 0)
      * @param targetAngle desired angle in radians relative to arm
      */
 
@@ -275,7 +259,7 @@ public class ArmS extends SubsystemBase implements Loggable {
     //     return followJointSpaceTargetC(()->SCORE_HIGH_CONE_POSITION);
     // }
     public Command stowC() {
-        return goToPositionC(()->STOW_POSITION);
+        return goToPositionC(()->ArmPositions.PRESTOW).andThen(goToPositionC(()->ArmPositions.STOW));
     }
     public Command stowIndefiniteC() {
         return goToPositionIndefiniteC(()->STOW_POSITION);
@@ -340,7 +324,6 @@ public class ArmS extends SubsystemBase implements Loggable {
         MECH_VISUALIZER_ARM.setAngle(Units.radiansToDegrees(m_pivot.getContinuousRangeAngle()) - 90);
         MECH_VISUALIZER_ARM.setLength(m_extender.getLength());
         MECH_VISUALIZER_HAND.setAngle(Units.radiansToDegrees(m_wrist.getAngle()));
-        MECH_VISUALIZER_HAND.setLength(handLengthSupplier.get());
     }
 
     

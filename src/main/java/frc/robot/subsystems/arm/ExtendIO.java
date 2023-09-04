@@ -1,6 +1,7 @@
 package frc.robot.subsystems.arm;
 
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.controller.LinearPlantInversionFeedforward;
 import edu.wpi.first.math.controller.LinearQuadraticRegulator;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -8,6 +9,7 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.LinearSystem;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
@@ -34,9 +36,10 @@ public abstract class ExtendIO implements Loggable {
     //     0.02
     // );
     protected final LinearSystem<N2, N1, N1> m_extendPlant =
-    LinearSystemId.identifyPositionSystem(
-        ARM_EXTEND_KV,
-        0.01);
+    LinearSystemId.createElevatorSystem(DCMotor.getNEO(1), 3.9159, EXTEND_DRUM_RADIUS, EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION);
+    // LinearSystemId.identifyPositionSystem(
+    //     ARM_EXTEND_KV,
+    //     0.01);
     protected final LinearQuadraticRegulator<N2, N1, N1> m_extendController = new LinearQuadraticRegulator<N2, N1, N1>(
         m_extendPlant,
         VecBuilder.fill(0.001, 0.001),
@@ -47,9 +50,9 @@ public abstract class ExtendIO implements Loggable {
     private double m_maximumInput;
     private TrapezoidProfile.State m_goal = new TrapezoidProfile.State();
     private TrapezoidProfile.State m_setpoint = new TrapezoidProfile.State();
-    private TrapezoidProfile.Constraints m_constraints = new Constraints(1.3, 1.5);
-    protected final SimpleMotorFeedforward m_extendFeedforward
-    = new SimpleMotorFeedforward(ARM_EXTEND_KS, ARM_EXTEND_KV, 0.01);
+    private TrapezoidProfile.Constraints m_constraints = new Constraints(1.3 * 1.3, 3.9);
+    protected final LinearPlantInversionFeedforward<N2, N1, N1> m_extendFeedforward
+    = new LinearPlantInversionFeedforward<>(m_extendPlant, 0.02);
 
     protected DoubleSupplier m_angleSupplier = ()->0;
 
@@ -69,21 +72,6 @@ public abstract class ExtendIO implements Loggable {
     }
 
     /**
-     * sets telescoping velocity of arm using feedforward
-     * @param velocityMetersPerSecond desired telescoping velocity in meters per second
-     */
-     public void setVelocity(double velocityMetersPerSecond) {
-        setVolts(
-            m_extendFeedforward.calculate(getVelocity())
-            + ARM_EXTEND_KG_VERTICAL * Math.sin(m_angleSupplier.getAsDouble())
-        );
-    }
-
-    public void openLoopHold() {
-        setVelocity(0);
-    }
-
-    /**
      * sets the desired arm length in meters
      * @param lengthMeters desired arm length in meters
      */
@@ -95,14 +83,18 @@ public abstract class ExtendIO implements Loggable {
     }
     private void runPID() {
         var profile = new TrapezoidProfile(m_constraints, m_goal, m_setpoint);
-        m_setpoint = profile.calculate(getPeriod());
+        m_setpoint = profile.calculate(TimingTracer.getLoopTime());
         State nextSetpoint = profile.calculate(getPeriod() * 2.0);
         setVolts(
             m_extendController.calculate(
-                VecBuilder.fill(getLength(), 0),
-                VecBuilder.fill(m_setpoint.position, 0)
+                VecBuilder.fill(getLength(), getVelocity()),
+                VecBuilder.fill(m_setpoint.position, m_setpoint.velocity)
             ).get(0, 0) +
-            (m_extendFeedforward.calculate(m_setpoint.velocity, nextSetpoint.velocity, getPeriod()) * 1.21)
+            (m_extendFeedforward.calculate(
+                VecBuilder.fill(m_setpoint.position, m_setpoint.velocity), 
+                VecBuilder.fill(nextSetpoint.position, nextSetpoint.velocity)
+                ).get(0,0) * 1.245
+            )
             + ARM_EXTEND_KG_VERTICAL * Math.sin(m_angleSupplier.getAsDouble())
         );
     }

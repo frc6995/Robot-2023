@@ -29,18 +29,14 @@ import static edu.wpi.first.wpilibj2.command.Commands.sequence;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
-import frc.robot.Constants.IntakeConstants;
+import static frc.robot.Constants.IntakeConstants.*;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
 public class IntakeS extends SubsystemBase implements Loggable {
-  private final CANSparkMax intakeMotor = new CANSparkMax(Constants.IntakeConstants.INTAKE_CAN_ID, MotorType.kBrushless);
-  private final CANSparkMax intakeFollowerMotor = new CANSparkMax(Constants.IntakeConstants.INTAKE_FOLLOWER_CAN_ID, MotorType.kBrushless);
-  private final SparkMaxLimitSwitch m_beamBreak = intakeFollowerMotor.getReverseLimitSwitch(Type.kNormallyClosed);
+  private final CANSparkMax intakeMotor = new CANSparkMax(INTAKE_CAN_ID, MotorType.kBrushless);
   @Log
-  private boolean isExtended = false;
-  private final DoubleSolenoid doubleSolenoid = new DoubleSolenoid(PneumaticsModuleType.REVPH, 
-    Constants.IntakeConstants.INTAKE_EXTEND, Constants.IntakeConstants.INTAKE_RETRACT);
+  private boolean isCube = false;
 
   private final TimeOfFlight distanceSensor = new TimeOfFlight(Constants.IntakeConstants.INTAKE_TOF_CAN_ID);
   private Trigger cubeDebouncedBeamBreak = new Trigger(this::hitBeamBreak);//.debounce(0.06);
@@ -51,9 +47,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
   public IntakeS() {
 
     intakeMotor.restoreFactoryDefaults();
-    intakeFollowerMotor.restoreFactoryDefaults();
     intakeMotor.setIdleMode(IdleMode.kBrake);
-    intakeFollowerMotor.setIdleMode(IdleMode.kBrake);
     intakeMotor.setSecondaryCurrentLimit(15);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 25);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
@@ -62,19 +56,9 @@ public class IntakeS extends SubsystemBase implements Loggable {
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
-    intakeFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 45);
-    intakeFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
-    intakeFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
-    intakeFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
-    intakeFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
-    intakeFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
-    intakeFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
-    m_beamBreak.enableLimitSwitch(false);
     
     intakeMotor.setSmartCurrentLimit(10, 10);
-    intakeFollowerMotor.follow(intakeMotor, false);
     intakeMotor.burnFlash();
-    intakeFollowerMotor.burnFlash();
 
     distanceSensor.setRangingMode(RangingMode.Short, 999);
     distanceSensor.setRangeOfInterest(9,9,11,11);
@@ -95,16 +79,11 @@ public class IntakeS extends SubsystemBase implements Loggable {
 
   @Log
   public double getConeCenterOffsetDistance() {
-     return (IntakeConstants.INTAKE_CENTERED_CONE_DISTANCE - distanceSensor.getRange()) / 1000.0;
+     return (INTAKE_CENTERED_CONE_DISTANCE - distanceSensor.getRange()) / 1000.0;
   }
   @Log
   public double getIntakeVolts() {
     return intakeMotor.getAppliedOutput() * 12;
-  }
-
-  @Log
-  public double getIntakeFollowerVolts() {
-    return intakeFollowerMotor.getAppliedOutput() * 12;
   }
 
   @Log
@@ -124,6 +103,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
 
   @Log
   public boolean hitBeamBreak() {
+<<<<<<< HEAD
     return m_beamBreak.isPressed() || (Math.abs(getConeCenterOffsetDistance()) < 0.1) || simTrigger.getRawButton(1);
   }
 
@@ -134,6 +114,9 @@ public class IntakeS extends SubsystemBase implements Loggable {
     else {
       return Units.inchesToMeters(9.4);
     }
+=======
+    return (Math.abs(getConeCenterOffsetDistance()) < 0.1);
+>>>>>>> io-split
   }
 
   /**
@@ -142,7 +125,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
    */
 
   public void intake(double voltage) {
-    intakeMotor.setVoltage(voltage);
+    intakeMotor.setVoltage(voltage * (isCube() ? -1 : 1));
   }
 
 
@@ -151,11 +134,11 @@ public class IntakeS extends SubsystemBase implements Loggable {
    */
 
   public void intake() {
-    intake(Constants.IntakeConstants.INTAKE_VOLTAGE * (isExtended() ? 1.5 : 3));
+    intake(Constants.IntakeConstants.INTAKE_VOLTAGE);
   }
 
   public Command autoStagedIntakeC() {
-    return runEnd(()->intake(Constants.IntakeConstants.INTAKE_VOLTAGE * 3 * 1/3.4), this::stop);
+    return runEnd(()->intake(Constants.IntakeConstants.INTAKE_VOLTAGE), this::stop);
   }
 
   /**
@@ -163,30 +146,11 @@ public class IntakeS extends SubsystemBase implements Loggable {
    */
 
   public void outtake() {
-    intake(-Constants.IntakeConstants.INTAKE_VOLTAGE * (isExtended() ? 2 : 1));
-  }
-
-  /**
-   * Extends the intake
-   */
-
-  public void extend() {
-    doubleSolenoid.set(Value.kForward);
-    isExtended = true;
-  }
-
-  /**
-   * Retracts the intake
-   */
-
-  public void retract() {
-    doubleSolenoid.set(Value.kReverse);
-    isExtended = false;
+    intake(-Constants.IntakeConstants.INTAKE_VOLTAGE);
   }
 
   public void setGamePiece(boolean isCube) {
-    doubleSolenoid.set(isCube? Value.kForward : Value.kReverse);
-    isExtended = isCube;
+    this.isCube = isCube;
   }
 
 
@@ -195,15 +159,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
    */
 
   public void toggle() {
-    if (doubleSolenoid.get() == Value.kOff) {
-      extend();
-      isExtended = true;
-    }
-    else {
-      doubleSolenoid.toggle();
-      isExtended = !isExtended;
-    }
-
+    isCube = !isCube;
   }
 
   /**
@@ -219,8 +175,8 @@ public class IntakeS extends SubsystemBase implements Loggable {
     // This method will be called once per scheduler run
   }
 
-  public boolean isExtended() {
-    return isExtended;
+  public boolean isCube() {
+    return isCube;
   }
 
   /**
@@ -244,69 +200,15 @@ public class IntakeS extends SubsystemBase implements Loggable {
     return runEnd(this::outtake, this::stop);
   }
 
-  /**
-   * Extends the intake
-   * @return returns the runOnce command
-   */
-
-  public Command extendC() {
-    return runOnce(this::extend);
-  }
-
-  /**
-   * Retracts the intake
-   * @return returns the runOnce command
-   */
-
-  public Command retractC() {
-    return runOnce(this::retract);
-  }
-
-  /**
-   * extends the intake and runs the intake motor forward
-   * @return returns the sequence Command
-   */
-
-  public Command extendAndIntakeC() {
-    return sequence(extendC(), intakeC()).finallyDo((interrupted)-> stop());
-  }
-
-  /**
-   * retracts the intake and runs the intake motor forward
-   * @return returns the sequence Command
-   */
-
-  public Command retractAndIntakeC() {
-    return sequence(retractC(), intakeC()).finallyDo((interrupted)-> stop());
-  }
-
-  /**
-   * extends the intake and runs the intake motor in reverse
-   * @return returns the sequence Command
-   */
-
-  public Command extendAndOuttakeC() {
-    return sequence(extendC(), outtakeC()).finallyDo((interrupted)-> stop());
-  }
-
-  /**
-   * retracts the intake and runs the intake motor in reverse
-   * @return returns the sequence Command
-   */
-
-   public Command retractAndOuttakeC() {
-    return sequence(retractC(), outtakeC()).finallyDo((interrupted)-> stop());
-  }
-
   public Command intakeUntilBeamBreakC() {
     return intakeUntilBeamBreakC(intakeC());
   }
 
   public Command intakeUntilBeamBreakC(Command intakeCommand) {
     return intakeCommand.until(()->{
-      return isExtended ? 
+      return isCube ? 
       cubeDebouncedBeamBreak.getAsBoolean() : coneDebouncedBeamBreak.getAsBoolean();})
-      .andThen(intakeC().withTimeout(isExtended ? 0.1 : 0.1));
+      .andThen(intakeC().withTimeout(isCube ? 0.1 : 0.1));
     
   }
 

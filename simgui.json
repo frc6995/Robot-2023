@@ -100,6 +100,14 @@
       }
     },
     "transitory": {
+      "CameraPublisher": {
+        "USB Camera 0": {
+          "PropertyInfo": {
+            "open": true
+          },
+          "open": true
+        }
+      },
       "DriverDisplay": {
         "open": true
       },
@@ -127,7 +135,8 @@
           },
           "Wrist": {
             "open": true
-          }
+          },
+          "open": true
         },
         "DrivebaseS": {
           "SimSwerveDriveIO": {
@@ -159,7 +168,10 @@
           },
           "open": true
         },
-        "Forward": {
+        "RobotContainer": {
+          "open": true
+        },
+        "Rotate": {
           "open": true
         },
         "open": true
@@ -234,7 +246,7 @@
               "autoFit": true
             }
           ],
-          "height": 404,
+          "height": 421,
           "series": [
             {
               "color": [
@@ -284,7 +296,7 @@
           ]
         },
         {
-          "height": 404,
+          "height": 421,
           "lockPrevX": true,
           "series": [
             {
@@ -340,8 +352,7 @@
     "Plot <2>": {
       "plots": [
         {
-          "height": 200,
-          "legendLocation": 1,
+          "height": 208,
           "series": [
             {
               "color": [
@@ -378,11 +389,20 @@
                 1.0
               ],
               "id": "NT:/Shuffleboard/ArmS/Extend/getGoalPosition"
+            },
+            {
+              "color": [
+                0.5058823823928833,
+                0.44705885648727417,
+                0.7019608020782471,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/Extend/getVolts"
             }
           ]
         },
         {
-          "height": 200,
+          "height": 208,
           "lockPrevX": true,
           "series": [
             {
@@ -425,12 +445,7 @@
           "showPause": false
         },
         {
-          "axis": [
-            {
-              "autoFit": true
-            }
-          ],
-          "height": 200,
+          "height": 208,
           "lockPrevX": true,
           "series": [
             {
@@ -468,12 +483,21 @@
                 1.0
               ],
               "id": "NT:/Shuffleboard/ArmS/Wrist/getVolts"
+            },
+            {
+              "color": [
+                0.5058823823928833,
+                0.44705885648727417,
+                0.7019608020782471,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/ArmS/Wrist/isInTolerance"
             }
           ],
           "showPause": false
         },
         {
-          "height": 200,
+          "height": 208,
           "lockPrevX": true,
           "series": [
             {
@@ -484,15 +508,6 @@
                 1.0
               ],
               "id": "NT:/SmartDashboard/armMoving"
-            },
-            {
-              "color": [
-                0.5058823823928833,
-                0.44705885648727417,
-                0.7019608020782471,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/Wrist/isInTolerance"
             },
             {
               "color": [
@@ -511,6 +526,15 @@
                 1.0
               ],
               "id": "NT:/Shuffleboard/ArmS/Extend/isInTolerance"
+            },
+            {
+              "color": [
+                0.5058823823928833,
+                0.44705885648727417,
+                0.7019608020782471,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/RobotContainer/loopTime"
             }
           ],
           "showPause": false

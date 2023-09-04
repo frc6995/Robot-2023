@@ -87,7 +87,7 @@ public class CommandOperatorKeypad {
 
     }
 
-    public Trigger stow() {
+    public Trigger action() {
         return key(Button.kStowButton);
     }
     public Trigger enter() {

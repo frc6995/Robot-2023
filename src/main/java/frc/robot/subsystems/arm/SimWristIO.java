@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.simulation.VariableLengthArmSim;
 import frc.robot.util.TimingTracer;
@@ -18,7 +19,7 @@ public class SimWristIO extends WristIO {
         DCMotor.getNEO(1),
         1.0 / WRIST_ROTATIONS_PER_MOTOR_ROTATION,
         wristMOI, HAND_LENGTH,
-        WRIST_MIN_ANGLE, WRIST_MAX_ANGLE, HAND_MASS_KILOS, true);
+        WRIST_MIN_ANGLE - Units.degreesToRadians(3), WRIST_MAX_ANGLE * 2, HAND_MASS_KILOS, true);
 
     private double m_inputVolts;
     public SimWristIO(Consumer<Runnable> addPeriodic) {
@@ -29,6 +30,7 @@ public class SimWristIO extends WristIO {
         m_wristSim.setGravityAngle(-Math.PI/2 - m_pivotAngleSupplier.getAsDouble());
         resetController();
         resetGoal();
+        startHome();
     }
 
     @Override
@@ -63,6 +65,24 @@ public class SimWristIO extends WristIO {
     @Override
     public double getVelocity() {
         return m_wristSim.getVelocityRadPerSec();
+    }
+
+    @Override
+    public boolean getHomed() {
+        // TODO Auto-generated method stub
+        return getAngle() <= WRIST_MAX_ANGLE;
+    }
+
+    @Override
+    public void startHome() {
+        // TODO Auto-generated method stub
+        super.startHome();
+    }
+
+    @Override
+    public void resetState(double position) {
+        m_wristSim.setState(VecBuilder.fill(position, 0));
+        
     }
     
 }
