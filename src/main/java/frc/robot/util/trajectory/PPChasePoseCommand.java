@@ -83,8 +83,8 @@ public class PPChasePoseCommand extends CommandBase implements Loggable {
         m_trajectoryGenerator = trajectoryGenerator;
         m_outputChassisSpeedsRobotRelative = outputChassisSpeedsFieldRelative;
         m_drive = drive;
-        m_finishTrigger = new Trigger(()->m_pose.get().getTranslation().getDistance(m_targetPose.get().getTranslation()) < Units.inchesToMeters(1)
-    && Math.abs(m_pose.get().getRotation().getDegrees() - m_targetPose.get().getRotation().getDegrees()) < 0.75)
+        m_finishTrigger = new Trigger(()->m_pose.get().getTranslation().getDistance(m_targetPose.get().getTranslation()) < Units.inchesToMeters(1.5)
+    && Math.abs(m_pose.get().getRotation().getDegrees() - m_targetPose.get().getRotation().getDegrees()) < 1)
     .debounce(0.05);
         addRequirements(m_drive);
         }

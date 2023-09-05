@@ -29,9 +29,10 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.TiltedElevatorSim;
 import edu.wpi.first.wpilibj.simulation.VariableLengthArmSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -44,11 +45,14 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import static frc.robot.Constants.ArmConstants.*;
 import frc.robot.Robot;
 import frc.robot.commands.arm.GoToPositionC;
+import frc.robot.subsystems.LightStripS.States;
 import frc.robot.subsystems.arm.ExtendIO;
+import frc.robot.subsystems.arm.JITBWristIO;
 import frc.robot.subsystems.arm.PivotIO;
 import frc.robot.subsystems.arm.RealExtendIO;
 import frc.robot.subsystems.arm.RealPivotIO;
@@ -66,17 +70,22 @@ import io.github.oblarg.oblog.annotations.Log;
 
 public class ArmS extends SubsystemBase implements Loggable {
     
+    @Log
     public final Field2d VISUALIZER = new Field2d();
 
     private ExtendIO m_extender;
     private PivotIO m_pivot;
     private WristIO m_wrist;
+    private Trigger m_coastModeTrigger = new CommandXboxController(0).start().and(DriverStation::isDisabled);
 
     public ArmS(Consumer<Runnable> addPeriodic) {
         if (RobotBase.isReal()) {
+            Timer.delay(0.1);
             m_extender = new RealExtendIO(addPeriodic);
+            Timer.delay(0.1);
             m_pivot = new RealPivotIO(addPeriodic);
-            m_wrist = new RealWristIO(addPeriodic);
+            Timer.delay(0.1);
+            m_wrist = new JITBWristIO(addPeriodic);
         }
         else {
             m_extender = new SimExtendIO(addPeriodic);
@@ -86,13 +95,14 @@ public class ArmS extends SubsystemBase implements Loggable {
         m_extender.setAngleSupplier(m_pivot::getContinuousRangeAngle);
         m_wrist.setPivotAngleSupplier(m_pivot::getContinuousRangeAngle);
         m_pivot.setExtendLengthSupplier(m_extender::getLength);
+        m_coastModeTrigger.whileTrue(coastC());
         // Homing setup for extension
         new Trigger(DriverStation::isEnabled).onTrue(Commands.runOnce(m_extender::resetController).ignoringDisable(true));
         Command homingCommand = Commands.runOnce(()->{
             m_extender.onHome();
             m_extender.resetController();
         }).ignoringDisable(true);
-        new Trigger(m_extender::isHomed).debounce(0.04).and(new Trigger(DriverStation::isDisabled))
+        new Trigger(m_extender::isHomed).and(m_coastModeTrigger.negate()).debounce(0.04).and(new Trigger(DriverStation::isDisabled))
             .onTrue(homingCommand);
         
         initVisualizer();
@@ -258,11 +268,25 @@ public class ArmS extends SubsystemBase implements Loggable {
     // public Command scoreHighCubeC() {
     //     return followJointSpaceTargetC(()->SCORE_HIGH_CONE_POSITION);
     // }
+
+    public Command coastC() {
+        return runOnce(()->{
+            m_extender.setIdleMode(IdleMode.kCoast);
+            m_wrist.setIdleMode(IdleMode.kCoast);
+            m_pivot.setIdleMode(IdleMode.kCoast);
+        }).andThen(
+            LightStripS.getInstance().stateC(()->States.ArmAdjust)
+        ).finallyDo((interrupted)->{
+            m_extender.setIdleMode(IdleMode.kBrake);
+            m_wrist.setIdleMode(IdleMode.kBrake);
+            m_pivot.setIdleMode(IdleMode.kBrake);
+        }).ignoringDisable(true);
+    }
     public Command stowC() {
-        return goToPositionC(()->ArmPositions.PRESTOW).andThen(goToPositionC(()->ArmPositions.STOW));
+        return goToPositionC(()->ArmPositions.STOW);
     }
     public Command stowIndefiniteC() {
-        return goToPositionIndefiniteC(()->STOW_POSITION);
+        return stowC();
     }
 
     public Command followJointSpaceTargetC(Supplier<ArmPosition> positionSupplier) {
@@ -293,8 +317,9 @@ public class ArmS extends SubsystemBase implements Loggable {
      */
 
     public void initVisualizer() {
-        Shuffleboard.getTab("ArmS").add("MECH_VISUALIZER", MECH_VISUALIZER);
-        Shuffleboard.getTab("ArmS").add("VISUALIZER", VISUALIZER);
+        //NetworkTableInstance.getDefault().
+        //Shuffleboard.getTab("ArmS").add("MECH_VISUALIZER", MECH_VISUALIZER);
+        //Shuffleboard.getTab("ArmS").add("VISUALIZER", VISUALIZER);
         initMechVisualizer();
     }
 
@@ -326,7 +351,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         MECH_VISUALIZER_HAND.setAngle(Units.radiansToDegrees(m_wrist.getAngle()));
     }
 
-    
+    @Log
     private final Mechanism2d MECH_VISUALIZER = new Mechanism2d(Units.feetToMeters(12), Units.feetToMeters(8));
     private final MechanismRoot2d MECH_VISUALIZER_ROOT = MECH_VISUALIZER.getRoot("root", Units.feetToMeters(6), 0);
     private final MechanismLigament2d MECH_VISUALIZER_PIVOT_BASE = new MechanismLigament2d(

@@ -97,7 +97,7 @@ public class Constants {
         // 12 volts / (5676rpm *2pi radPerRev  / 60 spm / 12.8 revsPerWheelRev)
         public static final double STEER_KV = 12.0/ (5676 * (2*Math.PI)/60/12.8);
     
-        public static final double DRIVE_P = 23;//9;
+        public static final double DRIVE_P = 2;//9;
         public static final double DRIVE_D = 0;
 
 
@@ -197,8 +197,8 @@ public class Constants {
         public static final String CAM_3_NAME = "OV9281-3";
         public static final String CAM_4_NAME = "OV9281-4";
         private static final double CAM_HEIGHT = Units.inchesToMeters(16);
-        private static final double CAM_X = Units.inchesToMeters(3.5);
-        private static final double CAM_Y = Units.inchesToMeters(7.5);
+        private static final double CAM_X = Units.inchesToMeters(6.6 / 2.0);
+        private static final double CAM_Y = Units.inchesToMeters(15.3/2.0);
         private static final double CAM_PITCH = Units.degreesToRadians(-15);
         private static final double CAM_YAW = Units.degreesToRadians(32);
     
@@ -206,14 +206,14 @@ public class Constants {
             new Translation3d(CAM_X, CAM_Y, CAM_HEIGHT), 
             new Rotation3d(0, CAM_PITCH, CAM_YAW));
         public static final Transform3d robotToCam2 = new Transform3d(
-            new Translation3d(CAM_X, -CAM_Y, CAM_HEIGHT), 
+            new Translation3d(CAM_X, -CAM_Y- Units.inchesToMeters(0.5), CAM_HEIGHT), 
             new Rotation3d(0, CAM_PITCH, -CAM_YAW));
         public static final Transform3d robotToCam3 = new Transform3d(
             new Translation3d(-CAM_X, CAM_Y, CAM_HEIGHT), 
             new Rotation3d(0, CAM_PITCH, (Math.PI) - CAM_YAW));
         public static final Transform3d robotToCam4 = new Transform3d(
             new Translation3d(-CAM_X, -CAM_Y, CAM_HEIGHT), 
-            new Rotation3d(0, CAM_PITCH, (Math.PI) + CAM_YAW));
+            new Rotation3d(0, CAM_PITCH, (Math.PI) + CAM_YAW + Units.degreesToRadians(5.5)));
         
         public static AprilTagFieldLayout TAG_FIELD_LAYOUT = 
         new AprilTagFieldLayout(
@@ -281,9 +281,15 @@ public class Constants {
                     VisionConstants.robotToCam1),
                 new VisionSource(
                     VisionConstants.CAM_2_NAME,
-                   VisionConstants.robotToCam2));
+                   VisionConstants.robotToCam2),
+                new VisionSource(
+                    VisionConstants.CAM_3_NAME,
+                    VisionConstants.robotToCam3));//,
+                // new VisionSource(
+                //     VisionConstants.CAM_4_NAME,
+                //    VisionConstants.robotToCam4));
     
-        public static final int THREAD_SLEEP_DURATION_MS = 5;
+        public static final int THREAD_SLEEP_DURATION_MS = 20;
       }
 
     public static final class ArmConstants {
@@ -303,9 +309,10 @@ public class Constants {
         public static final double EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION = 1.0/9.0;
         public static final double EXTEND_METERS_PER_DRUM_ROTATION = Math.PI * 2 * EXTEND_DRUM_RADIUS * 2; // 2x distance
 
-        public static final double ARM_EXTEND_KG_VERTICAL = 0.3 * 9.0/16.0;
-        public static final double ARM_EXTEND_KS = 0.1;
-        public static final double ARM_EXTEND_KV = 1.31/0.15 * (9.0 / 16.0);//12 /*v*//(5676 /*rpm */ * EXTEND_METERS_PER_DRUM_ROTATION * EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION / 60);
+        public static final double ARM_EXTEND_KG_VERTICAL = 0.35 * 16.0/9.0;
+        public static final double ARM_EXTEND_KS = 0.1 * 16.0/9.0;
+        public static final double ARM_EXTEND_KV = 1.31/0.15 * 9.0/16.0;//12 /*v*//(5676 /*rpm */ * EXTEND_METERS_PER_DRUM_ROTATION * EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION / 60);
+        public static final double ARM_EXTEND_KA = 0.4 * 16.0/9.0;
         /* PIVOT */
         public static final double MIN_ARM_ANGLE = 5.86 - 2*Math.PI;
         public static final double MAX_ARM_ANGLE = Math.PI + 0.42;
@@ -313,7 +320,7 @@ public class Constants {
 
         public static final double PIVOT_ENCODER_OFFSET = 0.423 * Math.PI * 2.0;
 
-        public static final double ARM_MASS_KILOS = Units.lbsToKilograms(21.1);
+        public static final double ARM_MASS_KILOS = Units.lbsToKilograms(17);
 
         public static final double ARM_MOI_SHRUNK = 0.7975;
         
@@ -332,9 +339,9 @@ public class Constants {
         // I.e. 0 is straight out from the pivot.
         // positive angles match pivot (up and over, with 0 being straight out the robot front)
         public static final int WRIST_MOTOR_ID = 25;
-        public static final double WRIST_ROTATIONS_PER_MOTOR_ROTATION = 1.0/31.030;
+        public static final double WRIST_ROTATIONS_PER_MOTOR_ROTATION = 1.0/31.0303;
         public static final double WRIST_ENCODER_OFFSET = 0.0972610;//5.382308 - Math.PI;//0.995;
-        public static final double HAND_LENGTH = Units.inchesToMeters(8);
+        public static final double HAND_LENGTH = Units.inchesToMeters(6);
         public static final double HAND_MASS_KILOS = Units.lbsToKilograms(5);
       
         public static final double WRIST_MIN_ANGLE = Units.degreesToRadians(-127);
@@ -343,15 +350,11 @@ public class Constants {
 
         public static class ArmPositions {
             public static final ArmPosition STOW = new ArmPosition(
-                Units.degreesToRadians(180 - 75.4),
-                MIN_ARM_LENGTH,
-                WRIST_MIN_ANGLE
+                Units.degreesToRadians(60),
+                MIN_ARM_LENGTH + Units.inchesToMeters(3),
+                WRIST_MAX_ANGLE
             );
-            public static final ArmPosition PRESTOW = new ArmPosition(
-                Units.degreesToRadians(180 - 75.4),
-                MIN_ARM_LENGTH,
-                Units.degreesToRadians(-90)
-            );
+            public static final ArmPosition PRESTOW = STOW;
             public static final ArmPosition FRONT_PLATFORM_TIPPED = new ArmPosition(
                 Units.degreesToRadians(75.4), MIN_ARM_LENGTH,  Units.degreesToRadians(-70));
             public static final ArmPosition FRONT_GROUND_CUBE = new ArmPosition(
@@ -362,21 +365,21 @@ public class Constants {
         }
 
         public static final ArmPosition SCORE_HIGH_CONE_POSITION = new ArmPosition(
-            0.658,
-            1.429,
-            -Units.degreesToRadians(90));
+            0.738,
+            1.417,
+            -1.03);
         public static final ArmPosition SCORE_HIGH_CUBE_POSITION = new ArmPosition(
-        0.658 - Units.degreesToRadians(10),
-        1.2,
-        (Math.PI/2)-1);
+            0.65,
+            1.07,
+            -1.666);
         public static final ArmPosition SCORE_MID_CONE_POSITION = new ArmPosition(
-            0.74,
-            1.082,
-            -0.74);
+            0.775,
+            0.900,
+            -1.155);
         public static final ArmPosition SCORE_MID_CUBE_POSITION = new ArmPosition(
-            0.658 - Units.degreesToRadians(15),
-            0.75,
-            (Math.PI/2)-1);
+            0.72,
+            0.58,
+            -1.79);
         public static final ArmPosition RETRACTED_SCORE_CONE_POSITION = new ArmPosition(
             0.658,
             0.628,
@@ -440,12 +443,12 @@ public class Constants {
 
     public static final class IntakeConstants {
         public static final int INTAKE_CAN_ID = 30; 
-        public static final double INTAKE_VOLTAGE = 6.995 / 3.0;
+        public static final double INTAKE_VOLTAGE = 11;
         public static final int INTAKE_EXTEND = 0;
         public static final int INTAKE_RETRACT= 1;
 
         public static final int INTAKE_TOF_CAN_ID = 32;
-        public static final double INTAKE_CENTERED_CONE_DISTANCE = 130.0;
+        public static final double INTAKE_CENTERED_CONE_DISTANCE = 157.0;
     }
 
     public static final class LightConstants {

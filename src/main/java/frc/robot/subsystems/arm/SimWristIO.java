@@ -2,6 +2,8 @@ package frc.robot.subsystems.arm;
 
 import java.util.function.Consumer;
 
+import com.revrobotics.CANSparkMax.IdleMode;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -83,6 +85,18 @@ public class SimWristIO extends WristIO {
     public void resetState(double position) {
         m_wristSim.setState(VecBuilder.fill(position, 0));
         
+    }
+
+    @Override
+    public void setIdleMode(IdleMode mode) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public double getCurrent() {
+        // TODO Auto-generated method stub
+        return 0;
     }
     
 }

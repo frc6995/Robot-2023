@@ -22,6 +22,8 @@ import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 import java.util.function.Function;
 
+import com.revrobotics.CANSparkMax.IdleMode;
+
 public class SimExtendIO extends ExtendIO {
 
 
@@ -85,6 +87,12 @@ public class SimExtendIO extends ExtendIO {
     public double getVolts() {
         // TODO Auto-generated method stub
         return m_inputVolts;
+    }
+
+    @Override
+    public void setIdleMode(IdleMode mode) {
+        // TODO Auto-generated method stub
+        
     }
     
 }

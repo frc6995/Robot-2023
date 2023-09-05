@@ -29,46 +29,45 @@ import static edu.wpi.first.wpilibj2.command.Commands.sequence;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
+import frc.robot.util.sparkmax.SparkMax;
+
 import static frc.robot.Constants.IntakeConstants.*;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
 public class IntakeS extends SubsystemBase implements Loggable {
-  private final CANSparkMax intakeMotor = new CANSparkMax(INTAKE_CAN_ID, MotorType.kBrushless);
+  private final SparkMax intakeMotor = new SparkMax(INTAKE_CAN_ID, MotorType.kBrushless);
   @Log
   private boolean isCube = false;
 
   private final TimeOfFlight distanceSensor = new TimeOfFlight(Constants.IntakeConstants.INTAKE_TOF_CAN_ID);
-  private Trigger cubeDebouncedBeamBreak = new Trigger(this::hitBeamBreak);//.debounce(0.06);
+  private Trigger cubeDebouncedBeamBreak = new Trigger(()->intakeMotor.getOutputCurrent() > 3).debounce(0.04);//.debounce(0.06);
   private Trigger coneDebouncedBeamBreak = new Trigger(this::hitBeamBreak);//.debounce(0.0);
 
-  private GenericHID simTrigger = new GenericHID(3);
     /** Creates a new IntakeS. */
   public IntakeS() {
 
     intakeMotor.restoreFactoryDefaults();
     intakeMotor.setIdleMode(IdleMode.kBrake);
     intakeMotor.setSecondaryCurrentLimit(15);
-    intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 25);
+    intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
-    
-    intakeMotor.setSmartCurrentLimit(10, 10);
-    intakeMotor.burnFlash();
+    intakeMotor.setSmartCurrentLimit(20, 20);
 
     distanceSensor.setRangingMode(RangingMode.Short, 999);
     distanceSensor.setRangeOfInterest(9,9,11,11);
-    setDefaultCommand(run(()->this.intake(0)));
+    setDefaultCommand(run(()->this.intake(isCube? 0.5 : 1)));
   }
 
   public Transform2d getConeCenterOffset() {
     
     double distanceToCone = getConeCenterOffsetDistance();
-    if (Math.abs(distanceToCone) > 0.1) {
+    if (Math.abs(distanceToCone) > 0.15) {
       return new Transform2d();
     }
     
@@ -79,19 +78,19 @@ public class IntakeS extends SubsystemBase implements Loggable {
 
   @Log
   public double getConeCenterOffsetDistance() {
-     return (INTAKE_CENTERED_CONE_DISTANCE - distanceSensor.getRange()) / 1000.0;
+     return -(INTAKE_CENTERED_CONE_DISTANCE - distanceSensor.getRange()) / 1000.0;
   }
-  @Log
+  //@Log
   public double getIntakeVolts() {
     return intakeMotor.getAppliedOutput() * 12;
   }
 
-  @Log
+  //@Log
   public double getDistanceSensor() {
     return distanceSensor.getRange();
   }
 
-  @Log
+  //@Log
   public double getRangeSigma() {
     return distanceSensor.getRangeSigma();
   }
@@ -103,20 +102,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
 
   @Log
   public boolean hitBeamBreak() {
-<<<<<<< HEAD
-    return m_beamBreak.isPressed() || (Math.abs(getConeCenterOffsetDistance()) < 0.1) || simTrigger.getRawButton(1);
-  }
-
-  public double getHandLength() {
-    if (isExtended) {
-      return Units.inchesToMeters(16);
-    }
-    else {
-      return Units.inchesToMeters(9.4);
-    }
-=======
     return (Math.abs(getConeCenterOffsetDistance()) < 0.1);
->>>>>>> io-split
   }
 
   /**
@@ -125,7 +111,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
    */
 
   public void intake(double voltage) {
-    intakeMotor.setVoltage(voltage * (isCube() ? -1 : 1));
+    intakeMotor.setVoltage(voltage  * (isCube() ? 1 : -1));
   }
 
 
@@ -134,7 +120,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
    */
 
   public void intake() {
-    intake(Constants.IntakeConstants.INTAKE_VOLTAGE);
+    intake((isCube? 0.25 : 1) * Constants.IntakeConstants.INTAKE_VOLTAGE);
   }
 
   public Command autoStagedIntakeC() {

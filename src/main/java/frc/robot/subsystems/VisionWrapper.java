@@ -10,11 +10,9 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 import frc.robot.Constants.Config;
 import frc.robot.Constants.PoseEstimator;
 import frc.robot.Constants.Vision;
@@ -25,22 +23,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
+
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.targeting.PhotonPipelineResult;
+
+import frc.robot.util.AprilTags;
 import frc.robot.util.CSV;
 
 
 public class VisionWrapper {
   /** If shuffleboard should be used--important for unit testing. */
-  private static boolean useShuffleboard = true;
-
-  private final ShuffleboardLayout cameraStatusList =
-      Shuffleboard.getTab("DriverView")
-          .getLayout("photonCameras", BuiltInLayouts.kList)
-          .withPosition(11, 0)
-          .withSize(2, 3);
+  private static boolean useShuffleboard = false;
 
   record CameraEstimator(PhotonCamera camera, PhotonPoseEstimator estimator) {}
 
@@ -50,8 +47,11 @@ public class VisionWrapper {
 
   private double lastDetection = 0;
 
+  private Supplier<Rotation2d> headingSupplier = ()->new Rotation2d();
+
   /** Creates a new VisionSubsystem. */
-  public VisionWrapper() {
+  public VisionWrapper(Supplier<Rotation2d> headingSupplier) {
+    this.headingSupplier = headingSupplier;
     // loading the 2023 field arrangement
     fieldLayout = VisionConstants.TAG_FIELD_LAYOUT;
 
@@ -60,11 +60,10 @@ public class VisionWrapper {
       var estimator =
           new PhotonPoseEstimator(
               fieldLayout,
-              PhotonPoseEstimator.PoseStrategy.MULTI_TAG_PNP,
+              PhotonPoseEstimator.PoseStrategy.LOWEST_AMBIGUITY,
               camera,
               visionSource.robotToCamera());
       estimator.setMultiTagFallbackStrategy(PhotonPoseEstimator.PoseStrategy.LOWEST_AMBIGUITY);
-      cameraStatusList.addBoolean(visionSource.name(), camera::isConnected);
       cameraEstimators.add(new CameraEstimator(camera, estimator));
     }
 
@@ -73,21 +72,21 @@ public class VisionWrapper {
     //       "time since apriltag detection",
     //       () -> String.format("%3.0f seconds", Timer.getFPGATimestamp() - lastDetection));
 
-    var thread =
-        new Thread(
-            () -> {
-              if (fieldLayout == null) return;
-              while (!Thread.currentThread().isInterrupted()) {
-                this.findVisionMeasurements();
-                try {
-                  Thread.sleep(Vision.THREAD_SLEEP_DURATION_MS);
-                } catch (InterruptedException e) {
-                  Thread.currentThread().interrupt();
-                }
-              }
-            });
-    thread.setDaemon(true);
-    thread.start();
+    // var thread =
+    //     new Thread(
+    //         () -> {
+    //           if (fieldLayout == null) return;
+    //           while (!Thread.currentThread().isInterrupted()) {
+    //             this.findVisionMeasurements();
+    //             try {
+    //               Thread.sleep(Vision.THREAD_SLEEP_DURATION_MS);
+    //             } catch (InterruptedException e) {
+    //               Thread.currentThread().interrupt();
+    //             }
+    //           }
+    //         });
+    // thread.setDaemon(true);
+    // thread.start();
   }
 
   record MeasurementRow(
@@ -176,7 +175,7 @@ public class VisionWrapper {
     return visionMeasurements.poll();
   }
 
-  private void findVisionMeasurements() {
+  public void findVisionMeasurements() {
     for (CameraEstimator cameraEstimator : cameraEstimators) {
       PhotonPipelineResult frame = cameraEstimator.camera().getLatestResult();
 
@@ -191,22 +190,27 @@ public class VisionWrapper {
           && (estimation.targetsUsed.get(0).getPoseAmbiguity() > PoseEstimator.POSE_AMBIGUITY_CUTOFF
               || estimation.targetsUsed.get(0).getPoseAmbiguity() == -1)) continue;
 
-      double sumDistance = 0;
-      for (var target : estimation.targetsUsed) {
-        var t3d = target.getBestCameraToTarget();
-        sumDistance +=
-            Math.sqrt(Math.pow(t3d.getX(), 2) + Math.pow(t3d.getY(), 2) + Math.pow(t3d.getZ(), 2));
-      }
-      double avgDistance = sumDistance / estimation.targetsUsed.size();
+      // double sumDistance = 0;
+      // for (var target : estimation.targetsUsed) {
+      //   var t3d = target.getBestCameraToTarget();
+      //   sumDistance +=
+      //       Math.sqrt(Math.pow(t3d.getX(), 2) + Math.pow(t3d.getY(), 2) + Math.pow(t3d.getZ(), 2));
+      // }
+      // double avgDistance = sumDistance / estimation.targetsUsed.size();
 
       var deviation =
-          PoseEstimator.TAG_COUNT_DEVIATION_PARAMS
-              .get(
-                  MathUtil.clamp(
-                      estimation.targetsUsed.size() - 1,
-                      0,
-                      PoseEstimator.TAG_COUNT_DEVIATION_PARAMS.size() - 1))
-              .computeDeviation(avgDistance);
+      AprilTags.calculateVisionUncertainty(
+        estimation.estimatedPose.getX(),
+        headingSupplier.get(),
+        new Rotation2d(cameraEstimator.estimator().getRobotToCameraTransform().getRotation().getZ()),
+        cameraEstimator.camera.getName());
+          // PoseEstimator.TAG_COUNT_DEVIATION_PARAMS
+          //     .get(
+          //         MathUtil.clamp(
+          //             estimation.targetsUsed.size() - 1,
+          //             0,
+          //             PoseEstimator.TAG_COUNT_DEVIATION_PARAMS.size() - 1))
+          //     .computeDeviation(avgDistance);
 
       // System.out.println(
       //     String.format(
@@ -216,11 +220,7 @@ public class VisionWrapper {
       //         smallestDistance,
       //         poseAmbiguityFactor,
       //         confidenceMultiplier));
-      logMeasurement(
-          estimation.targetsUsed.size(),
-          avgDistance,
-          estimation.targetsUsed.get(0).getPoseAmbiguity(),
-          estimation.estimatedPose);
+
       visionMeasurements.add(new VisionMeasurement(estimation, deviation));
     }
   }

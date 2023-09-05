@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class AprilTags {
     public static Matrix<N3, N1> calculateVisionUncertainty(double poseX, Rotation2d heading, Rotation2d cameraYaw, String cameraName) {
         double maximumUncertainty = 3;
-        double minimumUncertainty = 0.02;
+        double minimumUncertainty = 0.1;
         double a = 6;
         double b = -1.3;
         Rotation2d cameraWorldYaw = cameraYaw.rotateBy(heading);
@@ -49,6 +49,6 @@ public class AprilTags {
         SmartDashboard.putNumber("Debug/Cameras/"+cameraName+"/Vision Uncertainty", positionUncertainty);
         SmartDashboard.putBoolean("Debug/Cameras/"+cameraName+"/Facing Red Alliance", facingRedAlliance);
 
-        return VecBuilder.fill(positionUncertainty,positionUncertainty,positionUncertainty*3);
+        return VecBuilder.fill(positionUncertainty,positionUncertainty,1000);
     }
 }

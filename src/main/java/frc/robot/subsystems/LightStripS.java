@@ -7,12 +7,16 @@ package frc.robot.subsystems;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+
 import static frc.robot.Constants.LightConstants.*;
 
 public class LightStripS {
@@ -20,7 +24,7 @@ public class LightStripS {
   private static LightStripS m_instance = new LightStripS();
 
   private AddressableLED led = new AddressableLED(0);
-  private AddressableLEDBuffer buffer = new  AddressableLEDBuffer(64);
+  private AddressableLEDBuffer buffer = new  AddressableLEDBuffer(268);
   private final PersistentLedState persistentLedState = new PersistentLedState();
 
   private static class PersistentLedState {
@@ -49,7 +53,9 @@ public class LightStripS {
    * of the state (the lower the number, the higher the priority)
    */
   public static enum States {
-    Disabled(setColor(48, 189, 43)), // set in robotPeriodic
+    ArmAdjust(setColor(0, 0, 255)),
+    SetupDone(setColor(0, 255, 0)), // set in robotPeriodic
+    Disabled(setColor(255, 0, 0)), // set in robotPeriodic
     Error(pulse(0.25, setColor(255, 0, 0))),
     Climbing((ledBuffer, persistentState) -> {
       for (int i = 0; i < ledBuffer.getLength(); i++) {
@@ -86,6 +92,10 @@ public class LightStripS {
    */
   public void requestState(States state) {
     m_states.add(state);
+  }
+
+  public Command stateC(Supplier<States> state) {
+    return Commands.run(()->requestState(state.get()));
   }
 
   /**

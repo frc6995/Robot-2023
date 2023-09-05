@@ -3,8 +3,12 @@ package frc.robot.subsystems.arm;
 import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 
+import com.revrobotics.CANSparkMax.IdleMode;
+
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.controller.LinearPlantInversionFeedforward;
 import edu.wpi.first.math.controller.LinearQuadraticRegulator;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -18,6 +22,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -36,9 +41,10 @@ public abstract class PivotIO implements Loggable {
     private LinearPlantInversionFeedforward<N2, N1, N1> m_pivotFeedForward = new LinearPlantInversionFeedforward<>(
             m_pivotPlant, 0.02);
 
+    private Vector<N2> m_tolerances = VecBuilder.fill(0.05, 0.05);
     private LinearQuadraticRegulator<N2, N1, N1> m_pivotController = new LinearQuadraticRegulator<N2, N1, N1>(
             m_pivotPlant,
-            VecBuilder.fill(0.01, 0.01),
+            m_tolerances,
             VecBuilder.fill(12),
             0.02);
 
@@ -49,6 +55,17 @@ public abstract class PivotIO implements Loggable {
     public PivotIO(Consumer<Runnable> addPeriodic) {
         addPeriodic.accept(this::updatePivotPlant);
         addPeriodic.accept(this::runPID);
+        addPeriodic.accept(()->{
+            if (DriverStation.isDisabled()) {
+                resetController();
+                resetGoal();
+            }
+        });
+    }
+
+    public void onEnabled(){
+        resetController();
+        resetGoal();
     }
 
     public void setExtendLengthSupplier(DoubleSupplier extendLengthSupplier) {
@@ -133,7 +150,7 @@ public abstract class PivotIO implements Loggable {
     }
 
     private double getLength() {
-        return m_extendLengthSupplier.getAsDouble();
+        return MathUtil.clamp(m_extendLengthSupplier.getAsDouble(), MIN_ARM_LENGTH, MAX_ARM_LENGTH);
     }
 
     /**
@@ -162,10 +179,10 @@ public abstract class PivotIO implements Loggable {
     @Log
     public double getPivotCGRadius() {
         double minCG = 0;
-        double maxCG = Units.inchesToMeters(8);
+        double maxCG = Units.inchesToMeters(30);
 
         double result = minCG;
-        double frac = (m_extendLengthSupplier.getAsDouble() - MIN_ARM_LENGTH) / (MAX_ARM_LENGTH - MIN_ARM_LENGTH);
+        double frac = (getLength() - MIN_ARM_LENGTH) / (MAX_ARM_LENGTH - MIN_ARM_LENGTH);
         result += frac * (maxCG - minCG);
         return result;
     }
@@ -180,15 +197,10 @@ public abstract class PivotIO implements Loggable {
 
     public void updatePivotPlant() {
         if (Math.abs(getLength() - m_length) > 0.005) {
-            m_pivotPlant.getA().set(1, 1,
-            -1.0 / ARM_ROTATIONS_PER_MOTOR_ROTATION * 1.0 / ARM_ROTATIONS_PER_MOTOR_ROTATION
-                    * m_pivotGearbox.KtNMPerAmp
-                    / (m_pivotGearbox.KvRadPerSecPerVolt * m_pivotGearbox.rOhms * getPivotMOI()));
-            m_pivotPlant.getB().set(1, 0,
-                    1.0 / ARM_ROTATIONS_PER_MOTOR_ROTATION * m_pivotGearbox.KtNMPerAmp
-                            / (m_pivotGearbox.rOhms * getPivotMOI()));
+            m_pivotPlant = LinearSystemId.createSingleJointedArmSystem(
+                DCMotor.getNEO(2), getPivotMOI(), 1.0 / ARM_ROTATIONS_PER_MOTOR_ROTATION);
             m_pivotController = new LinearQuadraticRegulator<N2, N1, N1>(
-                m_pivotPlant, VecBuilder.fill(0.05, 0.05), VecBuilder.fill(12), 0.02);
+                m_pivotPlant, m_tolerances, VecBuilder.fill(12), 0.02);
             m_pivotFeedForward = new LinearPlantInversionFeedforward<>(
                 m_pivotPlant, 0.02);
             m_length = getLength();
@@ -211,6 +223,8 @@ public abstract class PivotIO implements Loggable {
         // SmartDashboard.putNumber("armCommandVelocity", velocityRadPerSec);
     }
 
+    protected abstract double getVelocity();
+
     /**
      * sets pivot joint to desired angle in radians
      * 
@@ -221,17 +235,17 @@ public abstract class PivotIO implements Loggable {
         var profile = new TrapezoidProfile(m_constraints, m_goal, m_setpoint);
         m_setpoint = profile.calculate(0.02);
         var nextSetpoint = profile.calculate(0.04);
-        var currentVoltageAdd = (getPivotkG() * getAngle().getCos())
+        var currentVoltageAdd = (getPivotkG())
                 + PIVOT_KS * Math.signum(m_setpoint.velocity);
         setVolts(
                 m_pivotController.calculate(
-                        VecBuilder.fill(getContinuousRangeAngle(), 0),
-                        VecBuilder.fill(m_setpoint.position, 0)).get(0, 0)
+                        VecBuilder.fill(getContinuousRangeAngle(), getVelocity()),
+                        VecBuilder.fill(m_setpoint.position, m_setpoint.velocity)).get(0, 0)
                         + currentVoltageAdd
                         + m_pivotFeedForward.calculate(
                                 VecBuilder.fill(0, m_setpoint.velocity),
                                 VecBuilder.fill(0, nextSetpoint.velocity))
-                                .get(0, 0) * 1.21);
+                                .get(0, 0));
     }
 
     public void setAngle(double targetAngle) {
@@ -278,4 +292,5 @@ public abstract class PivotIO implements Loggable {
     public String configureLogName() {
         return "Pivot";
     }
+    public abstract void setIdleMode(IdleMode mode);
 }

@@ -29,6 +29,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.SPI.Port;
@@ -55,6 +56,7 @@ import static frc.robot.Constants.DriveConstants.*;
 
 import frc.robot.Constants.VisionConstants;
 import frc.robot.util.AllianceWrapper;
+import frc.robot.util.AprilTags;
 import frc.robot.util.InputAxis;
 import frc.robot.util.NomadMathUtil;
 import frc.robot.util.trajectory.PPChasePoseCommand;
@@ -99,34 +101,24 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      * Takes in kinematics and robot angle for parameters
      */
     private final SwerveDrivePoseEstimator m_poseEstimator;
-    private final SwerveDriveOdometry m_odometry;
-    private final PhotonCameraWrapper m_camera1Wrapper;
-    private final PhotonCameraWrapper m_camera2Wrapper;
-    private final PhotonCameraWrapper m_camera3Wrapper;
-    private final PhotonCameraWrapper m_camera4Wrapper;
 
-    private final VisionWrapper m_visionWrapper = new VisionWrapper();
+    private final VisionWrapper m_visionWrapper;
 
     private Pose2d multitagPose = new Pose2d();
 
     public DrivebaseS(Consumer<Runnable> addPeriodic) {
         io = Robot.isReal() ? new RealSwerveDriveIO(addPeriodic) : new SimSwerveDriveIO(addPeriodic);
-        m_odometry = new SwerveDriveOdometry(m_kinematics, getHeading(), io.getCurrentPositions());
         m_poseEstimator = new SwerveDrivePoseEstimator(
                 m_kinematics, getHeading(), getModulePositions(), new Pose2d(),
                 Constants.PoseEstimator.STATE_STANDARD_DEVIATIONS,
                 Constants.PoseEstimator.VISION_MEASUREMENT_STANDARD_DEVIATIONS);
+        m_visionWrapper = new VisionWrapper(this::getPoseHeading);
         m_thetaController.setTolerance(Units.degreesToRadians(0.5));
         m_thetaController.enableContinuousInput(-Math.PI, Math.PI);
         m_profiledThetaController.setTolerance(Units.degreesToRadians(0.5));
         m_profiledThetaController.enableContinuousInput(-Math.PI, Math.PI);
         m_xController.setTolerance(0.01);
         m_yController.setTolerance(0.01);
-        m_camera1Wrapper = new PhotonCameraWrapper(VisionConstants.CAM_1_NAME, VisionConstants.robotToCam1);
-        m_camera2Wrapper = new PhotonCameraWrapper(VisionConstants.CAM_2_NAME, VisionConstants.robotToCam2);
-        m_camera3Wrapper = new PhotonCameraWrapper(VisionConstants.CAM_3_NAME, VisionConstants.robotToCam3);
-        m_camera4Wrapper = new PhotonCameraWrapper(VisionConstants.CAM_4_NAME, VisionConstants.robotToCam4);
-
     }
 
     public Rotation3d getRotation3d() {
@@ -146,10 +138,8 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
     @Override
     public void periodic() {
 
-        // update the odometry every 20ms
-        m_odometry.update(getHeading(), getModulePositions());
         m_poseEstimator.update(getHeading(), getModulePositions());
-
+        m_visionWrapper.findVisionMeasurements();
         /*
          * Process all vision measurements taken since the last periodic iteration
          */
@@ -324,14 +314,6 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
     }
 
     /**
-     * Get the pose as estimated by non-vision-assisted odometry.
-     * @return
-     */
-    public Pose2d getOdometryPose() {
-        return m_odometry.getPoseMeters();
-    }
-
-    /**
      * Return the simulated estimate of the robot's pose.
      * NOTE: on a real robot this will return a new Pose2d, (0, 0, 0)
      * 
@@ -362,7 +344,6 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
     public void resetPose(Pose2d pose) {
         io.resetPose(pose);
         m_poseEstimator.resetPosition(getHeading(), getModulePositions(), pose);
-        m_odometry.resetPosition(getHeading(), getModulePositions(), pose);
     }
 
     /**
@@ -445,7 +426,6 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      */
     public void drawRobotOnField(Field2d field) {
         field.setRobotPose(getPose());
-        field.getObject("odometry").setPose(getOdometryPose());
         field.getObject("multitag").setPose(multitagPose);
         // Draw a pose that is based on the robot pose, but shifted by the translation
         // of the module relative to robot center,

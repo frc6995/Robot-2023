@@ -20,7 +20,9 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.WPIUtilJNI;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -50,6 +52,7 @@ import frc.robot.util.AllianceWrapper;
 import frc.robot.util.InputAxis;
 import frc.robot.util.NomadMathUtil;
 import frc.robot.util.TimingTracer;
+import frc.robot.util.sparkmax.SparkMax;
 import io.github.oblarg.oblog.annotations.Log;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 
@@ -101,8 +104,9 @@ public class RobotContainer {
     /**
      * Trigger that determines whether the drivebase is close enough to its target pose to score a cube.
      */
-    @Log(methodName = "getAsBoolean")
-    private Trigger m_alignSafeToPlaceCube;
+    //@Log(methodName = "getAsBoolean")
+    private Trigger m_alignSafeToPlace;
+    private boolean m_setupDone = false;
     
     public RobotContainer(Consumer<Runnable> addPeriodic) {
         if (RobotBase.isSimulation()) {
@@ -110,21 +114,30 @@ public class RobotContainer {
             PhotonCamera.setVersionCheckEnabled(false);
         }
         addPeriodic.accept(Alert::periodic);
+        Timer.delay(0.1);
         m_drivebaseS = new DrivebaseS(addPeriodic);
-        m_alignSafeToPlaceCube = new Trigger(()->{
+        m_alignSafeToPlace = new Trigger(()->{
             Transform2d error = new Transform2d(m_targetAlignmentPose, m_drivebaseS.getPose());
-            return 
+            if (m_isCubeSelected) {
+                return
                 Math.abs(error.getRotation().getRadians()) < Units.degreesToRadians(3) &&
-                Math.abs(error.getX()) < 0.1 &&
-                Math.abs(error.getY()) < 0.1;
+                Math.abs(error.getX()) < 0.3 &&
+                Math.abs(error.getY()) < 0.2;
+            } else {
+                return
+                Math.abs(error.getRotation().getRadians()) < Units.degreesToRadians(3) &&
+                Math.abs(error.getX()) < 0.3 &&
+                Math.abs(error.getY()) < 0.2;
+            }
         });
     
+        Timer.delay(0.1);
         m_armS = new ArmS(addPeriodic);
 
         /**
          * Set driver mode on the USB camera streamed through PhotonVision
          */
-        PhotonCamera usbCam = new PhotonCamera("USB_Camera");
+        PhotonCamera usbCam = new PhotonCamera("HD_USB_Camera");
         usbCam.setDriverMode(true);
 
 
@@ -133,7 +146,7 @@ public class RobotContainer {
             m_targetAlignmentPose = pose;
             m_field.getObject("Selection").setPose(pose);
         }, (position)->{m_targetArmPosition = position;},
-        (selectedCube)->{m_isCubeSelected = selectedCube;});
+        (selectedCube)->{m_isCubeSelected = selectedCube; m_intakeS.setGamePiece(m_isCubeSelected);});
         // Set scoring to right hybrid node.
         m_keypad.setpointCommand(0, 0).schedule();
         
@@ -170,6 +183,15 @@ public class RobotContainer {
         m_field.getObject("bluePoses").setPoses(POIManager.BLUE_COMMUNITY);
         m_field.getObject("redPoses").setPoses(POIManager.RED_COMMUNITY);
         SmartDashboard.putData(m_autoSelector);
+        Timer.delay(0.2);
+        SparkMax.burnFlashInSync();
+        Timer.delay(0.2);
+        m_setupDone = true;
+        addPeriodic.accept(()->{
+            if (DriverStation.isDisabled() && m_setupDone) {
+                LightStripS.getInstance().requestState(States.SetupDone);
+            }
+        });
     }
 
     /**
@@ -188,7 +210,7 @@ public class RobotContainer {
                 alignToSelectedScoring().asProxy()
                 .until(
                     ()->
-                    m_isCubeSelected ? m_alignSafeToPlaceCube.getAsBoolean() : false)
+                    m_isCubeSelected ? m_alignSafeToPlace.getAsBoolean() : false)
                 .andThen(autoScoreSequenceCG().asProxy())
            
             );
@@ -258,6 +280,8 @@ public class RobotContainer {
         //lightSpeed = LightStripS.getInstance().getSpeed();
         TimingTracer.update();
         loopTime = TimingTracer.getLoopTime();
+        SmartDashboard.putNumber("loopTime", loopTime);
+
         //SmartDashboard.putNumber("loopTime", TimingTracer.getLoopTime());
         LightStripS.getInstance().requestState(m_isCubeSelected? States.RequestingCube : States.RequestingCone);
         /* Trace the loop duration and plot to shuffleboard */
@@ -307,13 +331,8 @@ public class RobotContainer {
     public Command autoScoreSequenceCG() {
         return sequence(
                 m_armS.goToPositionC(()->m_targetArmPosition),
-                either(
-                    sequence(
                         m_intakeS.outtakeC().withTimeout(0.4),
                         m_armS.stowC()
-                    ),
-                none(), 
-                ()->true)
             )
             .deadlineWith(Commands.run(()->LightStripS.getInstance().requestState(States.Scoring)));
 

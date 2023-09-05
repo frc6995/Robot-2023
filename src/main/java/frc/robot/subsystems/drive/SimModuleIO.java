@@ -1,6 +1,7 @@
 package frc.robot.subsystems.drive;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -15,8 +16,8 @@ public class SimModuleIO extends ModuleIO {
     SwerveModuleSim moduleSim = SimModuleIO.swerveSimModuleFactory();
     private double m_steerVolts;
     private double m_driveVolts;
-    public SimModuleIO(ModuleConstants moduleConstants) {
-        super(moduleConstants);
+    public SimModuleIO(Consumer<Runnable> addPeriodic, ModuleConstants moduleConstants) {
+        super(addPeriodic, moduleConstants);
         moduleSim.resetAzmth(Math.random() * 2 * Math.PI);
         // TODO Auto-generated constructor stub
     }

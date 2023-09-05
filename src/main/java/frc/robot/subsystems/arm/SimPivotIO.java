@@ -2,6 +2,8 @@ package frc.robot.subsystems.arm;
 
 import java.util.function.Consumer;
 
+import com.revrobotics.CANSparkMax.IdleMode;
+
 import static frc.robot.Constants.ArmConstants.*;
 
 import edu.wpi.first.math.MathUtil;
@@ -62,6 +64,18 @@ public class SimPivotIO extends PivotIO {
 
     public double getVolts() {
         return m_inputVolts;
+    }
+
+    @Override
+    public void setIdleMode(IdleMode mode) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    protected double getVelocity() {
+        // TODO Auto-generated method stub
+        return m_pivotSim.getVelocityRadPerSec();
     }
     
 }

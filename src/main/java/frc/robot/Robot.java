@@ -37,12 +37,14 @@ public class Robot extends TimedRobot {
         addPeriodic(()->{
             AllianceWrapper.setAlliance(DriverStation.getAlliance());
         }, 0.5);
+        addPeriodic(Logger::updateEntries, 0.04);
+        
         System.gc();
     }
 
     @Override
     public void robotPeriodic() {
-        Logger.updateEntries();
+        
         CommandScheduler.getInstance().run();
         robotContainer.periodic();
         matchTimeEntry.setNumber(DriverStation.getMatchTime());

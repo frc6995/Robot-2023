@@ -18,6 +18,8 @@ import io.github.oblarg.oblog.annotations.Log;
 
 import static frc.robot.Constants.DriveConstants.*;
 
+import java.util.function.Consumer;
+
 public abstract class ModuleIO implements Loggable {
 
     // steering trapezoid profile
@@ -44,13 +46,13 @@ public abstract class ModuleIO implements Loggable {
     protected final ModuleConstants m_moduleConstants;
     private final Alert m_pinionSlipAlert;
 
-    public ModuleIO(ModuleConstants moduleConstants) {
+    public ModuleIO(Consumer<Runnable> addPeriodic, ModuleConstants moduleConstants) {
         m_moduleConstants = moduleConstants;
         m_loggingName = moduleConstants.name + "-[" + moduleConstants.driveMotorID + ','
                 + moduleConstants.rotationMotorID + ']';
         m_pinionSlipAlert = new Alert(moduleConstants.name, "Check pinion slip", AlertType.ERROR);
         m_steerPIDController = new PIDController(
-                10 / (Math.PI/2), 0.0, STEER_D);
+                10 / (Math.PI), 0.0, STEER_D);
         // Tell the PID controller that it can move across the -pi to pi rollover point.
         m_steerPIDController.enableContinuousInput(-Math.PI, Math.PI);
 
@@ -111,10 +113,11 @@ public abstract class ModuleIO implements Loggable {
     public void setDesiredState(SwerveModuleState state) {
         state = SwerveModuleState.optimize(state,new Rotation2d(getAngle()));
         double prevVelSetpoint = m_drivePIDController.getSetpoint();
-        if (m_moduleConstants.name.contains("F")) {state.speedMetersPerSecond = -state.speedMetersPerSecond;}
+        //if (m_moduleConstants.name.contains("F")) {state.speedMetersPerSecond = -state.speedMetersPerSecond;}
+        double pidVolts = m_drivePIDController.calculate(getDriveVelocity(), state.speedMetersPerSecond);
         setDriveVoltage(
-                m_drivePIDController.calculate(getDriveVelocity(), state.speedMetersPerSecond)
-                        + m_driveFeedForward.calculate(prevVelSetpoint, state.speedMetersPerSecond, 0.02));
+                pidVolts+//m_drivePIDController.calculate(getDriveVelocity(), state.speedMetersPerSecond) +
+                        m_driveFeedForward.calculate(state.speedMetersPerSecond));
 
         
         double prevSteerGoal = m_steerGoal.position;

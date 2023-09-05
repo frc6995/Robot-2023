@@ -10,14 +10,13 @@ import io.github.oblarg.oblog.annotations.Log;
 /**
  * An extension of DoubleSupplier designed for pre-processing driver controller axis inputs.
  */
-public class InputAxis implements DoubleSupplier, Loggable {
+public class InputAxis implements DoubleSupplier{
     DoubleSupplier m_supplier;
     double deadband = 0;
     AsymmetricSlewRateLimiter limiter = new AsymmetricSlewRateLimiter(Double.MAX_VALUE, Double.MAX_VALUE);
     boolean square;
     double multiplier = 1;
     
-    @Log
     double outputValue;
     String name;
     public InputAxis(String name, DoubleSupplier supplier) {
@@ -25,12 +24,11 @@ public class InputAxis implements DoubleSupplier, Loggable {
         m_supplier = supplier;
     }
 
-    @Override
-    public String configureLogName() {
-        return name;
-    }
+    // @Override
+    // public String configureLogName() {
+    //     return name;
+    // }
 
-    @Log
     private double inputValue() {
         return m_supplier.getAsDouble();
     }

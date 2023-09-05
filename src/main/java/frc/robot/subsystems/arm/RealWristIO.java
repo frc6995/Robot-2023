@@ -4,6 +4,7 @@ import java.util.function.Consumer;
 
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
@@ -65,6 +66,18 @@ public class RealWristIO extends WristIO {
     public void resetState(double position) {
         // TODO Auto-generated method stub
         
+    }
+
+    @Override
+    public void setIdleMode(IdleMode mode) {
+        m_wristMotor.setIdleMode(mode);
+        
+    }
+
+    @Override
+    public double getCurrent() {
+        // TODO Auto-generated method stub
+        return 0;
     }
     
 }

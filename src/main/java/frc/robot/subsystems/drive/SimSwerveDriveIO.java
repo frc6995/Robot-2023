@@ -23,10 +23,10 @@ public class SimSwerveDriveIO extends SwerveDriveIO {
     public SimSwerveDriveIO(Consumer<Runnable> addPeriodic) {
         super(addPeriodic);
         m_modules = List.of(
-                new SimModuleIO(ModuleConstants.FL),
-                new SimModuleIO(ModuleConstants.FR),
-                new SimModuleIO(ModuleConstants.BL),
-                new SimModuleIO(ModuleConstants.BR));
+                new SimModuleIO(addPeriodic, ModuleConstants.FL),
+                new SimModuleIO(addPeriodic, ModuleConstants.FR),
+                new SimModuleIO(addPeriodic, ModuleConstants.BL),
+                new SimModuleIO(addPeriodic, ModuleConstants.BR));
         m_moduleSims = new ArrayList<SwerveModuleSim>();
         for (ModuleIO module : m_modules) {
             if (module instanceof SimModuleIO) {

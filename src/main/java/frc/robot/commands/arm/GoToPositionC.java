@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
@@ -24,9 +25,9 @@ public class GoToPositionC extends CommandBase {
   private ArmS m_armS;
   private ArmPosition m_startPosition;
   private ArmPosition m_targetPosition;
-  private List<ArmPosition> m_waypoints;
+  private List<Pair<ArmPosition, Boolean>> m_waypoints;
   private Supplier<ArmPosition> m_positionSupplier;
-  private double maxRotateLength = 0.64;
+  private final double maxRotateLength = 0.64;
   private int currentTarget = 0;
   private boolean m_shouldFinish = true;
 
@@ -73,8 +74,8 @@ public class GoToPositionC extends CommandBase {
     m_armS.resetPivot();
     m_armS.resetWrist();
 
-    m_waypoints = new LinkedList<ArmPosition>();
-    m_waypoints.add(m_startPosition);
+    m_waypoints = new LinkedList<Pair<ArmPosition, Boolean>>();
+    m_waypoints.add(Pair.of(m_startPosition, true));
     /*
      * if only wrist needed:
      * go directly to target
@@ -91,18 +92,21 @@ public class GoToPositionC extends CommandBase {
     if (retractBeforePivot) {
       // straighten wrist
 
-      m_waypoints.add(new ArmPosition(m_startPosition.pivotRadians, maxRotateLength,
-          MathUtil.clamp(m_startPosition.wristRadians, -safeWrist, safeWrist)));
+      m_waypoints.add(
+        Pair.of(new ArmPosition(m_startPosition.pivotRadians, Math.min(maxRotateLength, m_targetPosition.armLength),
+          MathUtil.clamp(m_targetPosition.wristRadians, -safeWrist, safeWrist)), true));
     }
     if (extendAfterPivot) {
-      m_waypoints.add(new ArmPosition(
+      m_waypoints.add(
+        Pair.of(new ArmPosition(
           m_targetPosition.pivotRadians, maxRotateLength,
-          MathUtil.clamp(m_targetPosition.wristRadians, -safeWrist, safeWrist)));
+          MathUtil.clamp(m_targetPosition.wristRadians, -safeWrist, safeWrist)), false));
     }
-    m_waypoints.add(new ArmPosition(
+    m_waypoints.add(
+      Pair.of(new ArmPosition(
         m_targetPosition.pivotRadians, m_targetPosition.armLength,
-        MathUtil.clamp(m_targetPosition.wristRadians, -safeWrist, safeWrist)));
-    m_waypoints.add(m_targetPosition);
+        MathUtil.clamp(m_targetPosition.wristRadians, -safeWrist, safeWrist)),false));
+    m_waypoints.add(Pair.of(m_targetPosition,true));
     // {
     // double targetLength = m_targetPosition.armLength;
     // if (Math.abs(m_startPosition.pivotRadians - m_targetPosition.pivotRadians) >
@@ -157,15 +161,18 @@ public class GoToPositionC extends CommandBase {
   }
 
   public void execute() {
+
     if (isAtSetpoint(m_targetPosition)) {
       currentTarget = m_waypoints.size() - 1;
-    } else if (isAtSetpoint(m_waypoints.get(currentTarget))) {
+    } else if (isAtSetpoint(m_waypoints.get(currentTarget).getFirst(),
+    m_waypoints.get(currentTarget).getSecond()
+    )) {
       if (currentTarget < m_waypoints.size() - 1) {
         currentTarget++;
       }
     }
 
-    var currentTargetPosition = m_waypoints.get(currentTarget);
+    var currentTargetPosition = m_waypoints.get(currentTarget).getFirst();
     m_armS.setExtendLength(m_armS.constrainLength(currentTargetPosition.armLength));
     m_armS.setAngle(currentTargetPosition.pivotRadians);
     m_armS.setWristAngle(currentTargetPosition.wristRadians);
@@ -175,8 +182,8 @@ public class GoToPositionC extends CommandBase {
 
     var actualPosition = m_armS.getArmPosition();
     var atSetpoint = (Math.abs(m_armS.constrainLength(m_targetPosition.armLength) - actualPosition.armLength) < Units
-        .inchesToMeters(0.5)
-        && Math.abs(m_targetPosition.pivotRadians - actualPosition.pivotRadians) < Units.degreesToRadians(2)
+        .inchesToMeters(2)
+        && Math.abs(m_targetPosition.pivotRadians - actualPosition.pivotRadians) < Units.degreesToRadians(3)
         && Math.abs(m_targetPosition.wristRadians - actualPosition.wristRadians) < Units.degreesToRadians(5));
     return atSetpoint && m_shouldFinish;
   }
@@ -185,13 +192,17 @@ public class GoToPositionC extends CommandBase {
     SmartDashboard.putBoolean("armMoving", false);
   }
 
-  private boolean isAtSetpoint(ArmPosition setpoint) {
+  private boolean isAtSetpoint(ArmPosition setpoint, Boolean wristRequired) {
 
     var actualPosition = m_armS.getArmPosition();
     var atSetpoint = (Math.abs(m_armS.constrainLength(setpoint.armLength) - actualPosition.armLength) < Units
         .inchesToMeters(2)
         && Math.abs(setpoint.pivotRadians - actualPosition.pivotRadians) < 0.2
-        && Math.abs(setpoint.wristRadians - actualPosition.wristRadians) < Units.degreesToRadians(5));
+        && (!wristRequired || Math.abs(setpoint.wristRadians - actualPosition.wristRadians) < Units.degreesToRadians(5)));
     return atSetpoint;
+  }
+
+  private boolean isAtSetpoint(ArmPosition setpoint) {
+    return isAtSetpoint(setpoint, true);
   }
 }
