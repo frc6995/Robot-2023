@@ -18,14 +18,14 @@ import java.util.function.Consumer;
 
 public class RealModuleIO extends ModuleIO {
 
-    private final SparkMax m_driveMotor;
-    private final SparkMax m_steerMotor;
-    private final SparkMaxAbsoluteEncoderWrapper m_magEncoder;
-    private double m_driveDistance = 0;
-    private double m_driveVelocity = 0;
-    private double m_steerAngle = 0;
-    private double m_steerVolts = 0;
-    private double m_driveVolts = 0;
+    protected final SparkMax m_driveMotor;
+    protected final SparkMax m_steerMotor;
+    protected final SparkMaxAbsoluteEncoderWrapper m_magEncoder;
+    protected double m_driveDistance = 0;
+    protected double m_driveVelocity = 0;
+    protected double m_steerAngle = 0;
+    protected double m_steerVolts = 0;
+    protected double m_driveVolts = 0;
     public RealModuleIO( Consumer<Runnable> addPeriodic, ModuleConstants moduleConstants) {
         super(addPeriodic, moduleConstants);
         m_driveMotor = new SparkMax(moduleConstants.driveMotorID, MotorType.kBrushless);

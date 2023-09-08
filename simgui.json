@@ -135,8 +135,7 @@
           },
           "Wrist": {
             "open": true
-          },
-          "open": true
+          }
         },
         "DrivebaseS": {
           "SimSwerveDriveIO": {
@@ -343,6 +342,24 @@
                 1.0
               ],
               "id": "NT:/Shuffleboard/Forward/outputValue"
+            },
+            {
+              "color": [
+                0.5764706134796143,
+                0.4705882668495178,
+                0.3764706254005432,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/DrivebaseS/io/BL-[16,15]/getDriveVelocity"
+            },
+            {
+              "color": [
+                0.8549020290374756,
+                0.545098066329956,
+                0.7647059559822083,
+                1.0
+              ],
+              "id": "NT:/Shuffleboard/DrivebaseS/io/BL-[16,15]/getDriveSetpoint"
             }
           ],
           "showPause": false

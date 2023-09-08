@@ -57,7 +57,7 @@ public class Alert {
    */
   public Alert(String group, String text, AlertType type) {
     this.group = group;
-    this.text = text;
+
     this.type = type;
     alerts.add(this);
   }
@@ -82,26 +82,6 @@ public class Alert {
       }
     }
     this.active = active;
-  }
-
-
-
-  /** Updates current alert text. */
-  public void setText(String text) {
-    if (active && !text.equals(this.text)) {
-      switch (type) {
-        case ERROR:
-          DriverStation.reportError(text, false);
-          break;
-        case WARNING:
-          DriverStation.reportWarning(text, false);
-          break;
-        case INFO:
-          System.out.println(text);
-          break;
-      }
-    }
-    this.text = text;
   }
 
   private static String[] getStrings(AlertType type) {

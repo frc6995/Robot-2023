@@ -46,7 +46,7 @@ public abstract class SwerveDriveIO implements Loggable {
     private void periodic() {
         updateModulePositions();
         updateModuleStates();
-        m_modules.forEach(ModuleIO::updateAlerts);
+        //m_modules.forEach(ModuleIO::updateAlerts);
     }
 
     public void setModuleStates(SwerveModuleState[] moduleStates) {

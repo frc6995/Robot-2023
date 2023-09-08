@@ -114,10 +114,10 @@ public abstract class ModuleIO implements Loggable {
         state = SwerveModuleState.optimize(state,new Rotation2d(getAngle()));
         double prevVelSetpoint = m_drivePIDController.getSetpoint();
         //if (m_moduleConstants.name.contains("F")) {state.speedMetersPerSecond = -state.speedMetersPerSecond;}
-        double pidVolts = m_drivePIDController.calculate(getDriveVelocity(), state.speedMetersPerSecond);
-        setDriveVoltage(
-                pidVolts+//m_drivePIDController.calculate(getDriveVelocity(), state.speedMetersPerSecond) +
-                        m_driveFeedForward.calculate(state.speedMetersPerSecond));
+
+        setDrivePid(state.speedMetersPerSecond, m_driveFeedForward.calculate(prevVelSetpoint, state.speedMetersPerSecond, 0.02));
+                // pidVolts+//m_drivePIDController.calculate(getDriveVelocity(), state.speedMetersPerSecond) +
+                //         m_driveFeedForward.calculate(prevVelSetpoint, state.speedMetersPerSecond, 0.02));
 
         
         double prevSteerGoal = m_steerGoal.position;
@@ -142,12 +142,21 @@ public abstract class ModuleIO implements Loggable {
         State prevSteerSetpoint = m_steerSetpoint;
         m_steerSetpoint = profile.calculate(0.02);
         State m_nextSetpoint = profile.calculate(0.04);
-        double steerVolts = m_steerPIDController.calculate(getAngle(), m_steerSetpoint.position);
-        setRotationVoltage(
-                steerVolts + m_steerFeedForward.calculate(m_steerSetpoint.velocity, m_nextSetpoint.velocity, 0.02)
-        );
+        setRotationPid(m_steerSetpoint.position, m_steerFeedForward.calculate(m_steerSetpoint.velocity, m_nextSetpoint.velocity, 0.02));
+        // double steerVolts = m_steerPIDController.calculate(getAngle(), m_steerSetpoint.position);
+        // setRotationVoltage(
+        //         steerVolts + m_steerFeedForward.calculate(m_steerSetpoint.velocity, m_nextSetpoint.velocity, 0.02)
+        // );
     }
 
+    public void setDrivePid(double velocity, double ffVolts){
+        double pidVolts = m_drivePIDController.calculate(getDriveVelocity(), velocity);
+        setDriveVoltage(pidVolts + ffVolts);
+    }
+    public void setRotationPid(double angle, double ffVolts){
+        double pidVolts = m_steerPIDController.calculate(getAngle(), angle);
+        setRotationVoltage(pidVolts + ffVolts);
+    }
     public SwerveModuleState getCurrentState() {
         return new SwerveModuleState(getDriveVelocity(), new Rotation2d(getAngle()));
     }

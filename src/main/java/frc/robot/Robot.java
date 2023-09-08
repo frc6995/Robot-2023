@@ -37,7 +37,18 @@ public class Robot extends TimedRobot {
         addPeriodic(()->{
             AllianceWrapper.setAlliance(DriverStation.getAlliance());
         }, 0.5);
-        addPeriodic(Logger::updateEntries, 0.04);
+    
+        addPeriodic(()->{
+            if (RobotBase.isSimulation()) {
+                var timeBefore = System.nanoTime();
+                Logger.updateEntries();
+                var timeAfter = System.nanoTime();
+                System.out.println(timeAfter-timeBefore);
+            } else {
+                Logger.updateEntries();
+            }
+
+        }, 0.04);
         
         System.gc();
     }
