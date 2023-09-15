@@ -1,5 +1,6 @@
 package frc.robot.subsystems.arm;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 import com.revrobotics.AbsoluteEncoder;
@@ -20,8 +21,8 @@ public class RealPivotIO extends PivotIO {
     private final SparkMaxAbsoluteEncoderWrapper m_encoder;
     
     private double m_position = 0;
-    public RealPivotIO(Consumer<Runnable> addPeriodic) {
-        super(addPeriodic);
+    public RealPivotIO(Consumer<Runnable> addPeriodic, BooleanSupplier hasCone) {
+        super(addPeriodic, hasCone);
         m_pivotMotor.restoreFactoryDefaults();
         m_pivotFollowerMotor.restoreFactoryDefaults();
         m_pivotMotor.getAbsoluteEncoder(Type.kDutyCycle).setPositionConversionFactor( 2 * Math.PI);

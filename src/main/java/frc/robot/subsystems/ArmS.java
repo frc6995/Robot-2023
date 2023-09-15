@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -30,6 +31,7 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
@@ -53,6 +55,7 @@ import frc.robot.commands.arm.GoToPositionC;
 import frc.robot.subsystems.LightStripS.States;
 import frc.robot.subsystems.arm.ExtendIO;
 import frc.robot.subsystems.arm.JITBWristIO;
+import frc.robot.subsystems.arm.OffboardExtendIO;
 import frc.robot.subsystems.arm.PivotIO;
 import frc.robot.subsystems.arm.RealExtendIO;
 import frc.robot.subsystems.arm.RealPivotIO;
@@ -76,21 +79,27 @@ public class ArmS extends SubsystemBase implements Loggable {
     private ExtendIO m_extender;
     private PivotIO m_pivot;
     private WristIO m_wrist;
-    private Trigger m_coastModeTrigger = new CommandXboxController(0).start().and(DriverStation::isDisabled);
+    private double[] m_position = new double[] {0, MIN_ARM_LENGTH, 0};
+    private DigitalInput m_coastModeButton = new DigitalInput(0);
+    private Trigger m_coastModeTrigger = (
+        new CommandXboxController(0).start().or(
+            ()->!m_coastModeButton.get()
+        )
+    ).and(DriverStation::isDisabled);
 
-    public ArmS(Consumer<Runnable> addPeriodic) {
+    public ArmS(Consumer<Runnable> addPeriodic, BooleanSupplier hasCone) {
         if (RobotBase.isReal()) {
             Timer.delay(0.1);
-            m_extender = new RealExtendIO(addPeriodic);
+            m_extender = new OffboardExtendIO(addPeriodic);
             Timer.delay(0.1);
-            m_pivot = new RealPivotIO(addPeriodic);
+            m_pivot = new RealPivotIO(addPeriodic, hasCone);
             Timer.delay(0.1);
-            m_wrist = new JITBWristIO(addPeriodic);
+            m_wrist = new JITBWristIO(addPeriodic, hasCone);
         }
         else {
             m_extender = new SimExtendIO(addPeriodic);
-            m_pivot = new SimPivotIO(addPeriodic);
-            m_wrist = new SimWristIO(addPeriodic);
+            m_pivot = new SimPivotIO(addPeriodic, hasCone);
+            m_wrist = new SimWristIO(addPeriodic, hasCone);
         }
         m_extender.setAngleSupplier(m_pivot::getContinuousRangeAngle);
         m_wrist.setPivotAngleSupplier(m_pivot::getContinuousRangeAngle);
@@ -104,7 +113,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         }).ignoringDisable(true);
         new Trigger(m_extender::isHomed).and(m_coastModeTrigger.negate()).debounce(0.04).and(new Trigger(DriverStation::isDisabled))
             .onTrue(homingCommand);
-        
+        m_position = getPosition();
         initVisualizer();
         
         //setDefaultCommand(new HoldCurrentPositionC(this));
@@ -139,6 +148,7 @@ public class ArmS extends SubsystemBase implements Loggable {
     }
 
     public void periodic() {
+        updatePosition();
         updateVisualizer();
     }
 
@@ -231,6 +241,16 @@ public class ArmS extends SubsystemBase implements Loggable {
         m_wrist.setAngle(targetAngle);
     }
 
+    public double[] getPosition() {
+        return m_position;
+    }
+
+    private void updatePosition() {
+        m_position[0] = getContinuousWristAngle();
+        m_position[1] = m_extender.getLength();
+        m_position[2] = getContinuousWristAngle();
+    }
+
     // endregion
 
     public ArmPosition getArmPosition() {
@@ -286,7 +306,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         return goToPositionC(()->ArmPositions.STOW);
     }
     public Command stowIndefiniteC() {
-        return stowC();
+        return new GoToPositionC(this, ()->ArmPositions.STOW, false);
     }
 
     public Command followJointSpaceTargetC(Supplier<ArmPosition> positionSupplier) {

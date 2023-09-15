@@ -26,7 +26,7 @@ public class LightStripS {
   private AddressableLED led = new AddressableLED(0);
   private AddressableLEDBuffer buffer = new  AddressableLEDBuffer(268);
   private final PersistentLedState persistentLedState = new PersistentLedState();
-
+  private States previousState = States.Default;
   private static class PersistentLedState {
       public int rainbowFirstPixelHue = 0;
       public int pulseOffset = 0;
@@ -68,7 +68,7 @@ public class LightStripS {
     IntakedCone(pulse(0.25, setColor(245, 224, 66))),
     IntakedCube(pulse(0.25, setColor(245, 224, 66))),
     RequestingCube(setColor(186, 15, 172)),
-    RequestingCone(setColor(245, 224, 66)),
+    RequestingCone(setColor(128, 128, 0)),
 
     Scoring(setColor(0, 0, 255)),
     Default(setColor(0, 255, 0));
@@ -107,8 +107,13 @@ public class LightStripS {
     if (DriverStation.isDisabled()) {
       requestState(States.Disabled);
     }
+    States state = m_states.first();
+    if (state != previousState) {
+      persistentLedState.pulseOffset = 0;
+    }
     //spark.set(m_states.first().lightSpeed);
-    m_states.first().setter.accept(buffer, persistentLedState);
+    state.setter.accept(buffer, persistentLedState);
+    previousState = state;
     // Do other things with the buffer
     led.setData(buffer);
     m_states.removeAll(Set.of(States.values()));
@@ -119,6 +124,19 @@ public class LightStripS {
       for (int i = 0; i < buffer.getLength(); i++) {
         buffer.setRGB(i, r, g, b);
       }
+    };
+  }
+
+  private static BiConsumer<AddressableLEDBuffer, PersistentLedState> barFill(BiConsumer<AddressableLEDBuffer, PersistentLedState> start, BiConsumer<AddressableLEDBuffer, PersistentLedState> end) {
+    return (buffer, state)->{
+      for (int i = 0; i < buffer.getLength(); i++) {
+        if (i > state.pulseOffset) {
+          start.accept(buffer, state);
+        } else {
+          end.accept(buffer, state);}
+
+      }
+      state.pulseOffset++;
     };
   }
 

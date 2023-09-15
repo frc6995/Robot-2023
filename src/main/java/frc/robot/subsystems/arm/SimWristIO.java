@@ -1,5 +1,6 @@
 package frc.robot.subsystems.arm;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 import com.revrobotics.CANSparkMax.IdleMode;
@@ -24,15 +25,16 @@ public class SimWristIO extends WristIO {
         WRIST_MIN_ANGLE - Units.degreesToRadians(3), WRIST_MAX_ANGLE * 2, HAND_MASS_KILOS, true);
 
     private double m_inputVolts;
-    public SimWristIO(Consumer<Runnable> addPeriodic) {
-        super(addPeriodic);
+    public SimWristIO(Consumer<Runnable> addPeriodic, BooleanSupplier hasCone) {
+        super(addPeriodic, hasCone);
         addPeriodic.accept(this::periodic);
         m_wristSim.setState(VecBuilder.fill(STOW_POSITION.wristRadians,0));
         //as the arm raises from 0 to pi/2, the gravity on the wrist goes from -pi/2 to -pi
         m_wristSim.setGravityAngle(-Math.PI/2 - m_pivotAngleSupplier.getAsDouble());
         resetController();
         resetGoal();
-        startHome();
+        endHome();
+        
     }
 
     @Override
@@ -98,5 +100,16 @@ public class SimWristIO extends WristIO {
         // TODO Auto-generated method stub
         return 0;
     }
+
+    protected double getWristkG() {
+        double kgConst = WRIST_KG * 0.6;
+        return kgConst * Math.cos(m_pivotAngleSupplier.getAsDouble() + getAngle());
+    }
+
+    // @Log
+    // protected double getWristkG() {
+    //     double kgConst = hasCone.getAsBoolean() ? (WRIST_KG * 1.1): (WRIST_KG * 0.7);
+    //     return kgConst * Math.cos(m_pivotAngleSupplier.getAsDouble() + getAngle());
+    // }
     
 }

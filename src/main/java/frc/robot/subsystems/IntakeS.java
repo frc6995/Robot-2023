@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import static edu.wpi.first.wpilibj2.command.Commands.sequence;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -41,15 +42,15 @@ public class IntakeS extends SubsystemBase implements Loggable {
   private boolean isCube = false;
 
   private final TimeOfFlight distanceSensor = new TimeOfFlight(Constants.IntakeConstants.INTAKE_TOF_CAN_ID);
-  private Trigger cubeDebouncedBeamBreak = new Trigger(()->intakeMotor.getOutputCurrent() > 3).debounce(0.04);//.debounce(0.06);
-  private Trigger coneDebouncedBeamBreak = new Trigger(this::hitBeamBreak);//.debounce(0.0);
+  private Trigger cubeDebouncedBeamBreak = new Trigger(()->intakeMotor.getOutputCurrent() > 20).debounce(0.04);//.debounce(0.06);
+  private Trigger coneDebouncedBeamBreak = new Trigger(()->intakeMotor.getOutputCurrent() > 20).debounce(0.1);
 
     /** Creates a new IntakeS. */
   public IntakeS() {
 
     intakeMotor.restoreFactoryDefaults();
     intakeMotor.setIdleMode(IdleMode.kBrake);
-    intakeMotor.setSecondaryCurrentLimit(15);
+    intakeMotor.setSecondaryCurrentLimit(30);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
@@ -57,17 +58,17 @@ public class IntakeS extends SubsystemBase implements Loggable {
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
-    intakeMotor.setSmartCurrentLimit(20, 20);
+    intakeMotor.setSmartCurrentLimit(30, 30);
 
     distanceSensor.setRangingMode(RangingMode.Short, 999);
     distanceSensor.setRangeOfInterest(9,9,11,11);
-    setDefaultCommand(run(()->this.intake(isCube? 0.5 : 1)));
+    setDefaultCommand(run(()->this.intake(isCube? 0.5 : 0)));
   }
 
   public Transform2d getConeCenterOffset() {
     
     double distanceToCone = getConeCenterOffsetDistance();
-    if (Math.abs(distanceToCone) > 0.15) {
+    if (Math.abs(distanceToCone) > 0.2) {
       return new Transform2d();
     }
     
@@ -78,6 +79,9 @@ public class IntakeS extends SubsystemBase implements Loggable {
 
   @Log
   public double getConeCenterOffsetDistance() {
+    if (RobotBase.isSimulation()) {
+      return 0;
+    }
      return -(INTAKE_CENTERED_CONE_DISTANCE - distanceSensor.getRange()) / 1000.0;
   }
   //@Log
@@ -95,6 +99,11 @@ public class IntakeS extends SubsystemBase implements Loggable {
     return distanceSensor.getRangeSigma();
   }
 
+  @Log
+  public double getCurrent() {
+    return intakeMotor.getOutputCurrent();
+  }
+
   // @Log
   // public boolean hitCurrentLimit() {
   //   return intakeMotor.getFault(FaultID.kOvercurrent);
@@ -102,7 +111,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
 
   @Log
   public boolean hitBeamBreak() {
-    return (Math.abs(getConeCenterOffsetDistance()) < 0.1);
+    return !isCube && (Math.abs(getConeCenterOffsetDistance())) < 0.16;
   }
 
   /**
@@ -120,7 +129,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
    */
 
   public void intake() {
-    intake((isCube? 0.25 : 1) * Constants.IntakeConstants.INTAKE_VOLTAGE);
+    intake((isCube? 1 : 1) * Constants.IntakeConstants.INTAKE_VOLTAGE);
   }
 
   public Command autoStagedIntakeC() {

@@ -44,6 +44,7 @@ public class Constants {
         static public final double MAX_TRANSLATE_ACCEL_MPS2 = MAX_FWD_REV_SPEED_MPS/0.125; //0-full time of 0.25 second
         static public final double MAX_ROTATE_ACCEL_RAD_PER_SEC_2 = MAX_ROTATE_SPEED_RAD_PER_SEC/0.25; //0-full time of 0.25 second
         static public final double MAX_LINEAR_SPEED = Units.feetToMeters(11);
+        static public final double MAX_TURN_SPEED = Units.degreesToRadians(360);
     // HELPER ORGANIZATION CONSTANTS
         static public final int FL = 0; // Front Left Module Index
         static public final int FR = 1; // Front Right Module Index
@@ -90,14 +91,14 @@ public class Constants {
 
         //kv: (12 volts * 60 s/min * 1/5.14 WRevs/MRevs * wheel rad * 2pi  / (6000 MRPM *
         /** ks, kv, ka */ 
-        public static final double[] DRIVE_FF_CONST = {0.14315, 2.1567, 0.57};
+        public static final double[] DRIVE_FF_CONST = {0.14315, 2 , 0.57};
 
         public static final double STEER_P = 2.3584;
         public static final double STEER_D = 0.01;
         // 12 volts / (5676rpm *2pi radPerRev  / 60 spm / 12.8 revsPerWheelRev)
         public static final double STEER_KV = 12.0/ (5676 * (2*Math.PI)/60/12.8);
     
-        public static final double DRIVE_P = 2;//9;
+        public static final double DRIVE_P = 16;//9;
         public static final double DRIVE_D = 0;
 
 
@@ -281,10 +282,10 @@ public class Constants {
                     VisionConstants.robotToCam1),
                 new VisionSource(
                     VisionConstants.CAM_2_NAME,
-                   VisionConstants.robotToCam2),
-                new VisionSource(
-                    VisionConstants.CAM_3_NAME,
-                    VisionConstants.robotToCam3));//,
+                   VisionConstants.robotToCam2));
+                // new VisionSource(
+                //     VisionConstants.CAM_3_NAME,
+                //     VisionConstants.robotToCam3));//,
                 // new VisionSource(
                 //     VisionConstants.CAM_4_NAME,
                 //    VisionConstants.robotToCam4));
@@ -309,16 +310,17 @@ public class Constants {
         public static final double EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION = 1.0/9.0;
         public static final double EXTEND_METERS_PER_DRUM_ROTATION = Math.PI * 2 * EXTEND_DRUM_RADIUS * 2; // 2x distance
 
-        public static final double ARM_EXTEND_KG_VERTICAL = 0.35 * 16.0/9.0;
-        public static final double ARM_EXTEND_KS = 0.1 * 16.0/9.0;
-        public static final double ARM_EXTEND_KV = 1.31/0.15 * 9.0/16.0;//12 /*v*//(5676 /*rpm */ * EXTEND_METERS_PER_DRUM_ROTATION * EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION / 60);
-        public static final double ARM_EXTEND_KA = 0.4 * 16.0/9.0;
+        public static final double ARM_EXTEND_KG_VERTICAL = 0.4 * 16.0/9.0;
+        public static final double ARM_EXTEND_KS = 0.15 * 16.0/9.0;
+        public static final double ARM_EXTEND_KV = 1.31 * 5.5 * 9.0/16.0;//12 /*v*//(5676 /*rpm */ * EXTEND_METERS_PER_DRUM_ROTATION * EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION / 60);
+        public static final double ARM_EXTEND_KA = 0.12 * 16.0/9.0;
         /* PIVOT */
         public static final double MIN_ARM_ANGLE = 5.86 - 2*Math.PI;
+        /** DO NOT INCREASE! arm will crunch cable chain */
         public static final double MAX_ARM_ANGLE = Math.PI + 0.42;
         public static final double ARM_ROTATIONS_PER_MOTOR_ROTATION = 1.0/225.0; //(1.0/25.0) * (16.0/60.0);
 
-        public static final double PIVOT_ENCODER_OFFSET = 0.423 * Math.PI * 2.0;
+        public static final double PIVOT_ENCODER_OFFSET = 0.423 * Math.PI * 2.0 + 0.025;
 
         public static final double ARM_MASS_KILOS = Units.lbsToKilograms(17);
 
@@ -354,19 +356,34 @@ public class Constants {
                 MIN_ARM_LENGTH + Units.inchesToMeters(3),
                 WRIST_MAX_ANGLE
             );
+            public static final ArmPosition CUBE_STOW = new ArmPosition(
+                1.35,
+                MIN_ARM_LENGTH + Units.inchesToMeters(3),
+                WRIST_MIN_ANGLE
+            );
             public static final ArmPosition PRESTOW = STOW;
             public static final ArmPosition FRONT_PLATFORM_TIPPED = new ArmPosition(
-                Units.degreesToRadians(75.4), MIN_ARM_LENGTH,  Units.degreesToRadians(-70));
+                2.368, MIN_ARM_LENGTH + Units.inchesToMeters(3),  0.31);
+            public static final ArmPosition FRONT_PLATFORM_CONE_UPRIGHT = new ArmPosition(
+                1.28, 0.912 , -1.89
+            );
             public static final ArmPosition FRONT_GROUND_CUBE = new ArmPosition(
                 Units.degreesToRadians(203),
                 Units.inchesToMeters(2.06),
                 Units.degreesToRadians(-26)
                 );
+            public static final ArmPosition BACK_TIPPED_FLOOR = new ArmPosition(
+                3.59, 0.5477, 0.223);
+            public static final ArmPosition BACK_UP_FLOOR = new ArmPosition(
+                3.07, MIN_ARM_LENGTH, 1.08);
+
+            public static final ArmPosition FRONT_UP_FLOOR = new ArmPosition(
+                0, STOW.armLength, -0.833);
         }
 
         public static final ArmPosition SCORE_HIGH_CONE_POSITION = new ArmPosition(
-            0.738,
-            1.417,
+            0.718,
+            1.417 - Units. inchesToMeters(2) ,
             -1.03);
         public static final ArmPosition SCORE_HIGH_CUBE_POSITION = new ArmPosition(
             0.65,
@@ -386,9 +403,9 @@ public class Constants {
             0);
         public static final ArmPosition STOW_POSITION = ArmPositions.STOW;
         public static final ArmPosition GROUND_CUBE_INTAKE_POSITION = new ArmPosition(
-            -0.41,
-            0.611,
-            0.56);
+            3.55,
+            STOW_POSITION.armLength,
+            -0.75);
         public static final ArmPosition GROUND_CONE_INTAKE_POSITION = new ArmPosition(
             -0.42,
             0.611,
@@ -411,6 +428,7 @@ public class Constants {
         );
 
         public static final ArmPosition PLATFORM_CONE_INTAKE_POSITION = ArmPositions.FRONT_PLATFORM_TIPPED;
+        
         public static final ArmPosition PLATFORM_CUBE_INTAKE_POSITION = new ArmPosition(
             1.130,
             0.764,
@@ -432,10 +450,7 @@ public class Constants {
         //     Units.degreesToRadians(-15),
         //     Units.inchesToMeters(9.4));
 
-        public static final ArmPosition SCORE_HYBRID_POSITION = new ArmPosition(
-            Units.degreesToRadians(66),
-            MIN_ARM_LENGTH + Units.inchesToMeters(0.125),
-            Units.degreesToRadians(-50));
+        public static final ArmPosition SCORE_HYBRID_POSITION = ArmPositions.CUBE_STOW;
 
         
     }

@@ -39,14 +39,7 @@ public class Robot extends TimedRobot {
         }, 0.5);
     
         addPeriodic(()->{
-            if (RobotBase.isSimulation()) {
-                var timeBefore = System.nanoTime();
-                Logger.updateEntries();
-                var timeAfter = System.nanoTime();
-                System.out.println(timeAfter-timeBefore);
-            } else {
-                Logger.updateEntries();
-            }
+            Logger.updateEntries();
 
         }, 0.04);
         

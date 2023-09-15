@@ -93,13 +93,13 @@ public class GoToPositionC extends CommandBase {
       // straighten wrist
 
       m_waypoints.add(
-        Pair.of(new ArmPosition(m_startPosition.pivotRadians, Math.min(maxRotateLength, m_targetPosition.armLength),
+        Pair.of(new ArmPosition(m_startPosition.pivotRadians, Math.min(rotateLength, m_targetPosition.armLength),
           MathUtil.clamp(m_targetPosition.wristRadians, -safeWrist, safeWrist)), true));
     }
     if (extendAfterPivot) {
       m_waypoints.add(
         Pair.of(new ArmPosition(
-          m_targetPosition.pivotRadians, maxRotateLength,
+          m_targetPosition.pivotRadians, rotateLength,
           MathUtil.clamp(m_targetPosition.wristRadians, -safeWrist, safeWrist)), false));
     }
     m_waypoints.add(
@@ -182,10 +182,10 @@ public class GoToPositionC extends CommandBase {
 
     var actualPosition = m_armS.getArmPosition();
     var atSetpoint = (Math.abs(m_armS.constrainLength(m_targetPosition.armLength) - actualPosition.armLength) < Units
-        .inchesToMeters(2)
+        .inchesToMeters(0.5)
         && Math.abs(m_targetPosition.pivotRadians - actualPosition.pivotRadians) < Units.degreesToRadians(3)
         && Math.abs(m_targetPosition.wristRadians - actualPosition.wristRadians) < Units.degreesToRadians(5));
-    return atSetpoint && m_shouldFinish;
+    return atSetpoint;
   }
 
   public void end(boolean interrupted) {

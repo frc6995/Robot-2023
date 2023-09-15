@@ -16,13 +16,13 @@ public class RealSwerveDriveIO extends SwerveDriveIO {
         super(addPeriodic);
         m_modules = new ArrayList<>();
         Timer.delay(0.05);
-        m_modules.add(new RealModuleIO(addPeriodic, ModuleConstants.FL));
+        m_modules.add(new OffboardModuleIO(addPeriodic, ModuleConstants.FL));
         Timer.delay(0.05);
-        m_modules.add(new RealModuleIO(addPeriodic, ModuleConstants.FR));
+        m_modules.add(new OffboardModuleIO(addPeriodic, ModuleConstants.FR));
         Timer.delay(0.05);
-        m_modules.add(new RealModuleIO(addPeriodic, ModuleConstants.BL));
+        m_modules.add(new OffboardModuleIO(addPeriodic, ModuleConstants.BL));
         Timer.delay(0.05);
-        m_modules.add(new RealModuleIO(addPeriodic, ModuleConstants.BR));
+        m_modules.add(new OffboardModuleIO(addPeriodic, ModuleConstants.BR));
         // TODO Auto-generated constructor stub
     }
 

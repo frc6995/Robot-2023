@@ -12,6 +12,7 @@ import com.pathplanner.lib.PathPlanner;
 
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -37,7 +38,9 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.ArmConstants;
+import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.InputDevices;
+import frc.robot.Constants.ArmConstants.ArmPositions;
 import frc.robot.POIManager.POIS;
 import frc.robot.commands.arm.GoToPositionC;
 import frc.robot.driver.CommandOperatorKeypad;
@@ -70,6 +73,7 @@ public class RobotContainer {
 
     @Log
     private double loopTime = 0;
+    private LinearFilter loopTimeAverage = LinearFilter.movingAverage(1);
     private final IntakeS m_intakeS = new IntakeS();
     private final ArmS m_armS;
 
@@ -104,7 +108,7 @@ public class RobotContainer {
     /**
      * Trigger that determines whether the drivebase is close enough to its target pose to score a cube.
      */
-    //@Log(methodName = "getAsBoolean")
+    @Log(methodName = "getAsBoolean")
     private Trigger m_alignSafeToPlace;
     private boolean m_setupDone = false;
     
@@ -117,7 +121,8 @@ public class RobotContainer {
         Timer.delay(0.1);
         m_drivebaseS = new DrivebaseS(addPeriodic);
         m_alignSafeToPlace = new Trigger(()->{
-            Transform2d error = new Transform2d(m_targetAlignmentPose, m_drivebaseS.getPose());
+            Transform2d error = new Transform2d(
+                m_targetAlignmentPose.transformBy(m_isCubeSelected ? new Transform2d() : m_intakeS.getConeCenterOffset()), m_drivebaseS.getPose());
             if (m_isCubeSelected) {
                 return
                 Math.abs(error.getRotation().getRadians()) < Units.degreesToRadians(3) &&
@@ -125,14 +130,14 @@ public class RobotContainer {
                 Math.abs(error.getY()) < 0.2;
             } else {
                 return
-                Math.abs(error.getRotation().getRadians()) < Units.degreesToRadians(3) &&
-                Math.abs(error.getX()) < 0.3 &&
-                Math.abs(error.getY()) < 0.2;
+                Math.abs(error.getRotation().getRadians()) < Units.degreesToRadians(2) &&
+                Math.abs(error.getX()) < 0.1 &&
+                Math.abs(error.getY()) < Units.inchesToMeters(1);
             }
         });
     
         Timer.delay(0.1);
-        m_armS = new ArmS(addPeriodic);
+        m_armS = new ArmS(addPeriodic, m_intakeS::hitBeamBreak);
 
         /**
          * Set driver mode on the USB camera streamed through PhotonVision
@@ -154,7 +159,7 @@ public class RobotContainer {
             m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis)
         );
         // face downfield while Start is held
-        m_driverController.start().whileTrue(
+        m_driverController.back().whileTrue(
             m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()->0)
         );
 
@@ -187,11 +192,7 @@ public class RobotContainer {
         SparkMax.burnFlashInSync();
         Timer.delay(0.2);
         m_setupDone = true;
-        addPeriodic.accept(()->{
-            if (DriverStation.isDisabled() && m_setupDone) {
-                LightStripS.getInstance().requestState(States.SetupDone);
-            }
-        });
+        DriverStation.reportWarning("Setup Done", false);
     }
 
     /**
@@ -208,9 +209,7 @@ public class RobotContainer {
         // Align, score, and stow.
         m_driverController.a().toggleOnTrue(
                 alignToSelectedScoring().asProxy()
-                .until(
-                    ()->
-                    m_isCubeSelected ? m_alignSafeToPlace.getAsBoolean() : false)
+                .until(m_alignSafeToPlace)
                 .andThen(autoScoreSequenceCG().asProxy())
            
             );
@@ -222,27 +221,27 @@ public class RobotContainer {
             )
             );
         // OFFICIAL CALEB PREFERENCE
-        m_driverController.y().toggleOnTrue(armIntakeSelectedCG(
-            ArmConstants.OVERTOP_CUBE_INTAKE_POSITION,
-            ArmConstants.OVERTOP_CONE_INTAKE_POSITION,
-            ()->m_isCubeSelected
-        ));
+        // m_driverController.y().toggleOnTrue(armIntakeSelectedCG(
+        //     ArmConstants.OVERTOP_CUBE_INTAKE_POSITION,
+        //     ArmConstants.OVERTOP_CONE_INTAKE_POSITION,
+        //     ()->m_isCubeSelected
+        // ));
+
+        m_driverController.y().toggleOnTrue(
+            m_drivebaseS.chasePoseC(()->POIManager.ownPOI(POIS.GRID_PLAT)));
         m_driverController.x().onTrue(m_armS.stowIndefiniteC());
-        m_driverController.back().onTrue(m_intakeS.runOnce(m_intakeS::toggle));
 
 
-        m_driverController.rightBumper().toggleOnTrue(armIntakeSelectedCG(
-            ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT, 
-            ArmConstants.RAMP_CONE_INTAKE_POSITION, ()->m_isCubeSelected));
+        m_driverController.rightBumper().toggleOnTrue(armIntakeCG(
+            ArmPositions.FRONT_UP_FLOOR, false));
 
-        m_driverController.rightTrigger().toggleOnTrue(armIntakeSelectedCG(
-            ArmConstants.ArmPositions.FRONT_GROUND_CUBE, 
-            ArmConstants.GROUND_CONE_INTAKE_POSITION, ()->m_isCubeSelected));
+        // m_driverController.rightTrigger().toggleOnTrue(armIntakeCG(
+        //     ArmPositions.BACK_TIPPED_FLOOR, 
+        //     false));
             
-        m_driverController.leftBumper().toggleOnTrue(armIntakeSelectedCG(
-            ArmConstants.PLATFORM_CUBE_INTAKE_POSITION, 
-            ArmConstants.PLATFORM_CONE_INTAKE_POSITION, ()->m_isCubeSelected));
-        m_driverController.leftTrigger().onTrue(m_armS.goToPositionIndefiniteC(ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT));
+        m_driverController.leftBumper().toggleOnTrue(armIntakeCG(
+            ArmPositions.FRONT_PLATFORM_CONE_UPRIGHT, false));
+        m_driverController.leftTrigger().onTrue(armIntakeCG(ArmConstants.GROUND_CUBE_INTAKE_POSITION, true));
         // m_driverController.leftTrigger().whileTrue(new ConditionalCommand(
         //     m_drivebaseS.chasePoseC(()->POIManager.ownPOI(POIS.CUBE_RAMP)),
         //     m_drivebaseS.chasePoseC(()->POIManager.ownPOI(POIS.CONE_RAMP)),
@@ -258,11 +257,11 @@ public class RobotContainer {
         m_driverController.povCenter().negate().whileTrue(m_drivebaseS.run(()->{
                 double pov = Units.degreesToRadians(-m_driverController.getHID().getPOV());
                 double adjustSpeed = 0.5; // m/s
-                m_drivebaseS.driveAllianceRelative(
+                m_drivebaseS.drive(
                     new ChassisSpeeds(
                         Math.cos(pov) * adjustSpeed,
                         Math.sin(pov) * adjustSpeed,
-                        0
+                        m_rotAxis.getAsDouble() * DriveConstants.MAX_TURN_SPEED
                     )
                 );
             }
@@ -276,15 +275,18 @@ public class RobotContainer {
     }
 
     public void periodic() {
+        if (DriverStation.isDisabled() && m_setupDone) {
+            LightStripS.getInstance().requestState(States.SetupDone);
+        }
         //System.out.println(m_autoSelector.getSelected().getRequirements().toString());
         //lightSpeed = LightStripS.getInstance().getSpeed();
         TimingTracer.update();
-        loopTime = TimingTracer.getLoopTime();
+        loopTime = loopTimeAverage.calculate(TimingTracer.getLoopTime());
         SmartDashboard.putNumber("loopTime", loopTime);
 
-        //SmartDashboard.putNumber("loopTime", TimingTracer.getLoopTime());
+        // //SmartDashboard.putNumber("loopTime", TimingTracer.getLoopTime());
         LightStripS.getInstance().requestState(m_isCubeSelected? States.RequestingCube : States.RequestingCone);
-        /* Trace the loop duration and plot to shuffleboard */
+        // /* Trace the loop duration and plot to shuffleboard */
         LightStripS.getInstance().periodic();
         m_drivebaseS.drawRobotOnField(m_field);
         m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
@@ -307,9 +309,9 @@ public class RobotContainer {
     public Command armIntakeCG(ArmPosition position, boolean isCube) {
         return 
         Commands.sequence(
-            // Start intaking, and stop when a piece is detected.
+            // Start intaking, and stop when a piece is detected.\
             Commands.deadline(
-                m_intakeS.setGamePieceC(()->isCube).andThen(m_intakeS.intakeUntilBeamBreakC()).asProxy(),
+                m_intakeS.setGamePieceC(()->isCube).andThen(m_intakeS.intakeUntilBeamBreakC()).andThen(m_intakeS.intakeC().withTimeout(0.2)).asProxy(),
                 // move to arm position while intaking.
                 m_armS.goToPositionIndefiniteC(position)
 
@@ -318,7 +320,7 @@ public class RobotContainer {
                 // Wait a bit, then pulse the intake to ensure piece collection.
                 Commands.waitSeconds(0.75).andThen(m_intakeS.intakeC().withTimeout(0.75)).asProxy(),
                 // stow the arm
-                m_armS.stowIndefiniteC(), 
+                m_armS.goToPositionC(()->isCube? ArmPositions.CUBE_STOW : ArmPositions.STOW), 
                 Commands.run(()->LightStripS.getInstance().requestState(isCube ? States.IntakedCube : States.IntakedCone)).asProxy().withTimeout(0.75)
             )
         );

@@ -22,13 +22,13 @@ import java.util.function.Consumer;
 
 public class RealExtendIO extends ExtendIO {
 
-    private final SparkMax m_extendMotor = new SparkMax(EXTEND_MOTOR_ID, MotorType.kBrushless);
+    protected final SparkMax m_extendMotor = new SparkMax(EXTEND_MOTOR_ID, MotorType.kBrushless);
 
-    private final SparkMaxLimitSwitch m_homingSwitch = m_extendMotor.getReverseLimitSwitch(Type.kNormallyOpen);
-    private final SparkMaxEncoderWrapper m_encoder;
-    private double m_position = MIN_ARM_LENGTH;
-    private double m_velocity = 0;
-    private boolean m_homed = false;
+    protected final SparkMaxLimitSwitch m_homingSwitch = m_extendMotor.getReverseLimitSwitch(Type.kNormallyOpen);
+    protected final SparkMaxEncoderWrapper m_encoder;
+    protected double m_position = MIN_ARM_LENGTH;
+    protected double m_velocity = 0;
+    protected boolean m_homed = false;
     /**
      * initializes extender: sets postion conversion factor of extender encoder, 
      * sets velocity conversion factor of extender encoder,

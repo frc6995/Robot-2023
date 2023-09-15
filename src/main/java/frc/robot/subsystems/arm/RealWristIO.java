@@ -1,5 +1,6 @@
 package frc.robot.subsystems.arm;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 import com.revrobotics.AbsoluteEncoder;
@@ -18,8 +19,8 @@ public class RealWristIO extends WristIO {
 
     private final SparkMax m_wristMotor = new SparkMax(WRIST_MOTOR_ID, MotorType.kBrushless);
     private final AbsoluteEncoder m_encoder = m_wristMotor.getAbsoluteEncoder(Type.kDutyCycle);
-    public RealWristIO(Consumer<Runnable> addPeriodic) {
-        super(addPeriodic);
+    public RealWristIO(Consumer<Runnable> addPeriodic, BooleanSupplier hasCone) {
+        super(addPeriodic, hasCone);
         m_encoder.setPositionConversionFactor(2 * Math.PI);
         m_encoder.setVelocityConversionFactor(2 * Math.PI/ 60);
         m_encoder.setInverted(true);

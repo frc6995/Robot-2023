@@ -164,7 +164,9 @@
               "open": true
             },
             "open": true
-          },
+          }
+        },
+        "IntakeS": {
           "open": true
         },
         "RobotContainer": {
@@ -235,7 +237,10 @@
             }
           ]
         }
-      ]
+      ],
+      "window": {
+        "visible": false
+      }
     },
     "Plot <1>": {
       "plots": [

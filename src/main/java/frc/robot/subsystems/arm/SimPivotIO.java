@@ -1,5 +1,6 @@
 package frc.robot.subsystems.arm;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 import com.revrobotics.CANSparkMax.IdleMode;
@@ -31,8 +32,8 @@ public class SimPivotIO extends PivotIO {
 
     private double m_inputVolts;
     
-    public SimPivotIO(Consumer<Runnable> addPeriodic) {
-        super(addPeriodic);
+    public SimPivotIO(Consumer<Runnable> addPeriodic, BooleanSupplier hasCone) {
+        super(addPeriodic, hasCone);
         addPeriodic.accept(this::simulationPeriodic);
         m_pivotSim.setState(VecBuilder.fill(STOW_POSITION.pivotRadians,0));
         // we need this to calculate outputs

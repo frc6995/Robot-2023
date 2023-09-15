@@ -1,5 +1,6 @@
 package frc.robot.subsystems.arm;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 import com.revrobotics.AbsoluteEncoder;
@@ -33,8 +34,8 @@ public class JITBWristIO extends WristIO {
     private double m_velocity;
     private double m_volts;
     private double m_angle;
-    public JITBWristIO(Consumer<Runnable> addPeriodic) {
-        super(addPeriodic);
+    public JITBWristIO(Consumer<Runnable> addPeriodic, BooleanSupplier hasCone) {
+        super(addPeriodic, hasCone);
         m_wristMotor.getEncoder().setPositionConversionFactor(2 * Math.PI * WRIST_ROTATIONS_PER_MOTOR_ROTATION);
         m_wristMotor.getEncoder().setVelocityConversionFactor(2 * Math.PI * WRIST_ROTATIONS_PER_MOTOR_ROTATION/ (60));
         m_encoder = new SparkMaxEncoderWrapper(m_wristMotor);

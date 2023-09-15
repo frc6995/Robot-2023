@@ -1,5 +1,6 @@
 package frc.robot.subsystems.arm;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 
@@ -52,14 +53,13 @@ public abstract class WristIO implements Loggable {
     new LinearQuadraticRegulator<>(m_wristPlant, VecBuilder.fill(0.001, 0.001), VecBuilder.fill(12), 0.02);
 
     protected DoubleSupplier m_pivotAngleSupplier = ()->0;
-    protected Alert m_wristNotHomedAlert = new Alert("Wrist", "Not Homed", AlertType.ERROR);
-
-    public WristIO(Consumer<Runnable> addPeriodic) {
+    protected BooleanSupplier hasCone;
+    public WristIO(Consumer<Runnable> addPeriodic, BooleanSupplier hasCone) {
+        this.hasCone= hasCone;
         m_goal = new State(STOW_POSITION.wristRadians, 0);
         m_setpoint = new State(STOW_POSITION.wristRadians, 0);
         addPeriodic.accept(this::runPID);
         addPeriodic.accept(()->{
-            m_wristNotHomedAlert.set(!hasHomed);
             if (isHoming) {LightStripS.getInstance().requestState(States.Climbing);};
     });
         addPeriodic.accept(()->{
@@ -76,7 +76,8 @@ public abstract class WristIO implements Loggable {
     }
     @Log
     protected double getWristkG() {
-        return WRIST_KG * Math.cos(m_pivotAngleSupplier.getAsDouble() + getAngle());
+        double kgConst = hasCone.getAsBoolean() ? (WRIST_KG * 1.1): (WRIST_KG * 0.7);
+        return kgConst * Math.cos(m_pivotAngleSupplier.getAsDouble() + getAngle());
     }
 
     private void setVelocity(double velocityRadPerSec) {
@@ -168,7 +169,7 @@ public abstract class WristIO implements Loggable {
 
     @Log
     public boolean isInTolerance() {
-        return Math.abs(getAngle() - getGoalPosition()) < 0.05;
+        return Math.abs(getAngle() - getGoalPosition()) < Units.degreesToRadians(5);
     }
 
     public abstract void setIdleMode(IdleMode mode);

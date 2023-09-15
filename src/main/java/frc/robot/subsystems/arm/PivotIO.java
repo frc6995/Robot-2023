@@ -1,5 +1,6 @@
 package frc.robot.subsystems.arm;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 
@@ -31,7 +32,7 @@ import static frc.robot.Constants.ArmConstants.*;
 public abstract class PivotIO implements Loggable {
 
     protected LinearSystem<N2, N1, N1> m_pivotPlant = LinearSystemId.createSingleJointedArmSystem(
-            DCMotor.getNEO(2), ARM_MOI_SHRUNK, 1.0 / ARM_ROTATIONS_PER_MOTOR_ROTATION);
+            DCMotor.getNEO(2), getPivotMOI(STOW_POSITION.armLength), 1.0 / ARM_ROTATIONS_PER_MOTOR_ROTATION);
 
     private State m_setpoint = new State();
     private State m_goal = new State();
@@ -41,7 +42,7 @@ public abstract class PivotIO implements Loggable {
     private LinearPlantInversionFeedforward<N2, N1, N1> m_pivotFeedForward = new LinearPlantInversionFeedforward<>(
             m_pivotPlant, 0.02);
 
-    private Vector<N2> m_tolerances = VecBuilder.fill(0.05, 0.05);
+    private Vector<N2> m_tolerances = VecBuilder.fill(0.01, 0.01);
     private LinearQuadraticRegulator<N2, N1, N1> m_pivotController = new LinearQuadraticRegulator<N2, N1, N1>(
             m_pivotPlant,
             m_tolerances,
@@ -51,8 +52,10 @@ public abstract class PivotIO implements Loggable {
     private DoubleSupplier m_extendLengthSupplier = () -> MIN_ARM_LENGTH;
     @Log
     private double m_length = m_extendLengthSupplier.getAsDouble();
+    private BooleanSupplier hasCone;
 
-    public PivotIO(Consumer<Runnable> addPeriodic) {
+    public PivotIO(Consumer<Runnable> addPeriodic, BooleanSupplier hasCone) {
+        this.hasCone = hasCone;
         addPeriodic.accept(this::updatePivotPlant);
         addPeriodic.accept(this::runPID);
         addPeriodic.accept(()->{
@@ -83,7 +86,7 @@ public abstract class PivotIO implements Loggable {
 
     @Log
     public boolean isInTolerance() {
-        return Math.abs(getContinuousRangeAngle() - getGoalPosition()) < 0.05;
+        return Math.abs(getContinuousRangeAngle() - getGoalPosition()) < Units.degreesToRadians(3);
     }
 
     public State getSetpoint() {
@@ -157,29 +160,21 @@ public abstract class PivotIO implements Loggable {
      * @return the MOI of the arm in Joules per kg^2
      */
 
-    public double getPivotMOI() {
+    public double getPivotMOI() { return getPivotMOI(getLength());
+    }
 
-        // double minMOI = ARM_MOI_SHRUNK;
-        // double maxMOI = A;
-        // double result = minMOI;
-        // double frac = (m_extendLengthSupplier.getAsDouble() - MIN_ARM_LENGTH) / (MAX_ARM_LENGTH - MIN_ARM_LENGTH);
-        // result += frac * frac * (maxMOI - minMOI);
-        // return result;
-        // var moiAboutCM = 1.0 / 12.0 * ARM_MASS_KILOS * m_extendLengthSupplier.getAsDouble()
-        //         * m_extendLengthSupplier.getAsDouble();
-        // return moiAboutCM;
-        // TODO get this from held piece status and length
+    public double getPivotMOI(double length) {
         return (1.0 / 3.0 * ARM_MASS_KILOS *
-        (getLength()-Units.inchesToMeters(12.5)) *
-        (getLength()-Units.inchesToMeters(12.5)) / 2.0) +
+        (length) *
+        (length) / 2.0) +
         (1.0 / 3.0 * ARM_MASS_KILOS * Units.inchesToMeters(12.5) *
         Units.inchesToMeters(12.5) / 2.0);
     }
 
     @Log
     public double getPivotCGRadius() {
-        double minCG = 0;
-        double maxCG = Units.inchesToMeters(30);
+        double minCG = Units.inchesToMeters(8);
+        double maxCG = Units.inchesToMeters(40);
 
         double result = minCG;
         double frac = (getLength() - MIN_ARM_LENGTH) / (MAX_ARM_LENGTH - MIN_ARM_LENGTH);
@@ -285,7 +280,7 @@ public abstract class PivotIO implements Loggable {
         * Math.cos(angle)
         * (m_gearbox.rOhms)
         / (m_gearbox.KtNMPerAmp * 1.0/ARM_ROTATIONS_PER_MOTOR_ROTATION );
-        return -voltsDrawnByGravity;
+        return -voltsDrawnByGravity * (hasCone.getAsBoolean() ? 1.2: 0.8);
          
       }
 

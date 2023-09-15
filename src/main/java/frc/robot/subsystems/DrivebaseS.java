@@ -621,7 +621,6 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
 
                 double fwdX = fwdXAxis.getAsDouble();
                 double fwdY = fwdYAxis.getAsDouble();
-                final double MAX_TURN_SPEED = Units.degreesToRadians(360);
 
                 // scale the desired translation vector by max linear speed.
                 double driveDirectionRadians = Math.atan2(fwdY, fwdX);

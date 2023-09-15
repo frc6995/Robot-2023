@@ -25,6 +25,7 @@ public abstract class ModuleIO implements Loggable {
     // steering trapezoid profile
     protected State m_steerGoal = new State();
     protected State m_steerSetpoint = new State();
+    protected double m_driveSetpoint = 0;
     protected TrapezoidProfile.Constraints m_steeringConstraints = new TrapezoidProfile.Constraints(
             STEER_MAX_SPEED_RAD_PER_SEC,
             STEER_MAX_ACCEL_RAD_PER_SEC_SQ);
@@ -35,10 +36,10 @@ public abstract class ModuleIO implements Loggable {
     private final PIDController m_drivePIDController;
     private final SimpleMotorFeedforward m_driveFeedForward = new SimpleMotorFeedforward(
             Robot.isReal() ? DRIVE_FF_CONST[0] : 0,
-            DRIVE_FF_CONST[1],
-            DRIVE_FF_CONST[2]);
+            DRIVE_FF_CONST[1], 0.2);
+            //DRIVE_FF_CONST[2]);
     private final SimpleMotorFeedforward m_steerFeedForward = new SimpleMotorFeedforward(
-        0, STEER_KV, 0.001);
+        0.000, STEER_KV, 0.001);
     
     private String m_loggingName;
     // steering PID controller
@@ -107,18 +108,21 @@ public abstract class ModuleIO implements Loggable {
     }
     @Log
     public double getDriveSetpoint() {
-        return m_drivePIDController.getSetpoint();
+        return m_driveSetpoint;
     }
     @Log
     public void setDesiredState(SwerveModuleState state) {
         state = SwerveModuleState.optimize(state,new Rotation2d(getAngle()));
-        double prevVelSetpoint = m_drivePIDController.getSetpoint();
-        //if (m_moduleConstants.name.contains("F")) {state.speedMetersPerSecond = -state.speedMetersPerSecond;}
 
+        double prevVelSetpoint = m_driveSetpoint;
+        //if (m_moduleConstants.name.contains("F")) {state.speedMetersPerSecond = -state.speedMetersPerSecond;}
+        m_driveSetpoint = state.speedMetersPerSecond;
         setDrivePid(state.speedMetersPerSecond, m_driveFeedForward.calculate(prevVelSetpoint, state.speedMetersPerSecond, 0.02));
                 // pidVolts+//m_drivePIDController.calculate(getDriveVelocity(), state.speedMetersPerSecond) +
                 //         m_driveFeedForward.calculate(prevVelSetpoint, state.speedMetersPerSecond, 0.02));
-
+        if (Math.abs(state.speedMetersPerSecond) < 0.01) {
+            setRotationVoltage(0);
+        } else {
         
         double prevSteerGoal = m_steerGoal.position;
         m_steerGoal = new State(state.angle.getRadians(), 0);
@@ -142,7 +146,9 @@ public abstract class ModuleIO implements Loggable {
         State prevSteerSetpoint = m_steerSetpoint;
         m_steerSetpoint = profile.calculate(0.02);
         State m_nextSetpoint = profile.calculate(0.04);
-        setRotationPid(m_steerSetpoint.position, m_steerFeedForward.calculate(m_steerSetpoint.velocity, m_nextSetpoint.velocity, 0.02));
+
+        setRotationPid(m_steerSetpoint.position, m_steerFeedForward.calculate(m_steerSetpoint.position));//m_steerFeedForward.calculate(m_steerSetpoint.velocity, m_nextSetpoint.velocity, 0.02));
+        }
         // double steerVolts = m_steerPIDController.calculate(getAngle(), m_steerSetpoint.position);
         // setRotationVoltage(
         //         steerVolts + m_steerFeedForward.calculate(m_steerSetpoint.velocity, m_nextSetpoint.velocity, 0.02)

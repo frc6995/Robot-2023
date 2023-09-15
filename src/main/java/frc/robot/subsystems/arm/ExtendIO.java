@@ -42,7 +42,7 @@ public abstract class ExtendIO implements Loggable {
     protected final LinearSystem<N2, N1, N1> m_extendPlant =
     //LinearSystemId.createElevatorSystem(DCMotor.getNEO(1), 3.9159, EXTEND_DRUM_RADIUS, EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION);
     LinearSystemId.identifyPositionSystem(ARM_EXTEND_KV, ARM_EXTEND_KA);
-    protected final PIDController m_extendController = new PIDController(5.625, 0, 0.71);
+    protected final PIDController m_extendController = new PIDController(5.625 * 2, 0, 0.71);
 
     private TrapezoidProfile.State m_goal = new TrapezoidProfile.State();
     private TrapezoidProfile.State m_setpoint = new TrapezoidProfile.State();
@@ -94,8 +94,7 @@ public abstract class ExtendIO implements Loggable {
         var profile = new TrapezoidProfile(m_constraints, m_goal, m_setpoint);
         m_setpoint = profile.calculate(TimingTracer.getLoopTime());
         State nextSetpoint = profile.calculate(getPeriod() * 2.0);
-        setVolts(
-            m_extendController.calculate(getLength(), m_setpoint.position) +
+        setPIDFF(m_setpoint.position, 
             // m_extendController.calculate(
             //     VecBuilder.fill(getLength(), 0),
             //     VecBuilder.fill(m_setpoint.position, 0)
@@ -105,6 +104,11 @@ public abstract class ExtendIO implements Loggable {
             ) +
             ARM_EXTEND_KG_VERTICAL * Math.sin(m_angleSupplier.getAsDouble())
         );
+    }
+
+    protected void setPIDFF(double length, double ffVolts) {
+        setVolts(
+            m_extendController.calculate(getLength(), length) + ffVolts);
     }
 
     public double getPeriod() {
