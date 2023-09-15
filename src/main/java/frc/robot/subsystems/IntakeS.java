@@ -16,6 +16,8 @@ import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.SparkMaxLimitSwitch;
 import com.revrobotics.SparkMaxLimitSwitch.Type;
 
+import autolog.Logged;
+import autolog.AutoLog.BothLog;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -33,12 +35,10 @@ import frc.robot.Constants;
 import frc.robot.util.sparkmax.SparkMax;
 
 import static frc.robot.Constants.IntakeConstants.*;
-import io.github.oblarg.oblog.Loggable;
-import io.github.oblarg.oblog.annotations.Log;
 
-public class IntakeS extends SubsystemBase implements Loggable {
+public class IntakeS extends SubsystemBase implements Logged {
   private final SparkMax intakeMotor = new SparkMax(INTAKE_CAN_ID, MotorType.kBrushless);
-  @Log
+  @BothLog
   private boolean isCube = false;
 
   private final TimeOfFlight distanceSensor = new TimeOfFlight(Constants.IntakeConstants.INTAKE_TOF_CAN_ID);
@@ -77,7 +77,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
     return new Transform2d(new Translation2d(0, offsetMeters), new Rotation2d());
   }
 
-  @Log
+  @BothLog
   public double getConeCenterOffsetDistance() {
     if (RobotBase.isSimulation()) {
       return 0;
@@ -99,7 +99,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
     return distanceSensor.getRangeSigma();
   }
 
-  @Log
+  @BothLog
   public double getCurrent() {
     return intakeMotor.getOutputCurrent();
   }
@@ -109,7 +109,7 @@ public class IntakeS extends SubsystemBase implements Loggable {
   //   return intakeMotor.getFault(FaultID.kOvercurrent);
   // }
 
-  @Log
+  @BothLog
   public boolean hitBeamBreak() {
     return !isCube && (Math.abs(getConeCenterOffsetDistance())) < 0.16;
   }

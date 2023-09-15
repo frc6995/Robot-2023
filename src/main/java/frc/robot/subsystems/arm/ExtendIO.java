@@ -17,7 +17,8 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.util.TimingTracer;
-import io.github.oblarg.oblog.Loggable;
+import autolog.Logged;
+import autolog.AutoLog.BothLog;
 import io.github.oblarg.oblog.annotations.Log;
 
 import static frc.robot.Constants.ArmConstants.*;
@@ -29,9 +30,9 @@ import java.util.function.DoubleSupplier;
 
 import com.revrobotics.CANSparkMax.IdleMode;
 
-public abstract class ExtendIO implements Loggable {
+public abstract class ExtendIO implements Logged {
 
-    public String configureLogName() {
+    public String getPath() {
         return "Extend";
     }
     // protected final ProfiledPIDController m_extendController =
@@ -74,7 +75,7 @@ public abstract class ExtendIO implements Loggable {
         resetController();
         resetGoal();
     }
-    @Log
+    @BothLog
     public double getCurrent() {return 0;}
     public void setAngleSupplier(DoubleSupplier supplier) {
         m_angleSupplier = supplier;
@@ -126,7 +127,7 @@ public abstract class ExtendIO implements Loggable {
     public State getSetpoint() {
         return m_setpoint;
     }
-    @Log
+    @BothLog
     public double getSetpointPosition() {
         return getSetpoint().position;
     }
@@ -136,30 +137,30 @@ public abstract class ExtendIO implements Loggable {
     public State getGoal() {
         return m_goal;
     }
-    @Log
+    @BothLog
     public double getGoalPosition() {
         return getGoal().position;
     }
-    @Log
+    @BothLog
     public double getGoalVelocity(){
         return getGoal().velocity;
     }
-    @Log
+    @BothLog
     public double getKG() {
         return ARM_EXTEND_KG_VERTICAL * Math.sin(m_angleSupplier.getAsDouble());
     }
-    @Log
+    @BothLog
     public abstract double getVolts();
-    @Log
+    @BothLog
     public boolean isInTolerance() {
         return Math.abs(getLength() - getGoalPosition()) < Units.inchesToMeters(0.5);
     }
     public abstract void setVolts(double volts);
-    @Log
+    @BothLog
     public abstract double getLength();
-    @Log
+    @BothLog
     public abstract double getVelocity();
-    @Log
+    @BothLog
     public abstract boolean isHomed();
     public abstract void setIdleMode(IdleMode mode);
     public void onHome() {

@@ -4,7 +4,7 @@ import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.MathUtil;
 import frc.robot.util.drive.AsymmetricSlewRateLimiter;
-import io.github.oblarg.oblog.Loggable;
+import autolog.Logged;
 import io.github.oblarg.oblog.annotations.Log;
 
 /**

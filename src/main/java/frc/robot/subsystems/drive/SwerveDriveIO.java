@@ -12,11 +12,13 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.SPI.Port;
 import frc.robot.NavX.AHRS;
-import io.github.oblarg.oblog.Loggable;
+import io.github.oblarg.oblog.annotations.Log;
+import autolog.Logged;
+import autolog.AutoLog.BothLog;
 
 import static frc.robot.Constants.DriveConstants.*;
 
-public abstract class SwerveDriveIO implements Loggable {
+public abstract class SwerveDriveIO implements Logged {
     protected final AHRS m_navx = new AHRS(Port.kMXP, (byte) 50);
     protected List<ModuleIO> m_modules;
 
@@ -29,16 +31,20 @@ public abstract class SwerveDriveIO implements Loggable {
             new SwerveModulePosition()
     };
 
+    @BothLog
+    private double number1 = 0;
     public SwerveDriveIO(Consumer<Runnable> addPeriodic) {
         addPeriodic.accept(this::periodic);
         m_navx.reset();
         m_navx.enableLogging(true);
     }
 
+
     @Override
-    public String configureLogName() {
+    public String getPath() {
         return "io";
     }
+    @BothLog
     public Rotation2d getGyroHeading() {
         return m_navx.getRotation2d();
     }

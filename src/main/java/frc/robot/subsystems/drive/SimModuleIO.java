@@ -55,7 +55,7 @@ public class SimModuleIO extends ModuleIO {
         m_driveVolts = volts;
         moduleSim.setWheelVoltage(m_driveVolts);
     }
-
+    @Override
     public double getAngle() {
         return MathUtil.angleModulus(moduleSim.getAzimuthEncoderPositionRev() / AZMTH_ENC_COUNTS_PER_MODULE_REV * 2 * Math.PI);
     }

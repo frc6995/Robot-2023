@@ -10,6 +10,9 @@ import org.photonvision.PhotonCamera;
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
 
+import autolog.AutoLog;
+import autolog.Logged;
+import autolog.AutoLog.BothLog;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.LinearFilter;
@@ -59,7 +62,7 @@ import frc.robot.util.sparkmax.SparkMax;
 import io.github.oblarg.oblog.annotations.Log;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 
-public class RobotContainer {
+public class RobotContainer implements Logged{
 
     /**
      * Establishes the controls and subsystems of the robot
@@ -68,16 +71,16 @@ public class RobotContainer {
     private final CommandOperatorKeypad m_keypad;
     private final DrivebaseS m_drivebaseS;
     
-    @Log
+    @BothLog
     private double lightSpeed = 0;
 
-    @Log
+    @BothLog
     private double loopTime = 0;
     private LinearFilter loopTimeAverage = LinearFilter.movingAverage(1);
     private final IntakeS m_intakeS = new IntakeS();
     private final ArmS m_armS;
 
-    @Log
+    @BothLog
     private final Field2d m_field = new Field2d();
     // @Log
     // private final Field3d m_field3d = new Field3d();
@@ -108,7 +111,6 @@ public class RobotContainer {
     /**
      * Trigger that determines whether the drivebase is close enough to its target pose to score a cube.
      */
-    @Log(methodName = "getAsBoolean")
     private Trigger m_alignSafeToPlace;
     private boolean m_setupDone = false;
     
@@ -188,6 +190,7 @@ public class RobotContainer {
         m_field.getObject("bluePoses").setPoses(POIManager.BLUE_COMMUNITY);
         m_field.getObject("redPoses").setPoses(POIManager.RED_COMMUNITY);
         SmartDashboard.putData(m_autoSelector);
+        AutoLog.setupLogging(this,"Robot", RobotBase.isReal());
         Timer.delay(0.2);
         SparkMax.burnFlashInSync();
         Timer.delay(0.2);
@@ -272,6 +275,11 @@ public class RobotContainer {
 
     public Command getAutonomousCommand() {
         return m_autoSelector.getSelected();
+    }
+
+    @BothLog
+    public boolean getSafeToPlace() {
+        return m_alignSafeToPlace.getAsBoolean();
     }
 
     public void periodic() {

@@ -1,5 +1,6 @@
 package frc.robot;
 
+import autolog.AutoLog;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -26,29 +27,23 @@ public class Robot extends TimedRobot {
         
         Robot.isSimulation = RobotBase.isSimulation();
         DriverStation.silenceJoystickConnectionWarning(true);
-        if (!isSimulation) {
-            DataLogManager.start();
-            DriverStation.startDataLog(DataLogManager.getLog());
-        }
 
         LiveWindow.disableAllTelemetry();
         robotContainer = new RobotContainer((fn)->this.addPeriodic(fn, kDefaultPeriod));
-        Logger.configureLoggingAndConfig(robotContainer, false);
+
         addPeriodic(()->{
             AllianceWrapper.setAlliance(DriverStation.getAlliance());
         }, 0.5);
-    
-        addPeriodic(()->{
-            Logger.updateEntries();
-
-        }, 0.04);
         
         System.gc();
     }
 
     @Override
     public void robotPeriodic() {
-        
+        AutoLog.updateDataLog();
+        if (!DriverStation.isFMSAttached()) {
+            AutoLog.updateNT();
+        }
         CommandScheduler.getInstance().run();
         robotContainer.periodic();
         matchTimeEntry.setNumber(DriverStation.getMatchTime());

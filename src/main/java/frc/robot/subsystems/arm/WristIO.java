@@ -6,6 +6,7 @@ import java.util.function.DoubleSupplier;
 
 import com.revrobotics.CANSparkMax.IdleMode;
 
+import autolog.AutoLog.BothLog;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.LinearPlantInversionFeedforward;
@@ -28,12 +29,12 @@ import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
 import frc.robot.util.Alert;
 import frc.robot.util.Alert.AlertType;
-import io.github.oblarg.oblog.Loggable;
+import autolog.Logged;
 import io.github.oblarg.oblog.annotations.Log;
 
 import static frc.robot.Constants.ArmConstants.*;
 
-public abstract class WristIO implements Loggable {
+public abstract class WristIO implements Logged {
 
     protected final double wristMOI = HAND_MASS_KILOS * HAND_LENGTH * HAND_LENGTH / 2.5;
 
@@ -41,9 +42,9 @@ public abstract class WristIO implements Loggable {
         DCMotor.getNEO(1), wristMOI, 1.0/WRIST_ROTATIONS_PER_MOTOR_ROTATION);
     private State m_setpoint = new State();
     private State m_goal = new State();
-    @Log
+    @BothLog
     protected boolean isHoming= false;
-    @Log
+    @BothLog
     protected boolean hasHomed = false;
     protected final LinearPlantInversionFeedforward<N2, N1, N1> m_wristFeedforward
         = new LinearPlantInversionFeedforward<>(m_wristPlant, 0.02);
@@ -74,7 +75,7 @@ public abstract class WristIO implements Loggable {
     public void setPivotAngleSupplier (DoubleSupplier pivotAngleSupplier) {
         m_pivotAngleSupplier = pivotAngleSupplier;
     }
-    @Log
+    @BothLog
     protected double getWristkG() {
         double kgConst = hasCone.getAsBoolean() ? (WRIST_KG * 1.1): (WRIST_KG * 0.7);
         return kgConst * Math.cos(m_pivotAngleSupplier.getAsDouble() + getAngle());
@@ -150,14 +151,14 @@ public abstract class WristIO implements Loggable {
     public State getSetpoint() {
         return m_setpoint;
     }
-    @Log
+    @BothLog
     public double getSetpointPosition(){
         return getSetpoint().position;
     }
     public State getGoal() {
         return m_goal;
     }
-    @Log
+    @BothLog
     public double getGoalPosition() {
         return getGoal().position;
     }
@@ -167,7 +168,7 @@ public abstract class WristIO implements Loggable {
         return "Wrist";
     }
 
-    @Log
+    @BothLog
     public boolean isInTolerance() {
         return Math.abs(getAngle() - getGoalPosition()) < Units.degreesToRadians(5);
     }
@@ -179,13 +180,13 @@ public abstract class WristIO implements Loggable {
      * 0 is straight out from the arm, parallel to it.
      * @return the wrist angle from -pi radians to pi radians
      */
-    @Log
+    @BothLog
     public abstract double getAngle();
-    @Log
+    @BothLog
     public abstract double getVolts();
-    @Log
+    @BothLog
     public abstract double getCurrent();
-    @Log
+    @BothLog
     public abstract boolean getHomed();
     public Constraints getConstraints() {
         return m_constraints;

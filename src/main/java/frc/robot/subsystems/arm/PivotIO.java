@@ -6,6 +6,7 @@ import java.util.function.DoubleSupplier;
 
 import com.revrobotics.CANSparkMax.IdleMode;
 
+import autolog.AutoLog.BothLog;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
@@ -24,12 +25,12 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
-import io.github.oblarg.oblog.Loggable;
+import autolog.Logged;
 import io.github.oblarg.oblog.annotations.Log;
 
 import static frc.robot.Constants.ArmConstants.*;
 
-public abstract class PivotIO implements Loggable {
+public abstract class PivotIO implements Logged {
 
     protected LinearSystem<N2, N1, N1> m_pivotPlant = LinearSystemId.createSingleJointedArmSystem(
             DCMotor.getNEO(2), getPivotMOI(STOW_POSITION.armLength), 1.0 / ARM_ROTATIONS_PER_MOTOR_ROTATION);
@@ -50,7 +51,7 @@ public abstract class PivotIO implements Loggable {
             0.02);
 
     private DoubleSupplier m_extendLengthSupplier = () -> MIN_ARM_LENGTH;
-    @Log
+    @BothLog
     private double m_length = m_extendLengthSupplier.getAsDouble();
     private BooleanSupplier hasCone;
 
@@ -84,7 +85,7 @@ public abstract class PivotIO implements Loggable {
         m_goal = new State(getContinuousRangeAngle(), 0);
     }
 
-    @Log
+    @BothLog
     public boolean isInTolerance() {
         return Math.abs(getContinuousRangeAngle() - getGoalPosition()) < Units.degreesToRadians(3);
     }
@@ -93,7 +94,7 @@ public abstract class PivotIO implements Loggable {
         return m_setpoint;
     }
 
-    @Log
+    @BothLog
     public double getSetpointPosition() {
         return getSetpoint().position;
     }
@@ -102,12 +103,12 @@ public abstract class PivotIO implements Loggable {
         return m_goal;
     }
 
-    @Log
+    @BothLog
     public double getGoalPosition() {
         return getGoal().position;
     }
 
-    @Log
+    @BothLog
     public abstract double getVolts();
 
     protected abstract void setVolts(double volts);
@@ -139,7 +140,7 @@ public abstract class PivotIO implements Loggable {
         return Rotation2d.fromRadians(position);
     }
 
-    @Log
+    @BothLog
     public abstract double getContinuousRangeAngle();
 
     public double continuousRangeAngleModulus(double targetAngle) {
@@ -171,7 +172,7 @@ public abstract class PivotIO implements Loggable {
         Units.inchesToMeters(12.5) / 2.0);
     }
 
-    @Log
+    @BothLog
     public double getPivotCGRadius() {
         double minCG = Units.inchesToMeters(8);
         double maxCG = Units.inchesToMeters(40);
@@ -261,7 +262,7 @@ public abstract class PivotIO implements Loggable {
      *         to hold arm horizontal at current extension length
      */
 
-    @Log
+    @BothLog
     protected double getPivotkG() {
         return getkG(getContinuousRangeAngle());
         // double minkG = ARM_PIVOT_KG_MIN_EXTEND;

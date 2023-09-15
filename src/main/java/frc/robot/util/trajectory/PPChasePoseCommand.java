@@ -19,7 +19,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.DrivebaseS;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
-import io.github.oblarg.oblog.Loggable;
+import autolog.Logged;
 
 /**
  * A command that uses two PID controllers ({@link PIDController}) and a
@@ -43,7 +43,7 @@ import io.github.oblarg.oblog.Loggable;
  * This class is provided by the NewCommands VendorDep
  */
 @SuppressWarnings("MemberName")
-public class PPChasePoseCommand extends CommandBase implements Loggable {
+public class PPChasePoseCommand extends CommandBase implements Logged {
     private final Timer m_timer = new Timer();
     private Supplier<Pose2d> m_targetPose;
     private PathPlannerTrajectory m_trajectory;

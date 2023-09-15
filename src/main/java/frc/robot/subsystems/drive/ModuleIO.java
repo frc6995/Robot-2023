@@ -13,14 +13,16 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.Robot;
 import frc.robot.util.Alert;
 import frc.robot.util.Alert.AlertType;
-import io.github.oblarg.oblog.Loggable;
+import autolog.Logged;
 import io.github.oblarg.oblog.annotations.Log;
 
 import static frc.robot.Constants.DriveConstants.*;
 
 import java.util.function.Consumer;
 
-public abstract class ModuleIO implements Loggable {
+import autolog.AutoLog.BothLog;
+
+public abstract class ModuleIO implements Logged {
 
     // steering trapezoid profile
     protected State m_steerGoal = new State();
@@ -68,7 +70,7 @@ public abstract class ModuleIO implements Loggable {
         m_pinionSlipAlert.set(Math.abs(getPinionSlip()) > Units.degreesToRadians(10));
     }
 
-    public String configureLogName() {
+    public String getPath() {
         System.out.println(m_loggingName);
         return m_loggingName;
     }
@@ -77,40 +79,40 @@ public abstract class ModuleIO implements Loggable {
 
     public abstract void setRotationVoltage(double rotationVolts);
 
-    @Log
+    @BothLog
     public abstract double getDriveDistance();
 
-    @Log
+    @BothLog
     public abstract double getDriveVelocity();
 
-    @Log
+    @BothLog
     /**
      * Returns the angle of the module from pi to -pi
      * @return
      */
     public abstract double getAngle();
 
-    @Log
+    @BothLog
     public abstract double getRelativeAngle();
 
-    @Log
+    @BothLog
     public abstract double getDriveVoltage();
-    @Log
+    @BothLog
     public abstract double getSteerVoltage();
 
-    @Log 
+    @BothLog 
     public double getSteerSetpoint() {
         return m_steerSetpoint.position;
     }
-    @Log
+    @BothLog
     public double getSteerGoal() {
         return m_steerGoal.position;
     }
-    @Log
+    @BothLog
     public double getDriveSetpoint() {
         return m_driveSetpoint;
     }
-    @Log
+
     public void setDesiredState(SwerveModuleState state) {
         state = SwerveModuleState.optimize(state,new Rotation2d(getAngle()));
 
@@ -147,7 +149,7 @@ public abstract class ModuleIO implements Loggable {
         m_steerSetpoint = profile.calculate(0.02);
         State m_nextSetpoint = profile.calculate(0.04);
 
-        setRotationPid(m_steerSetpoint.position, m_steerFeedForward.calculate(m_steerSetpoint.position));//m_steerFeedForward.calculate(m_steerSetpoint.velocity, m_nextSetpoint.velocity, 0.02));
+        setRotationPid(m_steerSetpoint.position, m_steerFeedForward.calculate(m_steerSetpoint.velocity));//m_steerFeedForward.calculate(m_steerSetpoint.velocity, m_nextSetpoint.velocity, 0.02));
         }
         // double steerVolts = m_steerPIDController.calculate(getAngle(), m_steerSetpoint.position);
         // setRotationVoltage(

@@ -10,6 +10,8 @@ import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.PathPoint;
 
+import autolog.Logged;
+import autolog.AutoLog.BothLog;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -63,14 +65,14 @@ import frc.robot.util.trajectory.PPChasePoseCommand;
 import frc.robot.util.trajectory.PPHolonomicDriveController;
 import frc.robot.util.trajectory.PPSwerveControllerCommand;
 import frc.robot.vision.PhotonCameraWrapper;
-import io.github.oblarg.oblog.Loggable;
+import autolog.Logged;
 import io.github.oblarg.oblog.annotations.Log;
 
 /**
  * Subsystem that controls the drivetrain of the robot
  * Handles all the odometry and base movement for the chassis
  */
-public class DrivebaseS extends SubsystemBase implements Loggable {
+public class DrivebaseS extends SubsystemBase implements Logged {
     /**
      * The abstract class for interfacing with the gyro and modules.
      */
@@ -125,12 +127,12 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
         return io.getRotation3d();
     }
 
-    @Log
+    @BothLog
     public double getGyroHeading() {
         return io.getGyroHeading().getRadians();
     }
 
-    @Log
+    @BothLog
     public double getPitch() {
         return io.getPitch();
     }
@@ -365,7 +367,7 @@ public class DrivebaseS extends SubsystemBase implements Loggable {
      * @return the current navX heading (which will not match odometry after drift
      *         or reset)
      */
-    @Log
+    @BothLog
     public double getHeadingDouble() {
         return getHeading().getRadians();
     }

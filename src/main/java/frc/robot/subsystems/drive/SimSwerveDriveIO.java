@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import autolog.AutoLog.BothLog;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -74,6 +75,10 @@ public class SimSwerveDriveIO extends SwerveDriveIO {
     @Override
     public Pose2d getSimPose() {
         return m_quadSwerveSim.getCurPose();
+    }
+    @BothLog
+    public double number() {
+        return 0;
     }
 
 }

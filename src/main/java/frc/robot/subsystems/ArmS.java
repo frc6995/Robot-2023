@@ -14,6 +14,8 @@ import com.revrobotics.SparkMaxAbsoluteEncoder;
 import com.revrobotics.SparkMaxLimitSwitch;
 import com.revrobotics.SparkMaxLimitSwitch.Type;
 
+import autolog.Logged;
+import autolog.AutoLog.BothLog;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.LinearPlantInversionFeedforward;
@@ -68,12 +70,12 @@ import frc.robot.util.NomadMathUtil;
 import frc.robot.util.TimingTracer;
 import frc.robot.util.sim.SparkMaxAbsoluteEncoderWrapper;
 import frc.robot.util.sim.SparkMaxEncoderWrapper;
-import io.github.oblarg.oblog.Loggable;
+import autolog.Logged;
 import io.github.oblarg.oblog.annotations.Log;
 
-public class ArmS extends SubsystemBase implements Loggable {
+public class ArmS extends SubsystemBase implements Logged {
     
-    @Log
+    @BothLog
     public final Field2d VISUALIZER = new Field2d();
 
     private ExtendIO m_extender;
@@ -223,7 +225,7 @@ public class ArmS extends SubsystemBase implements Loggable {
      * @return angle of the wrist in radians
      */
 
-    @Log
+    @BothLog
     public double getContinuousWristAngle() {
         return m_wrist.getAngle();
     }
@@ -371,7 +373,7 @@ public class ArmS extends SubsystemBase implements Loggable {
         MECH_VISUALIZER_HAND.setAngle(Units.radiansToDegrees(m_wrist.getAngle()));
     }
 
-    @Log
+    @BothLog
     private final Mechanism2d MECH_VISUALIZER = new Mechanism2d(Units.feetToMeters(12), Units.feetToMeters(8));
     private final MechanismRoot2d MECH_VISUALIZER_ROOT = MECH_VISUALIZER.getRoot("root", Units.feetToMeters(6), 0);
     private final MechanismLigament2d MECH_VISUALIZER_PIVOT_BASE = new MechanismLigament2d(
