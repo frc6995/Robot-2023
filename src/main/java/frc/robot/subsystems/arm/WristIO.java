@@ -24,6 +24,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.LightStripS;
 import frc.robot.subsystems.LightStripS.States;
@@ -42,13 +43,14 @@ public abstract class WristIO implements Logged {
         DCMotor.getNEO(1), wristMOI, 1.0/WRIST_ROTATIONS_PER_MOTOR_ROTATION);
     private State m_setpoint = new State();
     private State m_goal = new State();
+    private BooleanSupplier homingButton = new CommandXboxController(0).back().and(DriverStation::isDisabled);
     @BothLog
     protected boolean isHoming= false;
     @BothLog
     protected boolean hasHomed = false;
     protected final LinearPlantInversionFeedforward<N2, N1, N1> m_wristFeedforward
         = new LinearPlantInversionFeedforward<>(m_wristPlant, 0.02);
-    protected final Constraints m_constraints = new Constraints(3*Math.PI, 6*Math.PI);
+    protected final Constraints m_constraints = new Constraints(3*Math.PI, 5*Math.PI);
     
     protected final LinearQuadraticRegulator<N2, N1, N1> m_wristController = 
     new LinearQuadraticRegulator<>(m_wristPlant, VecBuilder.fill(0.001, 0.001), VecBuilder.fill(12), 0.02);
@@ -69,7 +71,10 @@ public abstract class WristIO implements Logged {
                 resetGoal();
             }
         });
-        new Trigger(()->isHoming && getHomed()).debounce(0.06).onTrue(Commands.runOnce(this::endHome));
+        new Trigger(()->isHoming && getHomed()).debounce(0.16).onTrue(
+            Commands.parallel(
+                LightStripS.getInstance().stateC(()->States.Climbing).withTimeout(0.5),
+                Commands.runOnce(this::endHome)).ignoringDisable(true));
     }
 
     public void setPivotAngleSupplier (DoubleSupplier pivotAngleSupplier) {
@@ -114,7 +119,7 @@ public abstract class WristIO implements Logged {
         hasHomed = true;
         resetState(WRIST_MAX_ANGLE);
         resetController();
-        resetGoal();
+        m_goal = new State(WRIST_MAX_ANGLE, 0);
         m_setpoint=new State(WRIST_MAX_ANGLE, 0);
     }
 
@@ -122,15 +127,19 @@ public abstract class WristIO implements Logged {
         var profile = new TrapezoidProfile(getConstraints(), m_goal, m_setpoint);
         m_setpoint = profile.calculate(0.02);
         var nextSetpoint = profile.calculate(0.04);
-        setVolts(
-            m_wristController.calculate(
-                        VecBuilder.fill(getAngle(), getVelocity()),
-                        VecBuilder.fill(m_setpoint.position, m_setpoint.velocity)).get(0, 0)
-                        + getWristkG()
+        setPIDFF(m_setpoint.position, getWristkG()
                         + m_wristFeedforward.calculate(
                                 VecBuilder.fill(0, m_setpoint.velocity),
                                 VecBuilder.fill(0, nextSetpoint.velocity))
                                 .get(0, 0));
+    }
+
+    protected void setPIDFF(double position, double ffVolts) {
+        setVolts(
+            m_wristController.calculate(
+                        VecBuilder.fill(getAngle(), getVelocity()),
+                        VecBuilder.fill(position, m_setpoint.velocity)).get(0, 0) +
+            ffVolts);
     }
 
     public void openLoopHold() {
@@ -187,7 +196,9 @@ public abstract class WristIO implements Logged {
     @BothLog
     public abstract double getCurrent();
     @BothLog
-    public abstract boolean getHomed();
+    public boolean getHomed() {
+        return homingButton.getAsBoolean();
+    };
     public Constraints getConstraints() {
         return m_constraints;
     };

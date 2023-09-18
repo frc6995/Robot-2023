@@ -43,11 +43,11 @@ public abstract class ExtendIO implements Logged {
     protected final LinearSystem<N2, N1, N1> m_extendPlant =
     //LinearSystemId.createElevatorSystem(DCMotor.getNEO(1), 3.9159, EXTEND_DRUM_RADIUS, EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION);
     LinearSystemId.identifyPositionSystem(ARM_EXTEND_KV, ARM_EXTEND_KA);
-    protected final PIDController m_extendController = new PIDController(5.625 * 2, 0, 0.71);
+    protected final PIDController m_extendController = new PIDController(5.625 * 5, 0, 0.71);
 
     private TrapezoidProfile.State m_goal = new TrapezoidProfile.State();
     private TrapezoidProfile.State m_setpoint = new TrapezoidProfile.State();
-    private TrapezoidProfile.Constraints m_constraints = new Constraints(1.3, 3);
+    private TrapezoidProfile.Constraints m_constraints = new Constraints(2.0, 4.5);
 
     protected final SimpleMotorFeedforward m_extendFeedforward = new SimpleMotorFeedforward(ARM_EXTEND_KS, ARM_EXTEND_KV, ARM_EXTEND_KA);
 

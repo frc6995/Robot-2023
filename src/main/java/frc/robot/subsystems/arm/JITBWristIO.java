@@ -6,6 +6,8 @@ import java.util.function.Consumer;
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkMaxPIDController;
+import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMax.SoftLimitDirection;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -13,6 +15,7 @@ import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -26,6 +29,7 @@ public class JITBWristIO extends WristIO {
 
     private final SparkMax m_wristMotor = new SparkMax(WRIST_MOTOR_ID, MotorType.kBrushless);
     private final SparkMaxEncoderWrapper m_encoder;
+    private final SparkMaxPIDController m_pidController = m_wristMotor.getPIDController();
     private final Constraints m_homingConstraints = new Constraints(1, 1);
     //private final AbsoluteEncoder m_encoder = m_wristMotor.getAbsoluteEncoder(Type.kDutyCycle);
 
@@ -34,6 +38,7 @@ public class JITBWristIO extends WristIO {
     private double m_velocity;
     private double m_volts;
     private double m_angle;
+    private Debouncer m_homingDebouncer = new Debouncer(0.5);
     public JITBWristIO(Consumer<Runnable> addPeriodic, BooleanSupplier hasCone) {
         super(addPeriodic, hasCone);
         m_wristMotor.getEncoder().setPositionConversionFactor(2 * Math.PI * WRIST_ROTATIONS_PER_MOTOR_ROTATION);
@@ -47,7 +52,12 @@ public class JITBWristIO extends WristIO {
         m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
         m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
 
+        m_pidController.setFeedbackDevice(m_wristMotor.getEncoder());
+        m_pidController.setPositionPIDWrappingEnabled(false);
 
+        m_pidController.setP(1);
+        m_pidController.setI(0);
+        m_pidController.setD(0);
         m_wristMotor.setSoftLimit(SoftLimitDirection.kReverse, (float) WRIST_MIN_ANGLE);
         m_wristMotor.setSoftLimit(SoftLimitDirection.kForward, (float) WRIST_MAX_ANGLE);
         m_wristMotor.setSmartCurrentLimit(40);
@@ -77,6 +87,14 @@ public class JITBWristIO extends WristIO {
         m_current = m_wristMotor.getOutputCurrent();
     }
 
+    public void setPIDFF(double position, double ffVolts) {
+        if (isHoming) {
+            m_wristMotor.setVoltage(3);
+        } else {
+            m_pidController.setReference(position, ControlType.kPosition, 0, ffVolts);
+        }
+        
+    }
     @Override
     public double getVolts() {
         return m_volts;
@@ -86,17 +104,20 @@ public class JITBWristIO extends WristIO {
         m_wristMotor.setVoltage(MathUtil.clamp(volts, -12, 12));
         
     }
+
+    @Override
+    public boolean getHomed() {
+        return super.getHomed() || m_homingDebouncer.calculate(m_current > 15);
+    }
     @Override
     public double getVelocity() {
         // TODO Auto-generated method stub
         return m_velocity;
     }
 
-    @Override
-    public boolean getHomed() {
-        return m_current > 15;
+    public void resetController() {
+        super.resetController();
     }
-
 
     @Override
     public Constraints getConstraints() {

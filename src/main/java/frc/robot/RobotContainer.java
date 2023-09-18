@@ -133,7 +133,7 @@ public class RobotContainer implements Logged{
             } else {
                 return
                 Math.abs(error.getRotation().getRadians()) < Units.degreesToRadians(2) &&
-                Math.abs(error.getX()) < 0.1 &&
+                Math.abs(error.getX()) < 0.05 &&
                 Math.abs(error.getY()) < Units.inchesToMeters(1);
             }
         });
@@ -148,43 +148,34 @@ public class RobotContainer implements Logged{
         usbCam.setDriverMode(true);
 
 
-        // Create the keypad with the functions it needs to set desired scoring action.
-        m_keypad = new CommandOperatorKeypad(2, (pose)->{
+        m_keypad = new CommandOperatorKeypad(2, 
+        (pose)->{
             m_targetAlignmentPose = pose;
             m_field.getObject("Selection").setPose(pose);
-        }, (position)->{m_targetArmPosition = position;},
+        },
+        (position)->{m_targetArmPosition = position;},
         (selectedCube)->{m_isCubeSelected = selectedCube; m_intakeS.setGamePiece(m_isCubeSelected);});
-        // Set scoring to right hybrid node.
-        m_keypad.setpointCommand(0, 0).schedule();
-        
-        m_drivebaseS.setDefaultCommand(
-            m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis)
-        );
-        // face downfield while Start is held
-        m_driverController.back().whileTrue(
-            m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()->0)
-        );
 
         configureButtonBindings();
+        addAutoRoutines();
 
+        // //Autonomous Option Selections:
+        // m_autoSelector.setDefaultOption("Cone Bal.-Bump Side", eighteenPointAuto(3));
+        // m_autoSelector.addOption("Cone Bal.-HP Side", eighteenPointAuto(5));
+        // //No Bump:
+        // m_autoSelector.addOption("2 Cone", fifteenPointAuto());
+        // m_autoSelector.addOption("2 Cone Bal.", twentysevenPointAuto());
+        // // m_autoSelector.addOption("Cone Over+Back - HP", overBackAuto(5));
+        // // m_autoSelector.addOption("Cone Over+Back - Bump", overBackAuto(3));
+        // m_autoSelector.addOption("2 Cone Over Bump", bumpTwoConeAuto());
 
-        //Autonomous Option Selections:
-        m_autoSelector.setDefaultOption("Cone Bal.-Bump Side", eighteenPointAuto(3));
-        m_autoSelector.addOption("Cone Bal.-HP Side", eighteenPointAuto(5));
-        //No Bump:
-        m_autoSelector.addOption("2 Cone", fifteenPointAuto());
-        m_autoSelector.addOption("2 Cone Bal.", twentysevenPointAuto());
-        // m_autoSelector.addOption("Cone Over+Back - HP", overBackAuto(5));
-        // m_autoSelector.addOption("Cone Over+Back - Bump", overBackAuto(3));
-        m_autoSelector.addOption("2 Cone Over Bump", bumpTwoConeAuto());
+        // // m_autoSelector.addOption("Cone+Over Bump [UNTESTED]", ninePointAuto());
 
-        // m_autoSelector.addOption("Cone+Over Bump [UNTESTED]", ninePointAuto());
-
-        m_autoSelector.addOption("Do Nothing", Commands.none());
-        // m_autoSelector.addOption("21 Point No 2nd", twentyonePointAutoNo2nd());
-        // m_autoSelector.addOption("21 Point With 2nd", twentyonePointAutoWith2nd());
-        // m_autoSelector.addOption("27 Point (Cone Cube)", twentysevenPointConeCubeAuto());
-        // m_autoSelector.addOption("27 Point (2 Cone)", twentysevenPointConeConeAuto());
+        // m_autoSelector.addOption("Do Nothing", Commands.none());
+        // // m_autoSelector.addOption("21 Point No 2nd", twentyonePointAutoNo2nd());
+        // // m_autoSelector.addOption("21 Point With 2nd", twentyonePointAutoWith2nd());
+        // // m_autoSelector.addOption("27 Point (Cone Cube)", twentysevenPointConeCubeAuto());
+        // // m_autoSelector.addOption("27 Point (2 Cone)", twentysevenPointConeConeAuto());
 
 
         m_field.getObject("bluePoses").setPoses(POIManager.BLUE_COMMUNITY);
@@ -194,7 +185,10 @@ public class RobotContainer implements Logged{
         Timer.delay(0.2);
         SparkMax.burnFlashInSync();
         Timer.delay(0.2);
-        m_setupDone = true;
+        Commands.sequence(
+            waitSeconds(4),
+            runOnce(()->m_setupDone = true)
+        ).ignoringDisable(true).schedule();
         DriverStation.reportWarning("Setup Done", false);
     }
 
@@ -209,6 +203,19 @@ public class RobotContainer implements Logged{
     }
 
     public void configureButtonBindings() {
+
+        // Create the keypad with the functions it needs to set desired scoring action.
+
+        // Set scoring to right hybrid node.
+        m_keypad.setpointCommand(0, 0).schedule();
+        
+        m_drivebaseS.setDefaultCommand(
+            m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis)
+        );
+        // face downfield while Start is held
+        m_driverController.x().whileTrue(
+            m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()->0)
+        );
         // Align, score, and stow.
         m_driverController.a().toggleOnTrue(
                 alignToSelectedScoring().asProxy()
@@ -217,12 +224,7 @@ public class RobotContainer implements Logged{
            
             );
         // Score and stow.
-        m_driverController.b().toggleOnTrue(
-            Commands.sequence(
-                m_intakeS.outtakeC().withTimeout(0.5),
-                m_armS.stowIndefiniteC()
-            )
-            );
+        m_driverController.b().toggleOnTrue(m_armS.stowIndefiniteC());
         // OFFICIAL CALEB PREFERENCE
         // m_driverController.y().toggleOnTrue(armIntakeSelectedCG(
         //     ArmConstants.OVERTOP_CUBE_INTAKE_POSITION,
@@ -230,9 +232,9 @@ public class RobotContainer implements Logged{
         //     ()->m_isCubeSelected
         // ));
 
-        m_driverController.y().toggleOnTrue(
-            m_drivebaseS.chasePoseC(()->POIManager.ownPOI(POIS.GRID_PLAT)));
-        m_driverController.x().onTrue(m_armS.stowIndefiniteC());
+        // m_driverController.y().toggleOnTrue(
+        //     m_drivebaseS.chasePoseC(()->POIManager.ownPOI(POIS.GRID_PLAT)));
+        m_driverController.back().onTrue(m_drivebaseS.xLockC());
 
 
         m_driverController.rightBumper().toggleOnTrue(armIntakeCG(
@@ -270,7 +272,12 @@ public class RobotContainer implements Logged{
             }
         ));        
     }
-
+    public void addAutoRoutines() {
+        m_autoSelector.setDefaultOption("Do Nothing", Commands.none());
+        m_autoSelector.addOption("HighConeHighCube", highConeHighCubeHPSide());
+        m_autoSelector.addOption("BumpSide 1 Cone Bal", eighteenPointAuto(3));
+        m_autoSelector.addOption("HP Side 1 Cone Bal", eighteenPointAuto(3));
+    }
 
 
     public Command getAutonomousCommand() {
@@ -283,8 +290,14 @@ public class RobotContainer implements Logged{
     }
 
     public void periodic() {
-        if (DriverStation.isDisabled() && m_setupDone) {
-            LightStripS.getInstance().requestState(States.SetupDone);
+        if (DriverStation.isDisabled()) {
+            if (m_setupDone) {
+                LightStripS.getInstance().requestState(States.SetupDone);
+            }
+            else {
+                LightStripS.getInstance().requestState(States.Disabled);
+            }
+
         }
         //System.out.println(m_autoSelector.getSelected().getRequirements().toString());
         //lightSpeed = LightStripS.getInstance().getSpeed();
@@ -350,12 +363,10 @@ public class RobotContainer implements Logged{
 
     //Autonomous Commands:
     
-
+    // region oldAutos
     public Command eighteenPointAuto(int blueColumn){
         
         return Commands.sequence(
-            m_intakeS.setGamePieceC(()->false).asProxy(),
-
             Commands.runOnce(
                 ()->m_drivebaseS.resetPose(
                     NomadMathUtil.mirrorPose(POIManager.BLUE_COMMUNITY.get(blueColumn), AllianceWrapper.getAlliance())
@@ -364,47 +375,18 @@ public class RobotContainer implements Logged{
             m_keypad.blueSetpointCommand(blueColumn, 2),
             Commands.deadline(
                 Commands.sequence(
-                    m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).withTimeout(3).asProxy(),
-                    m_intakeS.outtakeC().withTimeout(0.4).asProxy()
+                    m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).withTimeout(3),
+                    m_intakeS.outtakeC().withTimeout(0.4)
                 ),
-                alignToSelectedScoring().asProxy()
+                alignToSelectedScoring()
             ),
 
-            m_armS.goToPositionC(ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT).asProxy(),
-            m_drivebaseS.chargeStationAlignC().asProxy(),
-            m_drivebaseS.run(()->m_drivebaseS.drive(new ChassisSpeeds(0, 0, 0.1))).withTimeout(0.5).asProxy()
+            m_armS.goToPositionC(ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT),
+            m_drivebaseS.chargeStationAlignC(),
+            m_drivebaseS.xLockC()
             //m_drivebaseS.chargeStationBatteryFirstC()
         ).finallyDo((end)->m_drivebaseS.drive(new ChassisSpeeds()));
     }
-
-    // public Command overBackAuto(int blueColumn) {
-    //     return Commands.sequence(
-    //         m_intakeS.retractC().asProxy(),
-
-    //         Commands.runOnce(
-    //             ()->m_drivebaseS.resetPose(
-    //                 NomadMathUtil.mirrorPose(POIManager.BLUE_COMMUNITY.get(blueColumn), AllianceWrapper.getAlliance())
-    //             )),
-            
-    //         m_keypad.blueSetpointCommand(blueColumn, 2),
-    //         Commands.deadline(
-    //             Commands.sequence(
-    //                 m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).withTimeout(3).asProxy(),
-    //                 m_intakeS.outtakeC().withTimeout(0.4).asProxy()
-    //             ),
-    //             alignToSelectedScoring().asProxy()
-    //         ),
-
-    //         m_armS.goToPositionC(ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT).asProxy(),
-    //         sequence(
-    //             m_drivebaseS.run(()->m_drivebaseS.driveAllianceRelative(new ChassisSpeeds(3, 0, 0))).withTimeout(5).until(()->POIManager.mirrorPoseAlliance(m_drivebaseS.getPose()).getX() > 6).asProxy(),
-    //             m_drivebaseS.run(()->m_drivebaseS.driveAllianceRelative(new ChassisSpeeds(3, 0, 0))).withTimeout(3).until(()->Math.abs(m_drivebaseS.getPitch()) > Units.degreesToRadians(10)).asProxy(),
-    //             m_drivebaseS.chargeStationAlignC().asProxy()
-    //         ),
-    //         m_drivebaseS.run(()->m_drivebaseS.drive(new ChassisSpeeds(0, 0, 0.1))).withTimeout(0.5).asProxy()
-    //         //m_drivebaseS.chargeStationBatteryFirstC()
-    //     ).finallyDo((end)->m_drivebaseS.drive(new ChassisSpeeds()));
-    // }
 
     public Command ninePointAuto(){
         
@@ -544,4 +526,99 @@ public class RobotContainer implements Logged{
             )
         );
     }
+    // endregion
+    // region newAutos
+    public Command highConeHighCubeHPSide() {
+        var pathGroup = PathPlanner.loadPathGroup("High Cone High Cube",
+        new PathConstraints(4, 3),
+        new PathConstraints(4, 2.5));
+        var path1 = PathPlanner.loadPath("High Cone High Cube 1", new PathConstraints(2,2));
+        return sequence(
+            m_drivebaseS.resetPoseToBeginningC(path1),
+            m_intakeS.setGamePieceC(()->false),
+            // Target the HP-side high cone
+            m_keypad.blueSetpointCommand(8, 2),
+            // Step 1: Align and score
+            deadline(
+                sequence(
+                    m_armS.goToPositionC(ArmConstants.SCORE_MID_CONE_POSITION),
+                    m_intakeS.outtakeC().withTimeout(0.4)
+                )//,
+                // sequence(
+                //     alignToSelectedScoring().until(m_alignSafeToPlace)
+                //     .andThen(m_drivebaseS.stopC())
+                // )
+            ),
+            // Step 2: Fetch cube 1
+            m_keypad.blueSetpointCommand(7, 1),
+            deadline(
+                m_drivebaseS.pathPlannerCommand(path1),
+                m_intakeS.intakeC().until(m_intakeS::hitBeamBreak),
+                m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION)
+                // drive from first cone score to cube
+                
+            ).withTimeout(4),
+            // Drive back while stowing cube
+            // when we're close enough to score, move on
+            deadline(
+                sequence(
+                    m_drivebaseS.pathPlannerCommand(pathGroup.get(1)),
+                    alignToSelectedScoring()
+                ).until(m_alignSafeToPlace),
+                m_armS.goToPositionC(ArmConstants.SCORE_MID_CUBE_POSITION),
+                m_intakeS.run(()->m_intakeS.intake(0.5))
+            ),
+            m_intakeS.outtakeC().withTimeout(0.4),        
+            m_keypad.blueSetpointCommand(7, 1),
+            // head back out
+            deadline(
+                m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.stopOnceC()),
+                m_intakeS.intakeC().until(m_intakeS::hitBeamBreak),
+                m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION)
+                // drive from first cone score to cube
+               
+            ).withTimeout(4),
+
+            // Drive back while stowing cube
+            // when we're close enough to score, move on
+            deadline(
+                sequence(
+                    m_drivebaseS.pathPlannerCommand(pathGroup.get(3)),
+                    alignToSelectedScoring()
+                ).until(m_alignSafeToPlace),
+                m_armS.goToPositionC(ArmConstants.SCORE_MID_CUBE_POSITION),
+                m_intakeS.run(()->m_intakeS.intake(0.5))
+            ),
+            //m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CUBE_POSITION),
+            // extend, score
+            m_intakeS.run(()->m_intakeS.intake(-12)).withTimeout(0.4)
+         );
+    }
+
+    // public Command overBackAuto(int blueColumn) {
+    //     return Commands.sequence(
+    //         m_keypad.blueSetpointCommand(blueColumn, 2),
+    //         Commands.runOnce(
+    //             ()->m_drivebaseS.resetPose(
+    //                 NomadMathUtil.mirrorPose(POIManager.BLUE_COMMUNITY.get(blueColumn), AllianceWrapper.getAlliance())
+    //             )),
+            
+
+    //         Commands.deadline(
+    //             Commands.sequence(
+    //                 m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).withTimeout(3),
+    //                 m_intakeS.outtakeC().withTimeout(0.4)
+    //             ),
+    //             alignToSelectedScoring()
+    //         ),
+
+    //         m_armS.goToPositionC(ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT),
+    //         sequence(
+                
+    //             m_drivebaseS.run(()->m_drivebaseS.driveAllianceRelative(new ChassisSpeeds(3, 0, 0))).withTimeout(5).until(()->POIManager.mirrorPoseAlliance(m_drivebaseS.getPose()).getX() > 6),
+    //             m_drivebaseS.chargeStationAlignC()
+    //         ),
+    //         m_drivebaseS.xLockC()
+    //     );
+    //}
 }

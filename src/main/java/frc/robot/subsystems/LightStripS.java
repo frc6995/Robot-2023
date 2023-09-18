@@ -35,6 +35,8 @@ public class LightStripS {
   /** Creates a new LedS. */
   private LightStripS() {
     led.setLength(buffer.getLength());
+    
+    States.Disabled.setter.accept(buffer, persistentLedState);
     led.setData(buffer);
     led.start();
   }
@@ -104,9 +106,9 @@ public class LightStripS {
    */
   public void periodic() {
     requestState(States.Default);
-    if (DriverStation.isDisabled()) {
-      requestState(States.Disabled);
-    }
+    // if (DriverStation.isDisabled()) {
+    //   requestState(States.Disabled);
+    // }
     States state = m_states.first();
     if (state != previousState) {
       persistentLedState.pulseOffset = 0;

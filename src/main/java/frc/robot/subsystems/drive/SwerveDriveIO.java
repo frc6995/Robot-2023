@@ -31,8 +31,6 @@ public abstract class SwerveDriveIO implements Logged {
             new SwerveModulePosition()
     };
 
-    @BothLog
-    private double number1 = 0;
     public SwerveDriveIO(Consumer<Runnable> addPeriodic) {
         addPeriodic.accept(this::periodic);
         m_navx.reset();

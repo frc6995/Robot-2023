@@ -43,7 +43,7 @@ public abstract class PivotIO implements Logged {
     private LinearPlantInversionFeedforward<N2, N1, N1> m_pivotFeedForward = new LinearPlantInversionFeedforward<>(
             m_pivotPlant, 0.02);
 
-    private Vector<N2> m_tolerances = VecBuilder.fill(0.01, 0.01);
+    private Vector<N2> m_tolerances = VecBuilder.fill(0.001, 0.001);
     private LinearQuadraticRegulator<N2, N1, N1> m_pivotController = new LinearQuadraticRegulator<N2, N1, N1>(
             m_pivotPlant,
             m_tolerances,
@@ -194,7 +194,7 @@ public abstract class PivotIO implements Logged {
     public void updatePivotPlant() {
         if (Math.abs(getLength() - m_length) > 0.005) {
             m_pivotPlant = LinearSystemId.createSingleJointedArmSystem(
-                DCMotor.getNEO(2), getPivotMOI(), 1.0 / ARM_ROTATIONS_PER_MOTOR_ROTATION);
+                DCMotor.getNEO(2), getPivotMOI() * (hasCone.getAsBoolean() ? 1 : 0.9), 1.0 / ARM_ROTATIONS_PER_MOTOR_ROTATION);
             m_pivotController = new LinearQuadraticRegulator<N2, N1, N1>(
                 m_pivotPlant, m_tolerances, VecBuilder.fill(12), 0.02);
             m_pivotFeedForward = new LinearPlantInversionFeedforward<>(

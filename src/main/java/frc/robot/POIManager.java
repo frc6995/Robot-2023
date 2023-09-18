@@ -52,7 +52,7 @@ public class POIManager {
     }
     /**
      * The drivetrain scoring positions for the blue community.
-     * Pose 0 is for the farthest-right scoring station from the driver perspective.
+     * Pose 0 is for the wall side, the farthest-right scoring station from the driver perspective. 
      */
     public static final List<Pose2d> BLUE_COMMUNITY = List.of(
         new Pose2d(1.843, 0.547, fromDegrees(180)),
@@ -92,12 +92,17 @@ public class POIManager {
      */
 
     public static final List<Pose2d> RED_COMMUNITY;
+    public static final List<Pose2d> RED_FIELD_COMMUNITY;
     static {
         List<Pose2d> mirroredCommunity = new ArrayList<Pose2d>();
+        List<Pose2d> mirroredFieldCommunity = new ArrayList<Pose2d>();
         for (int i = BLUE_COMMUNITY.size() - 1; i >= 0; i--) {
             mirroredCommunity.add(mirrorPose(BLUE_COMMUNITY.get(i)));
+            mirroredFieldCommunity.add(mirrorPose(BLUE_COMMUNITY.get(BLUE_COMMUNITY.size()-1-i)));
         }
         RED_COMMUNITY = mirroredCommunity;
+        RED_FIELD_COMMUNITY = mirroredFieldCommunity;
+
     }
 
     public static List<Pose2d> ownCommunity() {
@@ -108,7 +113,14 @@ public class POIManager {
             return BLUE_COMMUNITY;
         }
     }
-
+    public static List<Pose2d> ownCommunityFlipped() {
+        if (AllianceWrapper.getAlliance() == Alliance.Red) {
+            return RED_FIELD_COMMUNITY;
+        }
+        else {
+            return BLUE_COMMUNITY;
+        }
+    }
     public static Pose2d ownPOI(POIS poi) {
         if (AllianceWrapper.getAlliance() == Alliance.Red) {
             return poi.redPose;

@@ -60,10 +60,10 @@ public class VisionWrapper {
       var estimator =
           new PhotonPoseEstimator(
               fieldLayout,
-              PhotonPoseEstimator.PoseStrategy.LOWEST_AMBIGUITY,
+              PhotonPoseEstimator.PoseStrategy.MULTI_TAG_PNP,
               camera,
               visionSource.robotToCamera());
-      estimator.setMultiTagFallbackStrategy(PhotonPoseEstimator.PoseStrategy.LOWEST_AMBIGUITY);
+      estimator.setMultiTagFallbackStrategy(PhotonPoseEstimator.PoseStrategy.AVERAGE_BEST_TARGETS);
       cameraEstimators.add(new CameraEstimator(camera, estimator));
     }
 
@@ -72,21 +72,21 @@ public class VisionWrapper {
     //       "time since apriltag detection",
     //       () -> String.format("%3.0f seconds", Timer.getFPGATimestamp() - lastDetection));
 
-    // var thread =
-    //     new Thread(
-    //         () -> {
-    //           if (fieldLayout == null) return;
-    //           while (!Thread.currentThread().isInterrupted()) {
-    //             this.findVisionMeasurements();
-    //             try {
-    //               Thread.sleep(Vision.THREAD_SLEEP_DURATION_MS);
-    //             } catch (InterruptedException e) {
-    //               Thread.currentThread().interrupt();
-    //             }
-    //           }
-    //         });
-    // thread.setDaemon(true);
-    // thread.start();
+    var thread =
+        new Thread(
+            () -> {
+              if (fieldLayout == null) return;
+              while (!Thread.currentThread().isInterrupted()) {
+                this.findVisionMeasurements();
+                try {
+                  Thread.sleep(Vision.THREAD_SLEEP_DURATION_MS);
+                } catch (InterruptedException e) {
+                  Thread.currentThread().interrupt();
+                }
+              }
+            });
+    thread.setDaemon(true);
+    thread.start();
   }
 
   record MeasurementRow(

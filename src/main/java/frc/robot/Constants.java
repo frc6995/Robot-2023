@@ -161,7 +161,7 @@ public class Constants {
                     1 * Math.PI // theta
                     );
     
-        public static final double POSE_AMBIGUITY_CUTOFF = .1;
+        public static final double POSE_AMBIGUITY_CUTOFF = .05;
     
         public static final List<TagCountDeviation> TAG_COUNT_DEVIATION_PARAMS =
             List.of(
@@ -282,13 +282,13 @@ public class Constants {
                     VisionConstants.robotToCam1),
                 new VisionSource(
                     VisionConstants.CAM_2_NAME,
-                   VisionConstants.robotToCam2));
-                // new VisionSource(
-                //     VisionConstants.CAM_3_NAME,
-                //     VisionConstants.robotToCam3));//,
-                // new VisionSource(
-                //     VisionConstants.CAM_4_NAME,
-                //    VisionConstants.robotToCam4));
+                   VisionConstants.robotToCam2),
+                new VisionSource(
+                    VisionConstants.CAM_3_NAME,
+                    VisionConstants.robotToCam3),
+                new VisionSource(
+                    VisionConstants.CAM_4_NAME,
+                   VisionConstants.robotToCam4));
     
         public static final int THREAD_SLEEP_DURATION_MS = 20;
       }
@@ -310,14 +310,14 @@ public class Constants {
         public static final double EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION = 1.0/9.0;
         public static final double EXTEND_METERS_PER_DRUM_ROTATION = Math.PI * 2 * EXTEND_DRUM_RADIUS * 2; // 2x distance
 
-        public static final double ARM_EXTEND_KG_VERTICAL = 0.4 * 16.0/9.0;
+        public static final double ARM_EXTEND_KG_VERTICAL = 0.41 * 16.0/9.0;
         public static final double ARM_EXTEND_KS = 0.15 * 16.0/9.0;
         public static final double ARM_EXTEND_KV = 1.31 * 5.5 * 9.0/16.0;//12 /*v*//(5676 /*rpm */ * EXTEND_METERS_PER_DRUM_ROTATION * EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION / 60);
         public static final double ARM_EXTEND_KA = 0.12 * 16.0/9.0;
         /* PIVOT */
         public static final double MIN_ARM_ANGLE = 5.86 - 2*Math.PI;
         /** DO NOT INCREASE! arm will crunch cable chain */
-        public static final double MAX_ARM_ANGLE = Math.PI + 0.42;
+        public static final double MAX_ARM_ANGLE = Math.PI + 0.5;
         public static final double ARM_ROTATIONS_PER_MOTOR_ROTATION = 1.0/225.0; //(1.0/25.0) * (16.0/60.0);
 
         public static final double PIVOT_ENCODER_OFFSET = 0.423 * Math.PI * 2.0 + 0.025;
@@ -353,25 +353,20 @@ public class Constants {
         public static class ArmPositions {
             public static final ArmPosition STOW = new ArmPosition(
                 Units.degreesToRadians(60),
-                MIN_ARM_LENGTH + Units.inchesToMeters(3),
+                MIN_ARM_LENGTH,
                 WRIST_MAX_ANGLE
             );
             public static final ArmPosition CUBE_STOW = new ArmPosition(
                 1.35,
-                MIN_ARM_LENGTH + Units.inchesToMeters(3),
+                MIN_ARM_LENGTH,
                 WRIST_MIN_ANGLE
             );
             public static final ArmPosition PRESTOW = STOW;
             public static final ArmPosition FRONT_PLATFORM_TIPPED = new ArmPosition(
                 2.368, MIN_ARM_LENGTH + Units.inchesToMeters(3),  0.31);
             public static final ArmPosition FRONT_PLATFORM_CONE_UPRIGHT = new ArmPosition(
-                1.28, 0.912 , -1.89
+                1.227, 0.97 , -2.02
             );
-            public static final ArmPosition FRONT_GROUND_CUBE = new ArmPosition(
-                Units.degreesToRadians(203),
-                Units.inchesToMeters(2.06),
-                Units.degreesToRadians(-26)
-                );
             public static final ArmPosition BACK_TIPPED_FLOOR = new ArmPosition(
                 3.59, 0.5477, 0.223);
             public static final ArmPosition BACK_UP_FLOOR = new ArmPosition(
@@ -403,9 +398,9 @@ public class Constants {
             0);
         public static final ArmPosition STOW_POSITION = ArmPositions.STOW;
         public static final ArmPosition GROUND_CUBE_INTAKE_POSITION = new ArmPosition(
-            3.55,
+            3.61,
             STOW_POSITION.armLength,
-            -0.75);
+            -0.8);
         public static final ArmPosition GROUND_CONE_INTAKE_POSITION = new ArmPosition(
             -0.42,
             0.611,

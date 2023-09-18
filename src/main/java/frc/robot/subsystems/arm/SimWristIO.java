@@ -22,7 +22,7 @@ public class SimWristIO extends WristIO {
         DCMotor.getNEO(1),
         1.0 / WRIST_ROTATIONS_PER_MOTOR_ROTATION,
         wristMOI, HAND_LENGTH,
-        WRIST_MIN_ANGLE - Units.degreesToRadians(3), WRIST_MAX_ANGLE * 2, HAND_MASS_KILOS, true);
+        WRIST_MIN_ANGLE - Units.degreesToRadians(3), WRIST_MAX_ANGLE, HAND_MASS_KILOS, true);
 
     private double m_inputVolts;
     public SimWristIO(Consumer<Runnable> addPeriodic, BooleanSupplier hasCone) {
@@ -39,6 +39,9 @@ public class SimWristIO extends WristIO {
 
     @Override
     public double getAngle() {
+        if (m_wristSim == null) {
+            return 0;
+        }
         return m_wristSim.getAngleRads();
     }
 
@@ -74,7 +77,7 @@ public class SimWristIO extends WristIO {
     @Override
     public boolean getHomed() {
         // TODO Auto-generated method stub
-        return getAngle() <= WRIST_MAX_ANGLE;
+        return super.getHomed() || getAngle() <= WRIST_MAX_ANGLE;
     }
 
     @Override

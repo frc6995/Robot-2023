@@ -49,6 +49,8 @@ public abstract class ModuleIO implements Logged {
     protected final ModuleConstants m_moduleConstants;
     private final Alert m_pinionSlipAlert;
 
+    private SwerveModuleState m_desiredState = new SwerveModuleState();
+
     public ModuleIO(Consumer<Runnable> addPeriodic, ModuleConstants moduleConstants) {
         m_moduleConstants = moduleConstants;
         m_loggingName = moduleConstants.name + "-[" + moduleConstants.driveMotorID + ','
@@ -64,6 +66,7 @@ public abstract class ModuleIO implements Logged {
         m_drivePIDController = new PIDController(
                 DRIVE_P, 0,
                 DRIVE_D);
+        addPeriodic.accept(this::setState);
     }
 
     public void updateAlerts() {
@@ -114,7 +117,10 @@ public abstract class ModuleIO implements Logged {
     }
 
     public void setDesiredState(SwerveModuleState state) {
-        state = SwerveModuleState.optimize(state,new Rotation2d(getAngle()));
+        m_desiredState = state;
+    }
+    private void setState(){
+        SwerveModuleState state = SwerveModuleState.optimize(m_desiredState,new Rotation2d(getAngle()));
 
         double prevVelSetpoint = m_driveSetpoint;
         //if (m_moduleConstants.name.contains("F")) {state.speedMetersPerSecond = -state.speedMetersPerSecond;}

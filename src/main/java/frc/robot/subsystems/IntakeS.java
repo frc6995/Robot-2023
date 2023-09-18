@@ -42,8 +42,8 @@ public class IntakeS extends SubsystemBase implements Logged {
   private boolean isCube = false;
 
   private final TimeOfFlight distanceSensor = new TimeOfFlight(Constants.IntakeConstants.INTAKE_TOF_CAN_ID);
-  private Trigger cubeDebouncedBeamBreak = new Trigger(()->intakeMotor.getOutputCurrent() > 20).debounce(0.04);//.debounce(0.06);
-  private Trigger coneDebouncedBeamBreak = new Trigger(()->intakeMotor.getOutputCurrent() > 20).debounce(0.1);
+  private Trigger cubeDebouncedBeamBreak = new Trigger(()->intakeMotor.getOutputCurrent() > 10).debounce(0.1);//.debounce(0.06);
+  private Trigger coneDebouncedBeamBreak = new Trigger(()->intakeMotor.getOutputCurrent() > 10).debounce(0.1);
 
     /** Creates a new IntakeS. */
   public IntakeS() {
@@ -62,7 +62,7 @@ public class IntakeS extends SubsystemBase implements Logged {
 
     distanceSensor.setRangingMode(RangingMode.Short, 999);
     distanceSensor.setRangeOfInterest(9,9,11,11);
-    setDefaultCommand(run(()->this.intake(isCube? 0.5 : 0)));
+    setDefaultCommand(run(()->this.intake(isCube? 0 : 0)));
   }
 
   public Transform2d getConeCenterOffset() {
@@ -141,7 +141,7 @@ public class IntakeS extends SubsystemBase implements Logged {
    */
 
   public void outtake() {
-    intake(-Constants.IntakeConstants.INTAKE_VOLTAGE);
+    intake((isCube? -0.4 : -1) * Constants.IntakeConstants.INTAKE_VOLTAGE);
   }
 
   public void setGamePiece(boolean isCube) {

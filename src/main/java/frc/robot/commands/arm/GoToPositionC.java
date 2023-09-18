@@ -15,6 +15,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import static frc.robot.Constants.ArmConstants.*;
+
+import frc.robot.Constants.ArmConstants;
 import frc.robot.subsystems.ArmS;
 import frc.robot.subsystems.ArmS.ArmPosition;
 
@@ -47,6 +49,13 @@ public class GoToPositionC extends CommandBase {
 
   private double limitLength(double length) {
     return MathUtil.clamp(length, length, length);
+  }
+
+  private double constrainWrist(double pivotAngle, double wristRadians) {
+    if(pivotAngle > ArmConstants.GROUND_CUBE_INTAKE_POSITION.pivotRadians - Units.degreesToRadians(5)) {
+      return Math.min(0, wristRadians);
+    }
+    return wristRadians;
   }
 
   @Override
@@ -94,18 +103,18 @@ public class GoToPositionC extends CommandBase {
 
       m_waypoints.add(
         Pair.of(new ArmPosition(m_startPosition.pivotRadians, Math.min(rotateLength, m_targetPosition.armLength),
-          MathUtil.clamp(m_targetPosition.wristRadians, -safeWrist, safeWrist)), true));
+          constrainWrist(m_startPosition.pivotRadians, m_targetPosition.wristRadians)), true));
     }
     if (extendAfterPivot) {
       m_waypoints.add(
         Pair.of(new ArmPosition(
           m_targetPosition.pivotRadians, rotateLength,
-          MathUtil.clamp(m_targetPosition.wristRadians, -safeWrist, safeWrist)), false));
+          constrainWrist(m_targetPosition.pivotRadians, m_targetPosition.wristRadians)), false));
     }
     m_waypoints.add(
       Pair.of(new ArmPosition(
         m_targetPosition.pivotRadians, m_targetPosition.armLength,
-        MathUtil.clamp(m_targetPosition.wristRadians, -safeWrist, safeWrist)),false));
+        constrainWrist(m_targetPosition.pivotRadians, m_targetPosition.wristRadians)),false));
     m_waypoints.add(Pair.of(m_targetPosition,true));
     // {
     // double targetLength = m_targetPosition.armLength;
@@ -173,7 +182,7 @@ public class GoToPositionC extends CommandBase {
     }
 
     var currentTargetPosition = m_waypoints.get(currentTarget).getFirst();
-    m_armS.setExtendLength(m_armS.constrainLength(currentTargetPosition.armLength));
+    m_armS.setExtendLength(currentTargetPosition.armLength);
     m_armS.setAngle(currentTargetPosition.pivotRadians);
     m_armS.setWristAngle(currentTargetPosition.wristRadians);
   }
@@ -181,7 +190,7 @@ public class GoToPositionC extends CommandBase {
   public boolean isFinished() {
 
     var actualPosition = m_armS.getArmPosition();
-    var atSetpoint = (Math.abs(m_armS.constrainLength(m_targetPosition.armLength) - actualPosition.armLength) < Units
+    var atSetpoint = (Math.abs(m_targetPosition.armLength - actualPosition.armLength) < Units
         .inchesToMeters(0.5)
         && Math.abs(m_targetPosition.pivotRadians - actualPosition.pivotRadians) < Units.degreesToRadians(3)
         && Math.abs(m_targetPosition.wristRadians - actualPosition.wristRadians) < Units.degreesToRadians(5));
@@ -195,7 +204,7 @@ public class GoToPositionC extends CommandBase {
   private boolean isAtSetpoint(ArmPosition setpoint, Boolean wristRequired) {
 
     var actualPosition = m_armS.getArmPosition();
-    var atSetpoint = (Math.abs(m_armS.constrainLength(setpoint.armLength) - actualPosition.armLength) < Units
+    var atSetpoint = (Math.abs(setpoint.armLength - actualPosition.armLength) < Units
         .inchesToMeters(2)
         && Math.abs(setpoint.pivotRadians - actualPosition.pivotRadians) < 0.2
         && (!wristRequired || Math.abs(setpoint.wristRadians - actualPosition.wristRadians) < Units.degreesToRadians(5)));

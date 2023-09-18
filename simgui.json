@@ -90,6 +90,9 @@
         "right": 1088,
         "top": 36,
         "width": 16.541748046875,
+        "window": {
+          "visible": true
+        },
         "zmodules": {
           "length": 0.4000000059604645,
           "style": "Hidden",
@@ -129,6 +132,12 @@
       },
       "Robot": {
         "m_armS": {
+          "Extend": {
+            "open": true
+          },
+          "m_pivot": {
+            "open": true
+          },
           "open": true
         },
         "m_drivebaseS": {
@@ -292,7 +301,7 @@
               "autoFit": true
             }
           ],
-          "height": 540,
+          "height": 844,
           "series": [
             {
               "color": [
@@ -301,7 +310,7 @@
                 0.6901960968971252,
                 1.0
               ],
-              "id": "NT:Robot/m_drivebaseS/io/m_modules/BL-[16,15]/getAngle"
+              "id": "NT:Robot/m_armS/m_pivot/getGoalPosition"
             },
             {
               "color": [
@@ -310,7 +319,7 @@
                 0.32156863808631897,
                 1.0
               ],
-              "id": "NT:Robot/m_drivebaseS/io/m_modules/BL-[16,15]/getSteerGoal"
+              "id": "NT:Robot/m_armS/m_pivot/getContinuousRangeAngle"
             },
             {
               "color": [
@@ -319,7 +328,7 @@
                 0.4078431725502014,
                 1.0
               ],
-              "id": "NT:Robot/m_drivebaseS/io/m_modules/BL-[16,15]/getSteerSetpoint"
+              "id": "NT:Robot/m_armS/m_pivot/getSetpointPosition"
             },
             {
               "color": [
@@ -328,201 +337,18 @@
                 0.32156863808631897,
                 1.0
               ],
-              "id": "NT:Robot/m_drivebaseS/io/m_modules/BL-[16,15]/getSteerVoltage"
+              "id": "NT:Robot/m_drivebaseS/io/m_modules/BL-[16,15]/getDriveSetpoint"
+            },
+            {
+              "color": [
+                0.5058823823928833,
+                0.44705885648727417,
+                0.7019608020782471,
+                1.0
+              ],
+              "id": "NT:Robot/m_drivebaseS/io/m_modules/BL-[16,15]/getDriveVelocity"
             }
           ]
-        }
-      ]
-    },
-    "Plot <2>": {
-      "plots": [
-        {
-          "height": 132,
-          "series": [
-            {
-              "color": [
-                0.2980392277240753,
-                0.44705885648727417,
-                0.6901960968971252,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/Extend/getLength"
-            },
-            {
-              "color": [
-                0.8666667342185974,
-                0.5176470875740051,
-                0.32156863808631897,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/Extend/getSetpointPosition"
-            },
-            {
-              "color": [
-                0.3333333432674408,
-                0.658823549747467,
-                0.4078431725502014,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/Extend/isHomed"
-            },
-            {
-              "color": [
-                0.7686275243759155,
-                0.30588236451148987,
-                0.32156863808631897,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/Extend/getGoalPosition"
-            },
-            {
-              "color": [
-                0.5058823823928833,
-                0.44705885648727417,
-                0.7019608020782471,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/Extend/getVolts"
-            }
-          ]
-        },
-        {
-          "height": 132,
-          "lockPrevX": true,
-          "series": [
-            {
-              "color": [
-                0.5764706134796143,
-                0.4705882668495178,
-                0.3764706254005432,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/Pivot/getPivotkG"
-            },
-            {
-              "color": [
-                0.8666667342185974,
-                0.5176470875740051,
-                0.32156863808631897,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/Pivot/getContinuousRangeAngle"
-            },
-            {
-              "color": [
-                0.3333333432674408,
-                0.658823549747467,
-                0.4078431725502014,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/Pivot/getGoalPosition"
-            },
-            {
-              "color": [
-                0.7686275243759155,
-                0.30588236451148987,
-                0.32156863808631897,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/Pivot/getSetpointPosition"
-            }
-          ],
-          "showPause": false
-        },
-        {
-          "height": 132,
-          "lockPrevX": true,
-          "series": [
-            {
-              "color": [
-                0.3333333432674408,
-                0.658823549747467,
-                0.4078431725502014,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/Wrist/getSetpointPosition"
-            },
-            {
-              "color": [
-                0.7686275243759155,
-                0.30588236451148987,
-                0.32156863808631897,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/Wrist/getGoalPosition"
-            },
-            {
-              "color": [
-                0.5058823823928833,
-                0.44705885648727417,
-                0.7019608020782471,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/Wrist/getAngle"
-            },
-            {
-              "color": [
-                0.7686275243759155,
-                0.30588236451148987,
-                0.32156863808631897,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/Wrist/getVolts"
-            },
-            {
-              "color": [
-                0.5058823823928833,
-                0.44705885648727417,
-                0.7019608020782471,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/Wrist/isInTolerance"
-            }
-          ],
-          "showPause": false
-        },
-        {
-          "height": 132,
-          "lockPrevX": true,
-          "series": [
-            {
-              "color": [
-                0.7686275243759155,
-                0.30588236451148987,
-                0.32156863808631897,
-                1.0
-              ],
-              "id": "NT:/SmartDashboard/armMoving"
-            },
-            {
-              "color": [
-                0.2980392277240753,
-                0.44705885648727417,
-                0.6901960968971252,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/Pivot/isInTolerance"
-            },
-            {
-              "color": [
-                0.5058823823928833,
-                0.44705885648727417,
-                0.7019608020782471,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/ArmS/Extend/isInTolerance"
-            },
-            {
-              "color": [
-                0.5058823823928833,
-                0.44705885648727417,
-                0.7019608020782471,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/RobotContainer/loopTime"
-            }
-          ],
-          "showPause": false
         }
       ]
     },

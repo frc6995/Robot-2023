@@ -264,15 +264,12 @@ public class PPSwerveControllerCommand extends CommandBase {
   @Override
   public void end(boolean interrupted) {
     this.timer.stop();
-
-    if (interrupted) {
       if (useKinematics) {
         this.outputModuleStates.accept(
             this.kinematics.toSwerveModuleStates(new ChassisSpeeds()));
       } else {
         this.outputChassisSpeeds.accept(new ChassisSpeeds());
       }
-    }
   }
 
   @Override

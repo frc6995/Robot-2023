@@ -141,7 +141,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
     public void periodic() {
 
         m_poseEstimator.update(getHeading(), getModulePositions());
-        m_visionWrapper.findVisionMeasurements();
+        //m_visionWrapper.findVisionMeasurements();
         /*
          * Process all vision measurements taken since the last periodic iteration
          */
@@ -155,7 +155,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
             }
             // Skip single-tag measurements with too-high ambiguity.
             if (estimation.targetsUsed.size() < 2
-                    && estimation.targetsUsed.get(0).getPoseAmbiguity() > PoseEstimator.POSE_AMBIGUITY_CUTOFF) {
+                    && estimation.targetsUsed.get(0).getBestCameraToTarget().getTranslation().getNorm() > Units.feetToMeters(13)) {
                 continue;
             }
             multitagPose = measurement.estimation().estimatedPose.toPose2d();
@@ -179,11 +179,6 @@ public class DrivebaseS extends SubsystemBase implements Logged {
         // angles could be valid.
         // By default it would point all modules forward when stopped. Here, we override
         // this.
-        if (Math.abs(speeds.vxMetersPerSecond) < 0.01
-                && Math.abs(speeds.vyMetersPerSecond) < 0.01
-                && Math.abs(speeds.omegaRadiansPerSecond) < 0.0001) {
-            states = getStoppedStates();
-        } else {
             double dt = 0.02;
             Pose2d veloPose = new Pose2d(speeds.vxMetersPerSecond * dt,
                     speeds.vyMetersPerSecond * dt,
@@ -198,7 +193,6 @@ public class DrivebaseS extends SubsystemBase implements Logged {
             MAX_FWD_REV_SPEED_MPS,
             MAX_ROTATE_SPEED_RAD_PER_SEC
             );
-        }
         setModuleStates(states);
     }
 
@@ -471,6 +465,17 @@ public class DrivebaseS extends SubsystemBase implements Logged {
 
     public Command stopC() {
         return run(() -> this.drive(new ChassisSpeeds()));
+    }
+
+    public Command xLockC() {
+        return run(()->this.setModuleStates(
+            new SwerveModuleState[] {
+                new SwerveModuleState(0, new Rotation2d(Math.PI/2)), //FL
+                new SwerveModuleState(0, new Rotation2d(-Math.PI/2)),
+                new SwerveModuleState(0, new Rotation2d(-Math.PI/2)), //BL
+                new SwerveModuleState(0, new Rotation2d(Math.PI/2))
+            }
+        ));
     }
 
     /**

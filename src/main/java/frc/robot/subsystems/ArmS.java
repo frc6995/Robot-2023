@@ -81,6 +81,7 @@ public class ArmS extends SubsystemBase implements Logged {
     private ExtendIO m_extender;
     private PivotIO m_pivot;
     private WristIO m_wrist;
+    @BothLog
     private double[] m_position = new double[] {0, MIN_ARM_LENGTH, 0};
     private DigitalInput m_coastModeButton = new DigitalInput(0);
     private Trigger m_coastModeTrigger = (
@@ -133,20 +134,6 @@ public class ArmS extends SubsystemBase implements Logged {
 
         );
         //setDefaultCommand(followJointSpaceTargetC());
-    }
-
-    public double constrainLength(double length) {
-        return constrainLength(length, m_pivot.getContinuousRangeAngle());
-    }
-    public double constrainLength(double length, double angle) {
-        return Math.max(getMinLength(angle), length);
-    }
-
-    public double getMinLength(double angle) {
-        if (angle < 0 || angle > Math.PI) {
-            return 0.610;
-        }
-        return MIN_ARM_LENGTH + Units.inchesToMeters(0.125);
     }
 
     public void periodic() {

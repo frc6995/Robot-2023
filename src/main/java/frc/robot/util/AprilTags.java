@@ -49,6 +49,6 @@ public class AprilTags {
         SmartDashboard.putNumber("Debug/Cameras/"+cameraName+"/Vision Uncertainty", positionUncertainty);
         SmartDashboard.putBoolean("Debug/Cameras/"+cameraName+"/Facing Red Alliance", facingRedAlliance);
 
-        return VecBuilder.fill(positionUncertainty,positionUncertainty,1000);
+        return VecBuilder.fill(positionUncertainty,positionUncertainty,10000);
     }
 }

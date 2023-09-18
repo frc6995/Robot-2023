@@ -57,11 +57,11 @@ public class RealWristIO extends WristIO {
         return m_encoder.getVelocity();
     }
 
-    @Override
-    public boolean getHomed() {
-        // TODO Auto-generated method stub
-        return getAngle() < WRIST_MIN_ANGLE;
-    }
+    // @Override
+    // public boolean getHomed() {
+    //     // TODO Auto-generated method stub
+    //     return getAngle() < WRIST_MIN_ANGLE;
+    // }
 
     @Override
     public void resetState(double position) {
