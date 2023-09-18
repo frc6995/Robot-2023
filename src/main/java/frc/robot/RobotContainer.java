@@ -530,11 +530,10 @@ public class RobotContainer implements Logged{
     // region newAutos
     public Command highConeHighCubeHPSide() {
         var pathGroup = PathPlanner.loadPathGroup("High Cone High Cube",
-        new PathConstraints(4, 3),
+        new PathConstraints(2, 2),
         new PathConstraints(4, 2.5));
-        var path1 = PathPlanner.loadPath("High Cone High Cube 1", new PathConstraints(2,2));
         return sequence(
-            m_drivebaseS.resetPoseToBeginningC(path1),
+            m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
             m_intakeS.setGamePieceC(()->false),
             // Target the HP-side high cone
             m_keypad.blueSetpointCommand(8, 2),
@@ -552,7 +551,7 @@ public class RobotContainer implements Logged{
             // Step 2: Fetch cube 1
             m_keypad.blueSetpointCommand(7, 1),
             deadline(
-                m_drivebaseS.pathPlannerCommand(path1),
+                m_drivebaseS.pathPlannerCommand(pathGroup.get(0)),
                 m_intakeS.intakeC().until(m_intakeS::hitBeamBreak),
                 m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION)
                 // drive from first cone score to cube
