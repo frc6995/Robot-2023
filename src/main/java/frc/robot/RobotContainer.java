@@ -133,7 +133,7 @@ public class RobotContainer implements Logged{
             } else {
                 return
                 Math.abs(error.getRotation().getRadians()) < Units.degreesToRadians(2) &&
-                Math.abs(error.getX()) < 0.05 &&
+                Math.abs(error.getX()) < 0.02 &&
                 Math.abs(error.getY()) < Units.inchesToMeters(1);
             }
         });
@@ -218,11 +218,19 @@ public class RobotContainer implements Logged{
         );
         // Align, score, and stow.
         m_driverController.a().toggleOnTrue(
-                alignToSelectedScoring().asProxy()
-                .until(m_alignSafeToPlace)
-                .andThen(autoScoreSequenceCG().asProxy())
-           
-            );
+            sequence(
+                deadline(
+                    sequence(
+                        waitUntil(m_alignSafeToPlace),
+                        m_armS.goToPositionC(()->m_targetArmPosition)
+                    ),
+                    alignToSelectedScoring().asProxy()
+
+                ),
+                m_intakeS.outtakeC().withTimeout(0.4),
+                m_armS.stowC() 
+            )
+        );
         // Score and stow.
         m_driverController.b().toggleOnTrue(m_armS.stowIndefiniteC());
         // OFFICIAL CALEB PREFERENCE
@@ -240,9 +248,10 @@ public class RobotContainer implements Logged{
         m_driverController.rightBumper().toggleOnTrue(armIntakeCG(
             ArmPositions.FRONT_UP_FLOOR, false));
 
-        // m_driverController.rightTrigger().toggleOnTrue(armIntakeCG(
-        //     ArmPositions.BACK_TIPPED_FLOOR, 
-        //     false));
+        m_driverController.rightTrigger().toggleOnTrue(armIntakeCG(
+            ArmPositions.BACK_TIPPED_FLOOR, 
+            ArmPositions.BACK_TIPPED_FLOOR_PRESTOW,
+            false));
             
         m_driverController.leftBumper().toggleOnTrue(armIntakeCG(
             ArmPositions.FRONT_PLATFORM_CONE_UPRIGHT, false));
@@ -327,7 +336,7 @@ public class RobotContainer implements Logged{
      * @param isCube Whether the intake should be in cube mode or cone mode.
      * @return
      */
-    public Command armIntakeCG(ArmPosition position, boolean isCube) {
+    public Command armIntakeCG(ArmPosition position, ArmPosition prestow, boolean isCube) {
         return 
         Commands.sequence(
             // Start intaking, and stop when a piece is detected.\
@@ -341,10 +350,14 @@ public class RobotContainer implements Logged{
                 // Wait a bit, then pulse the intake to ensure piece collection.
                 Commands.waitSeconds(0.75).andThen(m_intakeS.intakeC().withTimeout(0.75)).asProxy(),
                 // stow the arm
-                m_armS.goToPositionC(()->isCube? ArmPositions.CUBE_STOW : ArmPositions.STOW), 
+                m_armS.goToPositionC(()->prestow).andThen( m_armS.goToPositionC(()->isCube? ArmPositions.CUBE_STOW : ArmPositions.STOW)),
                 Commands.run(()->LightStripS.getInstance().requestState(isCube ? States.IntakedCube : States.IntakedCone)).asProxy().withTimeout(0.75)
             )
         );
+    }
+
+    public Command armIntakeCG(ArmPosition position, boolean isCube) {
+        return armIntakeCG(position, isCube? ArmPositions.CUBE_STOW : ArmPositions.STOW, isCube);
     }
 
     public Command armIntakeSelectedCG(ArmPosition cubePosition, ArmPosition conePosition, BooleanSupplier isCube) {
@@ -416,116 +429,116 @@ public class RobotContainer implements Logged{
 
     //No Bump
 
-    private Command twoConeAuto() {
-        var pathGroup = PathPlanner.loadPathGroup("27 Point", new PathConstraints(2, 2), new PathConstraints(4, 3));
-        return Commands.sequence(
-            m_intakeS.setGamePieceC(()->false).asProxy(),
-            m_keypad.blueSetpointCommand(8, 2),
-            m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
-            Commands.deadline(
-                m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
-                alignToSelectedScoring().asProxy()
-            ),
-            m_intakeS.outtakeC().withTimeout(0.3).asProxy(),
+    // private Command twoConeAuto() {
+    //     var pathGroup = PathPlanner.loadPathGroup("27 Point", new PathConstraints(2, 2), new PathConstraints(4, 3));
+    //     return Commands.sequence(
+    //         m_intakeS.setGamePieceC(()->false).asProxy(),
+    //         m_keypad.blueSetpointCommand(8, 2),
+    //         m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
+    //         Commands.deadline(
+    //             m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
+    //             alignToSelectedScoring().asProxy()
+    //         ),
+    //         m_intakeS.outtakeC().withTimeout(0.3).asProxy(),
             
-            m_keypad.blueSetpointCommand(6, 2),
+    //         m_keypad.blueSetpointCommand(6, 2),
 
-            Commands.deadline(
-                Commands.race(
-                    m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).asProxy(),
-                    m_intakeS.intakeUntilBeamBreakC(m_intakeS.autoStagedIntakeC()).asProxy()
-                ),
-                m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION).asProxy().withTimeout(5)  
-            ),
-            Commands.parallel(
+    //         Commands.deadline(
+    //             Commands.race(
+    //                 m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).asProxy(),
+    //                 m_intakeS.intakeUntilBeamBreakC(m_intakeS.autoStagedIntakeC()).asProxy()
+    //             ),
+    //             m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION).asProxy().withTimeout(5)  
+    //         ),
+    //         Commands.parallel(
                 
-                m_intakeS.intakeC().withTimeout(0.5).asProxy(),
-                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).asProxy()
-            ),
-            Commands.deadline(
-                sequence(
-                    m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy(),
-                    m_intakeS.outtakeC().withTimeout(0.3).asProxy()
-                ),
-                alignToSelectedScoring().asProxy()
-            )
+    //             m_intakeS.intakeC().withTimeout(0.5).asProxy(),
+    //             m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
+    //             m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).asProxy()
+    //         ),
+    //         Commands.deadline(
+    //             sequence(
+    //                 m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy(),
+    //                 m_intakeS.outtakeC().withTimeout(0.3).asProxy()
+    //             ),
+    //             alignToSelectedScoring().asProxy()
+    //         )
 
-        );
-    }
+    //     );
+    // }
 
 
-    private Command bumpTwoConeAuto() {
-        var pathGroup = PathPlanner.loadPathGroup("Bump 27 Point", new PathConstraints(1.5, 2));
-        return Commands.sequence(
-            m_intakeS.setGamePieceC(()->false).asProxy(),
-            m_keypad.blueSetpointCommand(0, 2),
-            m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
-            Commands.deadline(
-                m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
-                alignToSelectedScoring().asProxy()
-            ),
-            m_intakeS.outtakeC().withTimeout(0.3).asProxy(),
-            m_armS.goToPositionC(ArmConstants.RETRACTED_SCORE_CONE_POSITION).asProxy(),
-            m_keypad.blueSetpointCommand(2, 2),
+    // private Command bumpTwoConeAuto() {
+    //     var pathGroup = PathPlanner.loadPathGroup("Bump 27 Point", new PathConstraints(1.5, 2));
+    //     return Commands.sequence(
+    //         m_intakeS.setGamePieceC(()->false).asProxy(),
+    //         m_keypad.blueSetpointCommand(0, 2),
+    //         m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
+    //         Commands.deadline(
+    //             m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
+    //             alignToSelectedScoring().asProxy()
+    //         ),
+    //         m_intakeS.outtakeC().withTimeout(0.3).asProxy(),
+    //         m_armS.goToPositionC(ArmConstants.RETRACTED_SCORE_CONE_POSITION).asProxy(),
+    //         m_keypad.blueSetpointCommand(2, 2),
 
-            Commands.deadline(
-                Commands.race(
-                    m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.stopOnceC()).asProxy(),
-                    m_intakeS.intakeUntilBeamBreakC(m_intakeS.autoStagedIntakeC()).asProxy()
-                ),
-                m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION).asProxy().withTimeout(5)  
-            ),
-            Commands.parallel(
+    //         Commands.deadline(
+    //             Commands.race(
+    //                 m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.stopOnceC()).asProxy(),
+    //                 m_intakeS.intakeUntilBeamBreakC(m_intakeS.autoStagedIntakeC()).asProxy()
+    //             ),
+    //             m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION).asProxy().withTimeout(5)  
+    //         ),
+    //         Commands.parallel(
                 
-                m_intakeS.intakeC().withTimeout(0.1).asProxy(),
-                m_armS.goToPositionC(ArmConstants.RETRACTED_SCORE_CONE_POSITION).asProxy().withTimeout(3),
-                m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).asProxy()
-            ),
-            Commands.deadline(
-                sequence(
-                    m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy(),
-                    m_intakeS.outtakeC().withTimeout(0.3).asProxy(),
-                    m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy()
-                ),
-                alignToSelectedScoring().asProxy()
-            )
+    //             m_intakeS.intakeC().withTimeout(0.1).asProxy(),
+    //             m_armS.goToPositionC(ArmConstants.RETRACTED_SCORE_CONE_POSITION).asProxy().withTimeout(3),
+    //             m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).asProxy()
+    //         ),
+    //         Commands.deadline(
+    //             sequence(
+    //                 m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy(),
+    //                 m_intakeS.outtakeC().withTimeout(0.3).asProxy(),
+    //                 m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy()
+    //             ),
+    //             alignToSelectedScoring().asProxy()
+    //         )
 
-        );
-    }
-
-
+    //     );
+    // }
 
 
-    public Command fifteenPointAuto(){
-        var backOutPath = PathPlanner.loadPath("15 Point Back Out", new PathConstraints(4, 3));
+
+
+    // public Command fifteenPointAuto(){
+    //     var backOutPath = PathPlanner.loadPath("15 Point Back Out", new PathConstraints(4, 3));
         
-        return twoConeAuto().andThen(
-            Commands.parallel(
-                m_keypad.blueSetpointCommand(7, 2),
-                m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
-                m_drivebaseS.pathPlannerCommand(backOutPath).asProxy()
-            )
+    //     return twoConeAuto().andThen(
+    //         Commands.parallel(
+    //             m_keypad.blueSetpointCommand(7, 2),
+    //             m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
+    //             m_drivebaseS.pathPlannerCommand(backOutPath).asProxy()
+    //         )
             
-        );
-    }
+    //     );
+    // }
 
 
-    public Command twentysevenPointAuto(){
-        var pathGroup = PathPlanner.loadPathGroup("27 Point", new PathConstraints(2, 2));
-        return twoConeAuto().andThen(
+    //public Command twentysevenPointAuto(){
+    //     var pathGroup = PathPlanner.loadPathGroup("27 Point", new PathConstraints(2, 2));
+    //     return twoConeAuto().andThen(
 
-            Commands.parallel(
-                m_armS.goToPositionC(ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT).asProxy().withTimeout(3),
-                sequence(
-                    m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).asProxy(),
-                    m_drivebaseS.chargeStationAlignC().asProxy(),
-                    m_drivebaseS.run(()->m_drivebaseS.drive(new ChassisSpeeds(0, 0, 0.1))).withTimeout(0.5).asProxy()
-                ).finallyDo((end)->m_drivebaseS.drive(new ChassisSpeeds()))
+    //         Commands.parallel(
+    //             m_armS.goToPositionC(ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT).asProxy().withTimeout(3),
+    //             sequence(
+    //                 m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).asProxy(),
+    //                 m_drivebaseS.chargeStationAlignC().asProxy(),
+    //                 m_drivebaseS.run(()->m_drivebaseS.drive(new ChassisSpeeds(0, 0, 0.1))).withTimeout(0.5).asProxy()
+    //             ).finallyDo((end)->m_drivebaseS.drive(new ChassisSpeeds()))
                 
-            )
-        );
-    }
+    //         )
+    //     );
+    // }
     // endregion
     // region newAutos
     public Command highConeHighCubeHPSide() {

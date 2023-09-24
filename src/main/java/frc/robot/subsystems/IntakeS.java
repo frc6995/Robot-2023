@@ -18,6 +18,8 @@ import com.revrobotics.SparkMaxLimitSwitch.Type;
 
 import autolog.Logged;
 import autolog.AutoLog.BothLog;
+import autolog.AutoLog.NTLog;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -28,6 +30,8 @@ import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+
 import static edu.wpi.first.wpilibj2.command.Commands.sequence;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -42,15 +46,17 @@ public class IntakeS extends SubsystemBase implements Logged {
   private boolean isCube = false;
 
   private final TimeOfFlight distanceSensor = new TimeOfFlight(Constants.IntakeConstants.INTAKE_TOF_CAN_ID);
-  private Trigger cubeDebouncedBeamBreak = new Trigger(()->intakeMotor.getOutputCurrent() > 10).debounce(0.1);//.debounce(0.06);
-  private Trigger coneDebouncedBeamBreak = new Trigger(()->intakeMotor.getOutputCurrent() > 10).debounce(0.1);
+  private Trigger cubeDebouncedBeamBreak = new Trigger(()->getCurrent() > 20);//.debounce(0.06);
+  private Trigger coneDebouncedBeamBreak = new Trigger(()->getCurrent() > 20);
+  private LinearFilter currentAverage = LinearFilter.movingAverage(10);
+  private double current = 0;
 
     /** Creates a new IntakeS. */
   public IntakeS() {
 
     intakeMotor.restoreFactoryDefaults();
     intakeMotor.setIdleMode(IdleMode.kBrake);
-    intakeMotor.setSecondaryCurrentLimit(30);
+    intakeMotor.setSecondaryCurrentLimit(40);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
@@ -58,11 +64,11 @@ public class IntakeS extends SubsystemBase implements Logged {
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
-    intakeMotor.setSmartCurrentLimit(30, 30);
+    intakeMotor.setSmartCurrentLimit(40, 40);
 
     distanceSensor.setRangingMode(RangingMode.Short, 999);
     distanceSensor.setRangeOfInterest(9,9,11,11);
-    setDefaultCommand(run(()->this.intake(isCube? 0 : 0)));
+    setDefaultCommand(run(()->this.intake(isCube? 0.5 : 0)));
   }
 
   public Transform2d getConeCenterOffset() {
@@ -101,6 +107,10 @@ public class IntakeS extends SubsystemBase implements Logged {
 
   @BothLog
   public double getCurrent() {
+    return current;
+  }
+  @NTLog
+  public double getUnfilteredCurrent() {
     return intakeMotor.getOutputCurrent();
   }
 
@@ -141,7 +151,7 @@ public class IntakeS extends SubsystemBase implements Logged {
    */
 
   public void outtake() {
-    intake((isCube? -0.4 : -1) * Constants.IntakeConstants.INTAKE_VOLTAGE);
+    intake((isCube? -0.4 : -0.6) * Constants.IntakeConstants.INTAKE_VOLTAGE);
   }
 
   public void setGamePiece(boolean isCube) {
@@ -167,7 +177,7 @@ public class IntakeS extends SubsystemBase implements Logged {
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
+    current = currentAverage.calculate(intakeMotor.getOutputCurrent());
   }
 
   public boolean isCube() {
@@ -196,17 +206,11 @@ public class IntakeS extends SubsystemBase implements Logged {
   }
 
   public Command intakeUntilBeamBreakC() {
-    return intakeUntilBeamBreakC(intakeC());
-  }
-
-  public Command intakeUntilBeamBreakC(Command intakeCommand) {
-    return intakeCommand.until(()->{
-      return isCube ? 
-      cubeDebouncedBeamBreak.getAsBoolean() : coneDebouncedBeamBreak.getAsBoolean();})
-      .andThen(intakeC().withTimeout(isCube ? 0.1 : 0.1));
-    
-  }
-
-
-
+    return Commands.sequence(
+      run(this::intake).withTimeout(0.5),
+      run(this::intake).until(()->{
+        return isCube ? 
+        cubeDebouncedBeamBreak.getAsBoolean() : coneDebouncedBeamBreak.getAsBoolean();}),
+      intakeC().withTimeout(isCube ? 0.1 : 0.0));
+    }
 }

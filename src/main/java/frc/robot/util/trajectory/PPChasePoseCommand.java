@@ -83,9 +83,10 @@ public class PPChasePoseCommand extends CommandBase implements Logged {
         m_trajectoryGenerator = trajectoryGenerator;
         m_outputChassisSpeedsRobotRelative = outputChassisSpeedsFieldRelative;
         m_drive = drive;
-        m_finishTrigger = new Trigger(()->m_pose.get().getTranslation().getDistance(m_targetPose.get().getTranslation()) < Units.inchesToMeters(1)
-    && Math.abs(m_pose.get().getRotation().getDegrees() - m_targetPose.get().getRotation().getDegrees()) < 1)
-    .debounce(0.05);
+        m_finishTrigger = new Trigger(()->false);
+        // new Trigger(()->m_pose.get().getTranslation().getDistance(m_targetPose.get().getTranslation()) < Units.inchesToMeters(1)
+        //     && Math.abs(m_pose.get().getRotation().getDegrees() - m_targetPose.get().getRotation().getDegrees()) < 1)
+        //     .debounce(0.05);
         addRequirements(m_drive);
         }
 

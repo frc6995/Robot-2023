@@ -52,8 +52,8 @@ public class GoToPositionC extends CommandBase {
   }
 
   private double constrainWrist(double pivotAngle, double wristRadians) {
-    if(pivotAngle > ArmConstants.GROUND_CUBE_INTAKE_POSITION.pivotRadians - Units.degreesToRadians(5)) {
-      return Math.min(0, wristRadians);
+    if(pivotAngle > Math.PI) {
+      return Math.min(-0.05, wristRadians);
     }
     return wristRadians;
   }
@@ -184,7 +184,7 @@ public class GoToPositionC extends CommandBase {
     var currentTargetPosition = m_waypoints.get(currentTarget).getFirst();
     m_armS.setExtendLength(currentTargetPosition.armLength);
     m_armS.setAngle(currentTargetPosition.pivotRadians);
-    m_armS.setWristAngle(currentTargetPosition.wristRadians);
+    m_armS.setWristAngle(constrainWrist( m_armS.getArmPosition().pivotRadians, currentTargetPosition.wristRadians));
   }
 
   public boolean isFinished() {
@@ -193,7 +193,9 @@ public class GoToPositionC extends CommandBase {
     var atSetpoint = (Math.abs(m_targetPosition.armLength - actualPosition.armLength) < Units
         .inchesToMeters(0.5)
         && Math.abs(m_targetPosition.pivotRadians - actualPosition.pivotRadians) < Units.degreesToRadians(3)
-        && Math.abs(m_targetPosition.wristRadians - actualPosition.wristRadians) < Units.degreesToRadians(5));
+        && Math.abs(
+          constrainWrist(actualPosition.pivotRadians, m_targetPosition.wristRadians)
+         - actualPosition.wristRadians) < Units.degreesToRadians(5));
     return atSetpoint;
   }
 
@@ -207,7 +209,9 @@ public class GoToPositionC extends CommandBase {
     var atSetpoint = (Math.abs(setpoint.armLength - actualPosition.armLength) < Units
         .inchesToMeters(2)
         && Math.abs(setpoint.pivotRadians - actualPosition.pivotRadians) < 0.2
-        && (!wristRequired || Math.abs(setpoint.wristRadians - actualPosition.wristRadians) < Units.degreesToRadians(5)));
+        && (!wristRequired || Math.abs(
+          constrainWrist(actualPosition.pivotRadians, setpoint.wristRadians)
+         - actualPosition.wristRadians) < Units.degreesToRadians(5)));
     return atSetpoint;
   }
 

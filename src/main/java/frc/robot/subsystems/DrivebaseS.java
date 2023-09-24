@@ -78,12 +78,15 @@ public class DrivebaseS extends SubsystemBase implements Logged {
      */
     private final SwerveDriveIO io;
 
+    double lastHeading = 0;
+    boolean isTurning = false;
+    boolean lastIsTurning = false;
     /**
      * The X controller used for autonomous movement.
      */
-    public final PIDController m_xController = new PIDController(3, 0, 0);
-    public final PIDController m_yController = new PIDController(3, 0, 0);
-    public final PIDController m_thetaController = new PIDController(3, 0, 0);
+    public final PIDController m_xController = new PIDController(6, 0, 0);
+    public final PIDController m_yController = new PIDController(6, 0, 0);
+    public final PIDController m_thetaController = new PIDController(2, 0, 0);
     // constraints determined from OperatorControlC slew settings.
     // TODO replace this with a TrapezoidProfile delegating to m_thetaController?
     public final ProfiledPIDController m_profiledThetaController = new ProfiledPIDController(3, 0, 0,
@@ -613,10 +616,14 @@ public class DrivebaseS extends SubsystemBase implements Logged {
         InputAxis fwdYAxis,
         InputAxis rotAxis
     ) {
+
         return runOnce(()->{
             fwdXAxis.resetSlewRate();
             fwdYAxis.resetSlewRate();
             rotAxis.resetSlewRate();
+            lastHeading = getPoseHeading().getRadians();
+            isTurning = false;
+            lastIsTurning = false;
         }).andThen(
             run(
             ()->{
@@ -638,8 +645,28 @@ public class DrivebaseS extends SubsystemBase implements Logged {
                 double rot;
                 rot = rotAxis.getAsDouble();
                 rot *= MAX_TURN_SPEED;
+                // if still turning, set to false;
+                isTurning = Math.abs(rot) >= 0.05; //rad/s
+                // if it was true on the last iter, no longer true;
+                // if newly stopped turning
+                if (!isTurning && lastIsTurning) {
+                    lastHeading = getPoseHeading().getRadians();
+                    m_thetaController.reset();
+                }
 
+                if (!isTurning) {
+                    if( Math.abs(
+                        getPoseHeading().minus(new Rotation2d(lastHeading)).getRadians()
+                    ) < Units.degreesToRadians(1)) {
+                        rot = 0;
+                    } else {
+                        rot = m_thetaController.calculate(getPoseHeading().getRadians(), lastHeading);
+                    }
+                    
+                    
+                }
                 driveAllianceRelative(new ChassisSpeeds(fwdX, fwdY, rot));
+                lastIsTurning = isTurning;
             })
         );
     }

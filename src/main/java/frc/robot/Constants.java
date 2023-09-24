@@ -34,7 +34,7 @@ public class Constants {
 
     public static final class DriveConstants {
         static public final double WHEEL_BASE_WIDTH_M = Units.inchesToMeters(18.5);
-        static public final double WHEEL_RADIUS_M = 0.0508; //Units.inchesToMeters(4.0/2.0); //four inch (diameter) wheels
+        static public final double WHEEL_RADIUS_M = Units.inchesToMeters(3.9/2.0);//0.0508; //Units.inchesToMeters(4.0/2.0); //four inch (diameter) wheels
         static public final double ROBOT_MASS_kg = Units.lbsToKilograms(138);
         static public final double ROBOT_MOI_KGM2 = 1.0/12.0 * ROBOT_MASS_kg * Math.pow((WHEEL_BASE_WIDTH_M*1.1),2) * 2; //Model moment of intertia as a square slab slightly bigger than wheelbase with axis through center
         // Drivetrain Performance Mechanical limits
@@ -91,7 +91,7 @@ public class Constants {
 
         //kv: (12 volts * 60 s/min * 1/5.14 WRevs/MRevs * wheel rad * 2pi  / (6000 MRPM *
         /** ks, kv, ka */ 
-        public static final double[] DRIVE_FF_CONST = {0.14315, 2 , 0.57};
+        public static final double[] DRIVE_FF_CONST = {0.14315* 0.8, 2 , 4};
 
         public static final double STEER_P = 2.3584;
         public static final double STEER_D = 0.01;
@@ -328,12 +328,12 @@ public class Constants {
         
         public static final int PIVOT_MOTOR_ID = 22;
         public static final int PIVOT_FOLLOWER_MOTOR_ID = 23;
-        public static final double PIVOT_KS = 0.11 * 0.6 ;
+        public static final double PIVOT_KS = 0.11 * 0;
         public static final double ARM_PIVOT_KG_MIN_EXTEND = 0.1;//1.414 * (ARM_ROTATIONS_PER_MOTOR_ROTATION * 400) / 2 / Math.cos(Units.degreesToRadians(10.5));
         public static final double ARM_PIVOT_KG_MAX_EXTEND = 1;//0.13 / Math.cos(0.707);//2.872 * (ARM_ROTATIONS_PER_MOTOR_ROTATION * 400) / 2 / Math.cos(Units.degreesToRadians(10.5));
 
         public static final double PIVOT_MAX_VELOCITY = 2.38; // rad/s
-        public static final double PIVOT_MAX_ACCEL = 5; //rad/s/s
+        public static final double PIVOT_MAX_ACCEL = 3; //rad/s/s
 
         /* WRIST/HAND */
 
@@ -368,12 +368,18 @@ public class Constants {
                 1.227, 0.97 , -2.02
             );
             public static final ArmPosition BACK_TIPPED_FLOOR = new ArmPosition(
-                3.59, 0.5477, 0.223);
+                3.63,
+                0.541,
+                0.083);
+            public static final ArmPosition BACK_TIPPED_FLOOR_PRESTOW = new ArmPosition(
+                STOW.pivotRadians,
+                STOW.armLength,
+                0.083);
             public static final ArmPosition BACK_UP_FLOOR = new ArmPosition(
                 3.07, MIN_ARM_LENGTH, 1.08);
 
             public static final ArmPosition FRONT_UP_FLOOR = new ArmPosition(
-                0, STOW.armLength, -0.833);
+                0, STOW.armLength, -0.8);
         }
 
         public static final ArmPosition SCORE_HIGH_CONE_POSITION = new ArmPosition(

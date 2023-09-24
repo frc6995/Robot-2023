@@ -21,6 +21,7 @@ import static frc.robot.Constants.DriveConstants.*;
 import java.util.function.Consumer;
 
 import autolog.AutoLog.BothLog;
+import autolog.AutoLog.NTLog;
 
 public abstract class ModuleIO implements Logged {
 
@@ -195,6 +196,11 @@ public abstract class ModuleIO implements Logged {
     public void resetSteerController() {
         m_steerGoal = new State(getAngle(), 0);
         m_steerSetpoint = new State(getAngle(), 0);
+    }
+
+    @NTLog
+    public double getDriveCurrent() {
+        return 0;
     }
 
     

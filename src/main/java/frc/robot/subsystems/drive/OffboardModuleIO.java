@@ -22,9 +22,9 @@ public class OffboardModuleIO extends RealModuleIO {
         m_rotationController.setPositionPIDWrappingMaxInput(Math.PI);
         m_rotationController.setPositionPIDWrappingMinInput(-Math.PI);
 
-        m_driveController.setP(0.035);
+        m_driveController.setP(0.1);
         m_driveController.setI(0);
-        m_driveController.setD(0);
+        m_driveController.setD(0.005);
 
         m_rotationController.setP(0.5);
         m_rotationController.setI(0);
