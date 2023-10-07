@@ -33,8 +33,8 @@ public class Constants {
     }
 
     public static final class DriveConstants {
-        static public final double WHEEL_BASE_WIDTH_M = Units.inchesToMeters(18.5);
-        static public final double WHEEL_RADIUS_M = Units.inchesToMeters(3.9/2.0);//0.0508; //Units.inchesToMeters(4.0/2.0); //four inch (diameter) wheels
+        static public final double WHEEL_BASE_WIDTH_M = Units.inchesToMeters(18.75);
+        static public final double WHEEL_RADIUS_M = Units.inchesToMeters(4.0/2.0);//0.0508; //Units.inchesToMeters(4.0/2.0); //four inch (diameter) wheels
         static public final double ROBOT_MASS_kg = Units.lbsToKilograms(138);
         static public final double ROBOT_MOI_KGM2 = 1.0/12.0 * ROBOT_MASS_kg * Math.pow((WHEEL_BASE_WIDTH_M*1.1),2) * 2; //Model moment of intertia as a square slab slightly bigger than wheelbase with axis through center
         // Drivetrain Performance Mechanical limits
@@ -43,7 +43,7 @@ public class Constants {
         static public final double MAX_ROTATE_SPEED_RAD_PER_SEC = Units.degreesToRadians(720.0);
         static public final double MAX_TRANSLATE_ACCEL_MPS2 = MAX_FWD_REV_SPEED_MPS/0.125; //0-full time of 0.25 second
         static public final double MAX_ROTATE_ACCEL_RAD_PER_SEC_2 = MAX_ROTATE_SPEED_RAD_PER_SEC/0.25; //0-full time of 0.25 second
-        static public final double MAX_LINEAR_SPEED = Units.feetToMeters(11);
+        static public final double MAX_LINEAR_SPEED = Units.feetToMeters(3);
         static public final double MAX_TURN_SPEED = Units.degreesToRadians(360);
     // HELPER ORGANIZATION CONSTANTS
         static public final int FL = 0; // Front Left Module Index
@@ -57,10 +57,10 @@ public class Constants {
         static private double HW = WHEEL_BASE_WIDTH_M/2.0;
 
         public enum ModuleConstants {
-            FL("FL", 18, 17, 6, 5.651346 + 0.005 + 0.01, HW, HW),
-            FR("FR", 12, 11, 7, 3.762759 - 0.003 + 0.002 + 0.01, HW, -HW),
-            BL("BL", 16, 15, 8, 1.823007 + 0.01 + 0.001 - 0.03, -HW, HW),
-            BR("BR", 14, 13, 9, 5.614791 - 0.008 - 0.04 - 0.03 + 0.11, -HW, -HW);
+            FL("FL", 18, 17, 6, 0, HW, HW),
+            FR("FR", 12, 11, 7, 0, HW, -HW),
+            BL("BL", 16, 15, 8, 0, -HW, HW),
+            BR("BR", 14, 13, 9, 0, -HW, -HW);
     
             public final String name;
             public final int driveMotorID;
@@ -83,15 +83,15 @@ public class Constants {
             }
         }
         
-        public static final double WHEEL_REVS_PER_ENC_REV = 1.0/5.14;
-        public static final double AZMTH_REVS_PER_ENC_REV = 1.0/12.8;
+        public static final double WHEEL_REVS_PER_ENC_REV = 1.0/6.75;
+        public static final double AZMTH_REVS_PER_ENC_REV = 1.0/(150.0/7.0);
 
         public static final double STEER_MAX_SPEED_RAD_PER_SEC = 7.8 * 2 * Math.PI;
         public static final double STEER_MAX_ACCEL_RAD_PER_SEC_SQ = 400 * 2 * Math.PI;
 
         //kv: (12 volts * 60 s/min * 1/5.14 WRevs/MRevs * wheel rad * 2pi  / (6000 MRPM *
         /** ks, kv, ka */ 
-        public static final double[] DRIVE_FF_CONST = {0.14315* 0.8, 2 , 4};
+        public static final double[] DRIVE_FF_CONST = {0.14315* 0.1, 2 * 0.93/0.78 , 4};
 
         public static final double STEER_P = 2.3584;
         public static final double STEER_D = 0.01;
@@ -275,20 +275,20 @@ public class Constants {
     public static final class Vision {
         public static record VisionSource(String name, Transform3d robotToCamera) {}
     
-        public static final List<VisionSource> VISION_SOURCES =
-            List.of(
-                new VisionSource(
-                    VisionConstants.CAM_1_NAME,
-                    VisionConstants.robotToCam1),
-                new VisionSource(
-                    VisionConstants.CAM_2_NAME,
-                   VisionConstants.robotToCam2),
-                new VisionSource(
-                    VisionConstants.CAM_3_NAME,
-                    VisionConstants.robotToCam3),
-                new VisionSource(
-                    VisionConstants.CAM_4_NAME,
-                   VisionConstants.robotToCam4));
+        public static final List<VisionSource> VISION_SOURCES = List.of();
+            // List.of(
+            //     new VisionSource(
+            //         VisionConstants.CAM_1_NAME,
+            //         VisionConstants.robotToCam1),
+            //     new VisionSource(
+            //         VisionConstants.CAM_2_NAME,
+            //        VisionConstants.robotToCam2),
+            //     new VisionSource(
+            //         VisionConstants.CAM_3_NAME,
+            //         VisionConstants.robotToCam3),
+            //     new VisionSource(
+            //         VisionConstants.CAM_4_NAME,
+            //        VisionConstants.robotToCam4));
     
         public static final int THREAD_SLEEP_DURATION_MS = 20;
       }

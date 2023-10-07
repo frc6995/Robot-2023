@@ -37,12 +37,12 @@ public abstract class ModuleIO implements Logged {
     // logging position error because it's actually the "process variable", vs its
     // derivative
     private final PIDController m_drivePIDController;
-    private final SimpleMotorFeedforward m_driveFeedForward = new SimpleMotorFeedforward(
-            Robot.isReal() ? DRIVE_FF_CONST[0] : 0,
-            DRIVE_FF_CONST[1], 0.2);
+    double driveKV = DRIVE_FF_CONST[1];
+    
+    private final SimpleMotorFeedforward m_driveFeedForward; 
             //DRIVE_FF_CONST[2]);
     private final SimpleMotorFeedforward m_steerFeedForward = new SimpleMotorFeedforward(
-        0.000, STEER_KV, 0.001);
+        0, STEER_KV, 0.001);
     
     private String m_loggingName;
     // steering PID controller
@@ -54,6 +54,11 @@ public abstract class ModuleIO implements Logged {
 
     public ModuleIO(Consumer<Runnable> addPeriodic, ModuleConstants moduleConstants) {
         m_moduleConstants = moduleConstants;
+
+        m_driveFeedForward = new SimpleMotorFeedforward(
+            Robot.isReal() ? DRIVE_FF_CONST[0] : 0,
+            DRIVE_FF_CONST[1] * (moduleConstants.name.charAt(0) == 'B' ? 1 : 1), 0.2);
+
         m_loggingName = moduleConstants.name + "-[" + moduleConstants.driveMotorID + ','
                 + moduleConstants.rotationMotorID + ']';
         m_pinionSlipAlert = new Alert(moduleConstants.name, "Check pinion slip", AlertType.ERROR);
@@ -121,8 +126,8 @@ public abstract class ModuleIO implements Logged {
         m_desiredState = state;
     }
     private void setState(){
-        SwerveModuleState state = SwerveModuleState.optimize(m_desiredState,new Rotation2d(getAngle()));
-
+        //SwerveModuleState state = SwerveModuleState.optimize(m_desiredState,new Rotation2d(getAngle()));
+        SwerveModuleState state = m_desiredState;
         double prevVelSetpoint = m_driveSetpoint;
         //if (m_moduleConstants.name.contains("F")) {state.speedMetersPerSecond = -state.speedMetersPerSecond;}
         m_driveSetpoint = state.speedMetersPerSecond;

@@ -47,7 +47,9 @@ public class RealModuleIO extends ModuleIO {
                 (WHEEL_RADIUS_M * 2) * Math.PI / 60 / WHEEL_ENC_COUNTS_PER_WHEEL_REV);
 
         m_driveMotor.setIdleMode(IdleMode.kBrake);
+        m_driveMotor.setInverted(true);
         Timer.delay(0.1);
+        
         // Steer motor config
         m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 40);
         m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
@@ -57,6 +59,8 @@ public class RealModuleIO extends ModuleIO {
         m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
         m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
         m_steerMotor.getEncoder().setPositionConversionFactor(2.0 * Math.PI * AZMTH_REVS_PER_ENC_REV);
+        m_steerMotor.setInverted(true);
+        magEncoder.setInverted(true);
         magEncoder.setPositionConversionFactor(Math.PI * 2);
         magEncoder.setVelocityConversionFactor(Math.PI * 2 * 60);
         m_magEncoder = new SparkMaxAbsoluteEncoderWrapper(m_steerMotor,m_moduleConstants.magEncoderOffset);

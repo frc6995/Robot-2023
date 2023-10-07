@@ -646,7 +646,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
                 rot = rotAxis.getAsDouble();
                 rot *= MAX_TURN_SPEED;
                 // if still turning, set to false;
-                isTurning = Math.abs(rot) >= 0.05; //rad/s
+                isTurning = true;//Math.abs(rot) >= 0.05; //rad/s
                 // if it was true on the last iter, no longer true;
                 // if newly stopped turning
                 if (!isTurning && lastIsTurning) {
