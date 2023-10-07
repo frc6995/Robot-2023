@@ -66,8 +66,7 @@ public class IntakeS extends SubsystemBase implements Logged {
 
     distanceSensor.setRangingMode(RangingMode.Short, 999);
     distanceSensor.setRangeOfInterest(9,9,11,11);
-    // setDefaultCommand(run(()->{
-    //   this.intake(isCube? 0.5 : 0)));
+    setDefaultCommand(run(()->intakeMotor.setVoltage(0)));
   }
 
   public Transform2d getConeCenterOffset() {
@@ -91,7 +90,7 @@ public class IntakeS extends SubsystemBase implements Logged {
   }
 
   public boolean hitBeamBreak() {
-    return getConeCenterOffsetDistance() < -0.2 && getConeCenterOffsetDistance() < 0.15;
+    return getConeCenterOffsetDistance() > -0.2 && getConeCenterOffsetDistance() < 0.15;
   }
   //@Log
   public double getIntakeVolts() {
@@ -162,6 +161,14 @@ public class IntakeS extends SubsystemBase implements Logged {
     }
   }
 
+  public void outtakeSlow(boolean isCube) {
+    if (isCube) {
+      intakeMotor.setVoltage(-0.2 * Constants.IntakeConstants.INTAKE_VOLTAGE);
+    } else {
+      outtakeCone();
+    }
+  }
+
   /**
    * Stops the intake motor
    */
@@ -188,6 +195,14 @@ public class IntakeS extends SubsystemBase implements Logged {
 
   public Command outtakeC(BooleanSupplier isCube) {
     return runEnd(()->this.outtake(isCube.getAsBoolean()), this::stop);
+  }
+
+  public Command outtakeC(BooleanSupplier isCube, BooleanSupplier slowCube) {
+    return Commands.either(
+      runEnd(()->this.outtakeSlow(isCube.getAsBoolean()), this::stop),
+      runEnd(()->this.outtake(isCube.getAsBoolean()), this::stop),
+      slowCube)
+      ;
   }
 
   public Command intakeUntilBeamBreakC(boolean isCube) {

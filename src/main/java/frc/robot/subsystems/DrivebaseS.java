@@ -84,9 +84,9 @@ public class DrivebaseS extends SubsystemBase implements Logged {
     /**
      * The X controller used for autonomous movement.
      */
-    public final PIDController m_xController = new PIDController(6, 0, 0);
-    public final PIDController m_yController = new PIDController(6, 0, 0);
-    public final PIDController m_thetaController = new PIDController(2, 0, 0);
+    public final PIDController m_xController = new PIDController(3, 0, 0);
+    public final PIDController m_yController = new PIDController(3, 0, 0);
+    public final PIDController m_thetaController = new PIDController(3, 0, 0);
     // constraints determined from OperatorControlC slew settings.
     // TODO replace this with a TrapezoidProfile delegating to m_thetaController?
     public final ProfiledPIDController m_profiledThetaController = new ProfiledPIDController(3, 0, 0,
@@ -646,7 +646,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
                 rot = rotAxis.getAsDouble();
                 rot *= MAX_TURN_SPEED;
                 // if still turning, set to false;
-                isTurning = Math.abs(rot) >= 0.05; //rad/s
+                isTurning = true; //Math.abs(rot) >= 0.05; //rad/s
                 // if it was true on the last iter, no longer true;
                 // if newly stopped turning
                 if (!isTurning && lastIsTurning) {

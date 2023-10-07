@@ -201,7 +201,11 @@ public class RobotContainer implements Logged{
     }
     private boolean isCubeSelected() {
         double node = selectionEntry.get(0);
-        return (node <= 8) || (node % 3 == 1);
+        return (node <= 8) || (node > 8 && node % 3 == 1);
+    }
+    private boolean isHybridSelected() {
+        double node = selectionEntry.get(0);
+        return (node <= 8);
     }
     /**
      * Command factory for 
@@ -232,7 +236,7 @@ public class RobotContainer implements Logged{
                 deadline(
                     sequence(
                         waitUntil(m_alignSafeToPlace),
-                        m_armS.goToPositionC(getTargetArmPosition())
+                        m_armS.goToPositionC(this::getTargetArmPosition)
                     ),
                     alignToSelectedScoring().asProxy()
 
@@ -271,7 +275,10 @@ public class RobotContainer implements Logged{
         // D-pad driving slowly relative to alliance wall.
         m_driverController.povCenter().negate().whileTrue(m_drivebaseS.run(()->{
                 double pov = Units.degreesToRadians(-m_driverController.getHID().getPOV());
-                double adjustSpeed = 0.5; // m/s
+                if (m_armS.getArmPosition().pivotRadians > Math.PI) {
+                    pov += Math.PI;
+                }
+                double adjustSpeed = 0.75; // m/s
                 m_drivebaseS.drive(
                     new ChassisSpeeds(
                         Math.cos(pov) * adjustSpeed,
@@ -374,7 +381,7 @@ public class RobotContainer implements Logged{
     public Command autoScoreSequenceCG() {
         return sequence(
                 m_armS.goToPositionC(this::getTargetArmPosition),
-                        m_intakeS.outtakeC(this::isCubeSelected).withTimeout(0.4),
+                        m_intakeS.outtakeC(this::isCubeSelected, this::isHybridSelected).withTimeout(0.4),
                         m_armS.stowC()
             )
             .deadlineWith(Commands.run(()->LightStripS.getInstance().requestState(States.Scoring)));

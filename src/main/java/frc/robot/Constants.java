@@ -406,7 +406,7 @@ public class Constants {
         public static final ArmPosition GROUND_CUBE_INTAKE_POSITION = new ArmPosition(
             3.61,
             STOW_POSITION.armLength,
-            -0.8);
+            -0.663);
         public static final ArmPosition GROUND_CONE_INTAKE_POSITION = new ArmPosition(
             -0.42,
             0.611,
