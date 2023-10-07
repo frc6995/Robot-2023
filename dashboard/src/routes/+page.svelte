@@ -8,13 +8,12 @@
     import BooleanBox from "$lib/components/widgets/BooleanBox.widget.svelte";
     import { readable } from "svelte/store";
     NT.setIP("10.69.95.2")
-    NT.setIP("localhost")
-    let name = NT.NTString("", "/DriverDisplay/label")
     let max = NT.NTInt(150, "/DriverDisplay/maxTimer")
     let time = NT.NTDouble(-1, "/DriverDisplay/matchTime");
     let selection = NT.NTInt(-1, "/DriverDisplay/selection")
 
     let data = "/SmartDashboard/SendableChooser[0]"
+    let enabled = NT.NTBoolean(false, "/DriverDisplay/enabled");
     let autoOptions = NT.NTStringArray([], `${data.replace(/\/$/, '')}/options`);
 	let autoSelected = NT.NTString("", `${data.replace(/\/$/, '')}/selected`)
 	let autoActive = NT.NTString("", `${data.replace(/\/$/, '')}/active`)
@@ -31,13 +30,13 @@
 <main style="width:100vw; aspect-ratio: 16 / 9; overflow:hidden; box-sizing:border-box">
 <GridLayout columns={9}>
 <GridItem x={1} y={1} width={9} height={3}>
-    <ScoringGrid selection={$selection} selectCallback={(i)=>{}} conesScored={[]} cubesScored={[]}></ScoringGrid>
+    <ScoringGrid selection={$selection} selectCallback={selection} conesScored={[]} cubesScored={[]}></ScoringGrid>
 </GridItem>
 <GridItem x={6} y={4} width={4} height={2}>
     <TimerWidget value={$time} name={""} max={$max}></TimerWidget>
 </GridItem>
-<GridItem x={1} y={4} width={4} height={2}>
-    <Chooser options={$autoOptions} active={$autoActive} selectedStore={autoSelected}></Chooser>
+<GridItem x={1} y={4} width={4} height={1}>
+    <Chooser options={$autoOptions} active={$autoActive} selectedStore={autoSelected} disabled={$enabled}></Chooser>
 </GridItem>
 <GridItem x={5} y={4} width={1} height={1}>
     <BooleanBox value={$ntConnected} label="Connection"></BooleanBox>

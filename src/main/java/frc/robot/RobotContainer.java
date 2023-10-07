@@ -13,6 +13,7 @@ import com.pathplanner.lib.PathPlanner;
 import autolog.AutoLog;
 import autolog.Logged;
 import autolog.AutoLog.BothLog;
+import autolog.AutoLog.NTLog;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.LinearFilter;
@@ -23,6 +24,11 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.BooleanEntry;
+import edu.wpi.first.networktables.IntegerEntry;
+import edu.wpi.first.networktables.IntegerSubscriber;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -82,15 +88,18 @@ public class RobotContainer implements Logged{
 
     @BothLog
     private final Field2d m_field = new Field2d();
+    @NTLog(path="/DriverDisplay/field")
+    private final Field2d m_driverField = new Field2d();
+    @NTLog(path="/DriverDisplay/alliance")
+    public boolean isBlueAlliance() {
+        return AllianceWrapper.isBlue();
+    }
     // @Log
     // private final Field3d m_field3d = new Field3d();
     private final FieldObject2d m_target = m_field.getObject("target");
 
-    private ArmPosition m_targetArmPosition = ArmConstants.STOW_POSITION;
-    private Pose2d m_targetAlignmentPose = new Pose2d(1.909, 1.072, Rotation2d.fromRadians(Math.PI));
-    private boolean m_isCubeSelected = true;
-
-    
+    private IntegerEntry selectionEntry = NetworkTableInstance.getDefault().getIntegerTopic("/DriverDisplay/selection").getEntry(0);    
+    private BooleanEntry enabledEntry = NetworkTableInstance.getDefault().getBooleanTopic("/DriverDisplay/enabled").getEntry(false);
     private InputAxis m_fwdXAxis = new InputAxis("Forward", m_driverController::getLeftY)
         .withDeadband(0.2)
         .withInvert(true)
@@ -124,8 +133,8 @@ public class RobotContainer implements Logged{
         m_drivebaseS = new DrivebaseS(addPeriodic);
         m_alignSafeToPlace = new Trigger(()->{
             Transform2d error = new Transform2d(
-                m_targetAlignmentPose.transformBy(m_isCubeSelected ? new Transform2d() : m_intakeS.getConeCenterOffset()), m_drivebaseS.getPose());
-            if (m_isCubeSelected) {
+                getTargetAlignmentPose(), m_drivebaseS.getPose());
+            if (isCubeSelected()) {
                 return
                 Math.abs(error.getRotation().getRadians()) < Units.degreesToRadians(3) &&
                 Math.abs(error.getX()) < 0.3 &&
@@ -148,41 +157,16 @@ public class RobotContainer implements Logged{
         usbCam.setDriverMode(true);
 
 
-        m_keypad = new CommandOperatorKeypad(2, 
-        (pose)->{
-            m_targetAlignmentPose = pose;
-            m_field.getObject("Selection").setPose(pose);
-        },
-        (position)->{m_targetArmPosition = position;},
-        (selectedCube)->{m_isCubeSelected = selectedCube; m_intakeS.setGamePiece(m_isCubeSelected);});
+        m_keypad = new CommandOperatorKeypad(2);
 
         configureButtonBindings();
         addAutoRoutines();
-
-        // //Autonomous Option Selections:
-        // m_autoSelector.setDefaultOption("Cone Bal.-Bump Side", eighteenPointAuto(3));
-        // m_autoSelector.addOption("Cone Bal.-HP Side", eighteenPointAuto(5));
-        // //No Bump:
-        // m_autoSelector.addOption("2 Cone", fifteenPointAuto());
-        // m_autoSelector.addOption("2 Cone Bal.", twentysevenPointAuto());
-        // // m_autoSelector.addOption("Cone Over+Back - HP", overBackAuto(5));
-        // // m_autoSelector.addOption("Cone Over+Back - Bump", overBackAuto(3));
-        // m_autoSelector.addOption("2 Cone Over Bump", bumpTwoConeAuto());
-
-        // // m_autoSelector.addOption("Cone+Over Bump [UNTESTED]", ninePointAuto());
-
-        // m_autoSelector.addOption("Do Nothing", Commands.none());
-        // // m_autoSelector.addOption("21 Point No 2nd", twentyonePointAutoNo2nd());
-        // // m_autoSelector.addOption("21 Point With 2nd", twentyonePointAutoWith2nd());
-        // // m_autoSelector.addOption("27 Point (Cone Cube)", twentysevenPointConeCubeAuto());
-        // // m_autoSelector.addOption("27 Point (2 Cone)", twentysevenPointConeConeAuto());
-
 
         m_field.getObject("bluePoses").setPoses(POIManager.BLUE_COMMUNITY);
         m_field.getObject("redPoses").setPoses(POIManager.RED_COMMUNITY);
         SmartDashboard.putData(m_autoSelector);
         AutoLog.setupLogging(this,"Robot", RobotBase.isReal());
-        Timer.delay(0.2);
+        Timer.delay(0.3);
         SparkMax.burnFlashInSync();
         Timer.delay(0.2);
         Commands.sequence(
@@ -192,14 +176,40 @@ public class RobotContainer implements Logged{
         DriverStation.reportWarning("Setup Done", false);
     }
 
+    private Pose2d getTargetAlignmentPose() {
+        return POIManager.ownCommunity().get(
+            (int) selectionEntry.get(0) % 9
+        ).transformBy(isCubeSelected() ? new Transform2d() : m_intakeS.getConeCenterOffset());
+    }
+    private ArmPosition getTargetArmPosition() {
+        double node = selectionEntry.get(0);
+        if (node <= 8) {
+            return ArmConstants.SCORE_HYBRID_POSITION;
+        } else if (node <= 17) { // mid
+            if (node % 3 == 1) {//cube
+                return ArmConstants.SCORE_MID_CUBE_POSITION;
+            } else {
+                return ArmConstants.SCORE_MID_CONE_POSITION;
+            }
+        } else { // high
+            if (node % 3 == 1) {//cube
+                return ArmConstants.SCORE_HIGH_CUBE_POSITION;
+            } else {
+                return ArmConstants.SCORE_HIGH_CONE_POSITION;
+            }
+        }
+    }
+    private boolean isCubeSelected() {
+        double node = selectionEntry.get(0);
+        return (node <= 8) || (node % 3 == 1);
+    }
     /**
      * Command factory for 
      */
     private Command alignToSelectedScoring() {
         return  m_drivebaseS.chasePoseC(
-            ()->m_targetAlignmentPose.transformBy(m_isCubeSelected ? new Transform2d() : m_intakeS.getConeCenterOffset()
-            )
-        );
+            this::getTargetAlignmentPose
+            );
     }
 
     public void configureButtonBindings() {
@@ -222,26 +232,17 @@ public class RobotContainer implements Logged{
                 deadline(
                     sequence(
                         waitUntil(m_alignSafeToPlace),
-                        m_armS.goToPositionC(()->m_targetArmPosition)
+                        m_armS.goToPositionC(getTargetArmPosition())
                     ),
                     alignToSelectedScoring().asProxy()
 
                 ),
-                m_intakeS.outtakeC().withTimeout(0.4),
+                m_intakeS.outtakeC(this::isCubeSelected).withTimeout(0.4),
                 m_armS.stowC() 
             )
         );
         // Score and stow.
         m_driverController.b().toggleOnTrue(m_armS.stowIndefiniteC());
-        // OFFICIAL CALEB PREFERENCE
-        // m_driverController.y().toggleOnTrue(armIntakeSelectedCG(
-        //     ArmConstants.OVERTOP_CUBE_INTAKE_POSITION,
-        //     ArmConstants.OVERTOP_CONE_INTAKE_POSITION,
-        //     ()->m_isCubeSelected
-        // ));
-
-        // m_driverController.y().toggleOnTrue(
-        //     m_drivebaseS.chasePoseC(()->POIManager.ownPOI(POIS.GRID_PLAT)));
         m_driverController.back().onTrue(m_drivebaseS.xLockC());
 
 
@@ -259,10 +260,10 @@ public class RobotContainer implements Logged{
         // m_driverController.leftTrigger().whileTrue(new ConditionalCommand(
         //     m_drivebaseS.chasePoseC(()->POIManager.ownPOI(POIS.CUBE_RAMP)),
         //     m_drivebaseS.chasePoseC(()->POIManager.ownPOI(POIS.CONE_RAMP)),
-        //     ()->m_isCubeSelected));
+        //     ()->isCubeSelected()));
 
         // Button on keypad for pulsing the intake in.
-        m_keypad.action().onTrue(m_intakeS.intakeC().withTimeout(0.25));
+        m_keypad.action().onTrue(m_intakeS.intakeC(this::isCubeSelected).withTimeout(0.25));
         m_keypad.enter().toggleOnTrue(
             autoScoreSequenceCG()
         );
@@ -283,9 +284,10 @@ public class RobotContainer implements Logged{
     }
     public void addAutoRoutines() {
         m_autoSelector.setDefaultOption("Do Nothing", Commands.none());
-        m_autoSelector.addOption("HighConeHighCube", highConeHighCubeHPSide());
+        m_autoSelector.addOption("3pc HP", highConeHighCubeHPSide().andThen(midCubeHPAddon()));
+        m_autoSelector.addOption("3pc Bump", highConeHighCubeBumpSide().andThen(midCubeBumpAddon()));
         m_autoSelector.addOption("BumpSide 1 Cone Bal", eighteenPointAuto(3));
-        m_autoSelector.addOption("HP Side 1 Cone Bal", eighteenPointAuto(3));
+        m_autoSelector.addOption("HP Side 1 Cone Bal", eighteenPointAuto(5));
     }
 
 
@@ -300,6 +302,7 @@ public class RobotContainer implements Logged{
 
     public void periodic() {
         if (DriverStation.isDisabled()) {
+            enabledEntry.set(false);
             if (m_setupDone) {
                 LightStripS.getInstance().requestState(States.SetupDone);
             }
@@ -307,6 +310,8 @@ public class RobotContainer implements Logged{
                 LightStripS.getInstance().requestState(States.Disabled);
             }
 
+        } else {
+            enabledEntry.set(true);
         }
         //System.out.println(m_autoSelector.getSelected().getRequirements().toString());
         //lightSpeed = LightStripS.getInstance().getSpeed();
@@ -315,10 +320,12 @@ public class RobotContainer implements Logged{
         SmartDashboard.putNumber("loopTime", loopTime);
 
         // //SmartDashboard.putNumber("loopTime", TimingTracer.getLoopTime());
-        LightStripS.getInstance().requestState(m_isCubeSelected? States.RequestingCube : States.RequestingCone);
+        LightStripS.getInstance().requestState(isCubeSelected()? States.RequestingCube : States.RequestingCone);
         // /* Trace the loop duration and plot to shuffleboard */
         LightStripS.getInstance().periodic();
         m_drivebaseS.drawRobotOnField(m_field);
+        m_driverField.setRobotPose(m_drivebaseS.getPose());
+        m_driverField.getObject("target").setPose(getTargetAlignmentPose());
         m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
         ///]m_field3d.setRobotPose(new Pose3d(m_drivebaseS.getPose().getX(), m_drivebaseS.getPose().getY(), 0, m_drivebaseS.getRotation3d()));
     }
@@ -341,14 +348,14 @@ public class RobotContainer implements Logged{
         Commands.sequence(
             // Start intaking, and stop when a piece is detected.\
             Commands.deadline(
-                m_intakeS.setGamePieceC(()->isCube).andThen(m_intakeS.intakeUntilBeamBreakC()).andThen(m_intakeS.intakeC().withTimeout(0.2)).asProxy(),
+                m_intakeS.intakeUntilBeamBreakC(isCube).andThen(m_intakeS.intakeC(()->isCube).withTimeout(0.2)).asProxy(),
                 // move to arm position while intaking.
                 m_armS.goToPositionIndefiniteC(position)
 
             ),
             Commands.parallel(
                 // Wait a bit, then pulse the intake to ensure piece collection.
-                Commands.waitSeconds(0.75).andThen(m_intakeS.intakeC().withTimeout(0.75)).asProxy(),
+                Commands.waitSeconds(0.75).andThen(m_intakeS.intakeC(()->isCube).withTimeout(0.75)).asProxy(),
                 // stow the arm
                 m_armS.goToPositionC(()->prestow).andThen( m_armS.goToPositionC(()->isCube? ArmPositions.CUBE_STOW : ArmPositions.STOW)),
                 Commands.run(()->LightStripS.getInstance().requestState(isCube ? States.IntakedCube : States.IntakedCone)).asProxy().withTimeout(0.75)
@@ -366,8 +373,8 @@ public class RobotContainer implements Logged{
     }
     public Command autoScoreSequenceCG() {
         return sequence(
-                m_armS.goToPositionC(()->m_targetArmPosition),
-                        m_intakeS.outtakeC().withTimeout(0.4),
+                m_armS.goToPositionC(this::getTargetArmPosition),
+                        m_intakeS.outtakeC(this::isCubeSelected).withTimeout(0.4),
                         m_armS.stowC()
             )
             .deadlineWith(Commands.run(()->LightStripS.getInstance().requestState(States.Scoring)));
@@ -389,7 +396,7 @@ public class RobotContainer implements Logged{
             Commands.deadline(
                 Commands.sequence(
                     m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).withTimeout(3),
-                    m_intakeS.outtakeC().withTimeout(0.4)
+                    m_intakeS.outtakeC(()->false).withTimeout(0.4)
                 ),
                 alignToSelectedScoring()
             ),
@@ -404,8 +411,6 @@ public class RobotContainer implements Logged{
     public Command ninePointAuto(){
         
         return Commands.sequence(
-            m_intakeS.setGamePieceC(()->false).asProxy(),
-
             Commands.runOnce(
                 ()->m_drivebaseS.resetPose(
                     NomadMathUtil.mirrorPose(POIManager.BLUE_COMMUNITY.get(0), AllianceWrapper.getAlliance())
@@ -415,7 +420,7 @@ public class RobotContainer implements Logged{
             Commands.deadline(
                 Commands.sequence(
                     m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).withTimeout(3).asProxy(),
-                    m_intakeS.outtakeC().withTimeout(0.4).asProxy()
+                    m_intakeS.outtakeC(()->false).withTimeout(0.4).asProxy()
                 ),
                 alignToSelectedScoring().asProxy()
             ),
@@ -427,119 +432,7 @@ public class RobotContainer implements Logged{
         ).finallyDo((end)->m_drivebaseS.drive(new ChassisSpeeds()));
     }
 
-    //No Bump
 
-    // private Command twoConeAuto() {
-    //     var pathGroup = PathPlanner.loadPathGroup("27 Point", new PathConstraints(2, 2), new PathConstraints(4, 3));
-    //     return Commands.sequence(
-    //         m_intakeS.setGamePieceC(()->false).asProxy(),
-    //         m_keypad.blueSetpointCommand(8, 2),
-    //         m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
-    //         Commands.deadline(
-    //             m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
-    //             alignToSelectedScoring().asProxy()
-    //         ),
-    //         m_intakeS.outtakeC().withTimeout(0.3).asProxy(),
-            
-    //         m_keypad.blueSetpointCommand(6, 2),
-
-    //         Commands.deadline(
-    //             Commands.race(
-    //                 m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).asProxy(),
-    //                 m_intakeS.intakeUntilBeamBreakC(m_intakeS.autoStagedIntakeC()).asProxy()
-    //             ),
-    //             m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION).asProxy().withTimeout(5)  
-    //         ),
-    //         Commands.parallel(
-                
-    //             m_intakeS.intakeC().withTimeout(0.5).asProxy(),
-    //             m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
-    //             m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).asProxy()
-    //         ),
-    //         Commands.deadline(
-    //             sequence(
-    //                 m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy(),
-    //                 m_intakeS.outtakeC().withTimeout(0.3).asProxy()
-    //             ),
-    //             alignToSelectedScoring().asProxy()
-    //         )
-
-    //     );
-    // }
-
-
-    // private Command bumpTwoConeAuto() {
-    //     var pathGroup = PathPlanner.loadPathGroup("Bump 27 Point", new PathConstraints(1.5, 2));
-    //     return Commands.sequence(
-    //         m_intakeS.setGamePieceC(()->false).asProxy(),
-    //         m_keypad.blueSetpointCommand(0, 2),
-    //         m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
-    //         Commands.deadline(
-    //             m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy().withTimeout(3),
-    //             alignToSelectedScoring().asProxy()
-    //         ),
-    //         m_intakeS.outtakeC().withTimeout(0.3).asProxy(),
-    //         m_armS.goToPositionC(ArmConstants.RETRACTED_SCORE_CONE_POSITION).asProxy(),
-    //         m_keypad.blueSetpointCommand(2, 2),
-
-    //         Commands.deadline(
-    //             Commands.race(
-    //                 m_drivebaseS.pathPlannerCommand(pathGroup.get(0)).andThen(m_drivebaseS.stopOnceC()).asProxy(),
-    //                 m_intakeS.intakeUntilBeamBreakC(m_intakeS.autoStagedIntakeC()).asProxy()
-    //             ),
-    //             m_armS.goToPositionC(ArmConstants.OVERTOP_CONE_INTAKE_POSITION).asProxy().withTimeout(5)  
-    //         ),
-    //         Commands.parallel(
-                
-    //             m_intakeS.intakeC().withTimeout(0.1).asProxy(),
-    //             m_armS.goToPositionC(ArmConstants.RETRACTED_SCORE_CONE_POSITION).asProxy().withTimeout(3),
-    //             m_drivebaseS.pathPlannerCommand(pathGroup.get(1)).asProxy()
-    //         ),
-    //         Commands.deadline(
-    //             sequence(
-    //                 m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION).asProxy(),
-    //                 m_intakeS.outtakeC().withTimeout(0.3).asProxy(),
-    //                 m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy()
-    //             ),
-    //             alignToSelectedScoring().asProxy()
-    //         )
-
-    //     );
-    // }
-
-
-
-
-    // public Command fifteenPointAuto(){
-    //     var backOutPath = PathPlanner.loadPath("15 Point Back Out", new PathConstraints(4, 3));
-        
-    //     return twoConeAuto().andThen(
-    //         Commands.parallel(
-    //             m_keypad.blueSetpointCommand(7, 2),
-    //             m_armS.goToPositionC(ArmConstants.STOW_POSITION).asProxy().withTimeout(3),
-    //             m_drivebaseS.pathPlannerCommand(backOutPath).asProxy()
-    //         )
-            
-    //     );
-    // }
-
-
-    //public Command twentysevenPointAuto(){
-    //     var pathGroup = PathPlanner.loadPathGroup("27 Point", new PathConstraints(2, 2));
-    //     return twoConeAuto().andThen(
-
-    //         Commands.parallel(
-    //             m_armS.goToPositionC(ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT).asProxy().withTimeout(3),
-    //             sequence(
-    //                 m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).asProxy(),
-    //                 m_drivebaseS.chargeStationAlignC().asProxy(),
-    //                 m_drivebaseS.run(()->m_drivebaseS.drive(new ChassisSpeeds(0, 0, 0.1))).withTimeout(0.5).asProxy()
-    //             ).finallyDo((end)->m_drivebaseS.drive(new ChassisSpeeds()))
-                
-    //         )
-    //     );
-    // }
-    // endregion
     // region newAutos
     public Command highConeHighCubeHPSide() {
         var pathGroup = PathPlanner.loadPathGroup("High Cone High Cube",
@@ -547,14 +440,13 @@ public class RobotContainer implements Logged{
         new PathConstraints(4, 2.5));
         return sequence(
             m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
-            m_intakeS.setGamePieceC(()->false),
             // Target the HP-side high cone
             m_keypad.blueSetpointCommand(8, 2),
             // Step 1: Align and score
             deadline(
                 sequence(
                     m_armS.goToPositionC(ArmConstants.SCORE_MID_CONE_POSITION),
-                    m_intakeS.outtakeC().withTimeout(0.4)
+                    m_intakeS.outtakeC(()->false).withTimeout(0.4)
                 )//,
                 // sequence(
                 //     alignToSelectedScoring().until(m_alignSafeToPlace)
@@ -562,10 +454,10 @@ public class RobotContainer implements Logged{
                 // )
             ),
             // Step 2: Fetch cube 1
-            m_keypad.blueSetpointCommand(7, 1),
+            m_keypad.blueSetpointCommand(7, 2),
             deadline(
                 m_drivebaseS.pathPlannerCommand(pathGroup.get(0)),
-                m_intakeS.intakeC().until(m_intakeS::hitBeamBreak),
+                m_intakeS.intakeC(()->true).until(m_intakeS::hitBeamBreak),
                 m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION)
                 // drive from first cone score to cube
                 
@@ -577,15 +469,22 @@ public class RobotContainer implements Logged{
                     m_drivebaseS.pathPlannerCommand(pathGroup.get(1)),
                     alignToSelectedScoring()
                 ).until(m_alignSafeToPlace),
-                m_armS.goToPositionC(ArmConstants.SCORE_MID_CUBE_POSITION),
-                m_intakeS.run(()->m_intakeS.intake(0.5))
+                m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CUBE_POSITION),
+                m_intakeS.run(()->m_intakeS.intakeCube(0.5))
             ),
-            m_intakeS.outtakeC().withTimeout(0.4),        
+            m_intakeS.outtakeC(()->true).withTimeout(0.4)
+         );
+    }
+    public Command midCubeHPAddon() {
+        var pathGroup = PathPlanner.loadPathGroup("High Cone High Cube",
+        new PathConstraints(2, 2),
+        new PathConstraints(4, 2.5));
+        return sequence(
             m_keypad.blueSetpointCommand(7, 1),
             // head back out
             deadline(
                 m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.stopOnceC()),
-                m_intakeS.intakeC().until(m_intakeS::hitBeamBreak),
+                m_intakeS.intakeC(()->true).until(m_intakeS::hitBeamBreak),
                 m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION)
                 // drive from first cone score to cube
                
@@ -599,11 +498,84 @@ public class RobotContainer implements Logged{
                     alignToSelectedScoring()
                 ).until(m_alignSafeToPlace),
                 m_armS.goToPositionC(ArmConstants.SCORE_MID_CUBE_POSITION),
-                m_intakeS.run(()->m_intakeS.intake(0.5))
+                m_intakeS.run(()->m_intakeS.intakeCube(0.5))
             ),
             //m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CUBE_POSITION),
             // extend, score
-            m_intakeS.run(()->m_intakeS.intake(-12)).withTimeout(0.4)
+            m_intakeS.run(()->m_intakeS.outtakeCube(12)).withTimeout(0.4)
+        );
+    }
+
+    public Command highConeHighCubeBumpSide() {
+        var pathGroup = PathPlanner.loadPathGroup("High Cone High Cube Bump",
+        new PathConstraints(2, 2),
+        new PathConstraints(4, 2.5));
+        return sequence(
+            m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
+            // Target the HP-side high cone
+            m_keypad.blueSetpointCommand(0, 2),
+            // Step 1: Align and score
+            deadline(
+                sequence(
+                    m_armS.goToPositionC(ArmConstants.SCORE_MID_CONE_POSITION),
+                    m_intakeS.outtakeC(()->false).withTimeout(0.4)
+                )//,
+                // sequence(
+                //     alignToSelectedScoring().until(m_alignSafeToPlace)
+                //     .andThen(m_drivebaseS.stopC())
+                // )
+            ),
+            // Step 2: Fetch cube 1
+            m_keypad.blueSetpointCommand(1, 1),
+            deadline(
+                m_drivebaseS.pathPlannerCommand(pathGroup.get(0)),
+                m_intakeS.intakeC(()->true).until(m_intakeS::hitBeamBreak),
+                m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION)
+                // drive from first cone score to cube
+                
+            ).withTimeout(4),
+            // Drive back while stowing cube
+            // when we're close enough to score, move on
+            deadline(
+                sequence(
+                    m_drivebaseS.pathPlannerCommand(pathGroup.get(1)),
+                    alignToSelectedScoring()
+                ).until(m_alignSafeToPlace),
+                m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CUBE_POSITION),
+                m_intakeS.run(()->m_intakeS.intakeCube(0.5))
+            ),
+            m_intakeS.outtakeC(()->true).withTimeout(0.4)
+         );
+    }
+
+    public Command midCubeBumpAddon() {
+        var pathGroup = PathPlanner.loadPathGroup("High Cone High Cube Bump",
+        new PathConstraints(2, 2),
+        new PathConstraints(4, 2.5));
+        return sequence(
+        m_keypad.blueSetpointCommand(1, 1),
+            // head back out
+            deadline(
+                m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.stopOnceC()),
+                m_intakeS.intakeC(()->true).until(m_intakeS::hitBeamBreak),
+                m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION)
+                // drive from first cone score to cube
+               
+            ).withTimeout(4),
+
+            // Drive back while stowing cube
+            // when we're close enough to score, move on
+            deadline(
+                sequence(
+                    m_drivebaseS.pathPlannerCommand(pathGroup.get(3)),
+                    alignToSelectedScoring()
+                ).until(m_alignSafeToPlace),
+                m_armS.goToPositionC(ArmConstants.SCORE_MID_CUBE_POSITION),
+                m_intakeS.run(()->m_intakeS.intakeCube(0.5))
+            ),
+            //m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CUBE_POSITION),
+            // extend, score
+            m_intakeS.run(()->m_intakeS.outtakeCube(12)).withTimeout(0.4)
          );
     }
 

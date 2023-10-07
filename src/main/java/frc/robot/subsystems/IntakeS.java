@@ -42,8 +42,6 @@ import static frc.robot.Constants.IntakeConstants.*;
 
 public class IntakeS extends SubsystemBase implements Logged {
   private final SparkMax intakeMotor = new SparkMax(INTAKE_CAN_ID, MotorType.kBrushless);
-  @BothLog
-  private boolean isCube = false;
 
   private final TimeOfFlight distanceSensor = new TimeOfFlight(Constants.IntakeConstants.INTAKE_TOF_CAN_ID);
   private Trigger cubeDebouncedBeamBreak = new Trigger(()->getCurrent() > 20);//.debounce(0.06);
@@ -68,13 +66,14 @@ public class IntakeS extends SubsystemBase implements Logged {
 
     distanceSensor.setRangingMode(RangingMode.Short, 999);
     distanceSensor.setRangeOfInterest(9,9,11,11);
-    setDefaultCommand(run(()->this.intake(isCube? 0.5 : 0)));
+    // setDefaultCommand(run(()->{
+    //   this.intake(isCube? 0.5 : 0)));
   }
 
   public Transform2d getConeCenterOffset() {
     
     double distanceToCone = getConeCenterOffsetDistance();
-    if (Math.abs(distanceToCone) > 0.2) {
+    if (!hitBeamBreak()) {
       return new Transform2d();
     }
     
@@ -89,6 +88,10 @@ public class IntakeS extends SubsystemBase implements Logged {
       return 0;
     }
      return -(INTAKE_CENTERED_CONE_DISTANCE - distanceSensor.getRange()) / 1000.0;
+  }
+
+  public boolean hitBeamBreak() {
+    return getConeCenterOffsetDistance() < -0.2 && getConeCenterOffsetDistance() < 0.15;
   }
   //@Log
   public double getIntakeVolts() {
@@ -118,53 +121,45 @@ public class IntakeS extends SubsystemBase implements Logged {
   // public boolean hitCurrentLimit() {
   //   return intakeMotor.getFault(FaultID.kOvercurrent);
   // }
-
-  @BothLog
-  public boolean hitBeamBreak() {
-    return !isCube && (Math.abs(getConeCenterOffsetDistance())) < 0.16;
+  public void intakeCube() {
+    intakeMotor.setVoltage(Constants.IntakeConstants.INTAKE_VOLTAGE);
+  }
+  public void intakeCube(double volts) {
+    intakeMotor.setVoltage(volts);
+  }
+  public void outtakeCone(double volts) {
+    intakeCube(volts);
+  }
+  public void outtakeCube(double volts) {
+    intakeCone(volts);
+  }
+  public void intakeCone() {
+    intakeMotor.setVoltage(-Constants.IntakeConstants.INTAKE_VOLTAGE);
+  }
+  public void intakeCone(double volts) {
+    intakeMotor.setVoltage(-volts);
+  }
+  public void outtakeCube() {
+    intakeMotor.setVoltage(-0.4 * Constants.IntakeConstants.INTAKE_VOLTAGE);
+  }
+  public void outtakeCone() {
+    intakeMotor.setVoltage(0.6 * Constants.IntakeConstants.INTAKE_VOLTAGE);
   }
 
-  /**
-   * Sets voltage of intake motor to the voltage parameter 
-   * @param voltage the voltage supplied to intake motor
-   */
-
-  public void intake(double voltage) {
-    intakeMotor.setVoltage(voltage  * (isCube() ? 1 : -1));
+  public void intake(boolean isCube) {
+    if (isCube) {
+      intakeCube();
+    } else {
+      intakeCone();
+    }
   }
 
-
-  /**
-   * Spins intake motor forward at specified voltage
-   */
-
-  public void intake() {
-    intake((isCube? 1 : 1) * Constants.IntakeConstants.INTAKE_VOLTAGE);
-  }
-
-  public Command autoStagedIntakeC() {
-    return runEnd(()->intake(Constants.IntakeConstants.INTAKE_VOLTAGE), this::stop);
-  }
-
-  /**
-   * Spins intake motor in reverse at specified voltage
-   */
-
-  public void outtake() {
-    intake((isCube? -0.4 : -0.6) * Constants.IntakeConstants.INTAKE_VOLTAGE);
-  }
-
-  public void setGamePiece(boolean isCube) {
-    this.isCube = isCube;
-  }
-
-
-  /**
-   * Toggles the intake between extend and retract
-   */
-
-  public void toggle() {
-    isCube = !isCube;
+  public void outtake(boolean isCube) {
+    if (isCube) {
+      outtakeCube();
+    } else {
+      outtakeCone();
+    }
   }
 
   /**
@@ -180,37 +175,40 @@ public class IntakeS extends SubsystemBase implements Logged {
     current = currentAverage.calculate(intakeMotor.getOutputCurrent());
   }
 
-  public boolean isCube() {
-    return isCube;
+  public Command intakeC(BooleanSupplier isCube) {
+    return runEnd(()->this.intake(isCube.getAsBoolean()), this::stop);//.until(new Trigger(this::hitProxSensor));
   }
-
-  /**
-   * Runs the intake motor forward and then stops it
-   * @return returns the runEnd Command
-   */
-
-   public Command setGamePieceC(BooleanSupplier isCube) {
-    return runOnce(()->setGamePiece(isCube.getAsBoolean()));
-   }
-   public Command intakeC() {
-    return runEnd(this::intake, this::stop);//.until(new Trigger(this::hitProxSensor));
-  }
+  
+  
 
   /**
    * Runs the intake motor in reverse and then stops it
    * @return returns the runEnd Command
    */
 
-  public Command outtakeC() {
-    return runEnd(this::outtake, this::stop);
+  public Command outtakeC(BooleanSupplier isCube) {
+    return runEnd(()->this.outtake(isCube.getAsBoolean()), this::stop);
   }
 
-  public Command intakeUntilBeamBreakC() {
+  public Command intakeUntilBeamBreakC(boolean isCube) {
     return Commands.sequence(
-      run(this::intake).withTimeout(0.5),
-      run(this::intake).until(()->{
+      run(()->this.intake(isCube)).withTimeout(0.5),
+      run(()->this.intake(isCube)).until(()->{
         return isCube ? 
         cubeDebouncedBeamBreak.getAsBoolean() : coneDebouncedBeamBreak.getAsBoolean();}),
-      intakeC().withTimeout(isCube ? 0.1 : 0.0));
+      intakeC(()->isCube).withTimeout(isCube ? 0.1 : 0.0));
     }
+  public boolean acquiredCube() {
+    return cubeDebouncedBeamBreak.getAsBoolean();
+  }
+  public boolean acquiredCone() {
+    return coneDebouncedBeamBreak.getAsBoolean();
+  }
+  public boolean acquiredPiece(boolean isCube) {
+    if (isCube) {
+      return acquiredCube();
+    } else {
+      return acquiredCone();
+    }
+  }
 }

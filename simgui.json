@@ -17,6 +17,7 @@
   },
   "NTProvider": {
     "types": {
+      "/DriverDisplay/field": "Field2d",
       "/FMSInfo": "FMSInfo",
       "/Robot/m_armS/MECH_VISUALIZER": "Mechanism2d",
       "/Robot/m_armS/VISUALIZER": "Field2d",
@@ -111,6 +112,9 @@
       "open": false
     },
     "retained": {
+      "DriverDisplay": {
+        "open": true
+      },
       "SmartDashboard": {
         "SendableChooser[0]": {
           "open": true
@@ -128,6 +132,9 @@
         }
       },
       "DriverDisplay": {
+        "field": {
+          "open": true
+        },
         "open": true
       },
       "Robot": {
@@ -238,6 +245,30 @@
         "open": true
       }
     }
+  },
+  "NetworkTables Info": {
+    "Clients": {
+      "open": true
+    },
+    "Connections": {
+      "open": true
+    },
+    "Server": {
+      "open": true
+    },
+    "ntcore-ts-1696099063261@2": {
+      "Publishers": {
+        "open": true
+      },
+      "open": true
+    },
+    "ntcore-ts-1696099088232@1": {
+      "Publishers": {
+        "open": true
+      },
+      "open": true
+    },
+    "visible": true
   },
   "Plot": {
     "Plot <0>": {

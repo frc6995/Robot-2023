@@ -65,12 +65,23 @@
       }
     },
     "security": {
-      "csp": null
+      "csp": null,
+      "dangerousUseHttpScheme" : true
     },
     "updater": {
       "active": false
     },
     "windows": [
+      {
+        "label": "main",
+        "title": "Main",
+        "url": "/main"
+      },
+      {
+        "label": "operator",
+        "title": "Operator",
+        "url": "/"
+      }
     ]
   }
 }

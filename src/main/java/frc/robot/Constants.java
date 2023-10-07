@@ -333,7 +333,7 @@ public class Constants {
         public static final double ARM_PIVOT_KG_MAX_EXTEND = 1;//0.13 / Math.cos(0.707);//2.872 * (ARM_ROTATIONS_PER_MOTOR_ROTATION * 400) / 2 / Math.cos(Units.degreesToRadians(10.5));
 
         public static final double PIVOT_MAX_VELOCITY = 2.38; // rad/s
-        public static final double PIVOT_MAX_ACCEL = 3; //rad/s/s
+        public static final double PIVOT_MAX_ACCEL = 5; //rad/s/s
 
         /* WRIST/HAND */
 

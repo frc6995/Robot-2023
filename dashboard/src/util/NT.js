@@ -5,8 +5,9 @@ import { onDestroy } from 'svelte';
 class NT {
     constructor(ip) {
         this.ip = ip;
-
+        
         this.nt  = NetworkTables.getInstanceByURI(ip);
+        this.nt.changeURI("10.69.95.2");
         this.ntSubscribers = {}
     }
 
@@ -17,52 +18,30 @@ class NT {
         this.ip = ip;        
     }
     NTValue(init, key, topicType) {
-        if (this.ntSubscribers[key] !== undefined) {
-            return this.ntSubscribers[key];
-        }
+
+        const internal = writable(init);
         console.log("create")
         let _val = init;
-        let needsToPublish = false;
+        let isPublishing = false;
         const subs = [];
         let topic = this.nt.createTopic(key, topicType);
-        topic.subscribe((value)=>{
-                _val = value;
-                console.log(value)
-                subs.forEach((fn) => fn(_val));
+        let subuuid = topic.subscribe((value)=>{
+                internal.set(value);
             }
         );
+       
 
-        onDestroy(()=>{
-            if (needsToPublish) {
-            topic.unpublish();
-            }
-
-            topic.unsubscribe();
-        })
-        
-        const subscribe = (cb) => {
-            subs.push(cb);
-            cb(_val);
-        
-            return () => {
-                const index = subs.findIndex((fn) => fn === cb);
-                subs.splice(index, 1);
-            };
-        };
+        const subscribe = internal.subscribe;
         
         const set = (v) => {
-            if (!needsToPublish) {
+            if (!topic.publisher) {
                 topic.publish();
-                needsToPublish = true;
             }
             topic.setValue(v);
-            _val = v;
-            subs.forEach((fn) => fn(_val));
+            internal.set(v);
         };
 
-        const get = () => {
-            return _val;
-        }
+        const get = ()=>topic.getValue();
         
         const update = (fn) => set(fn(_val));
         const type = () => topicType;
@@ -74,7 +53,6 @@ class NT {
         store.get = get;
         store.update = update;
         store.type = type;
-        this.ntSubscribers[key] = store;
         return store;
     }
 
