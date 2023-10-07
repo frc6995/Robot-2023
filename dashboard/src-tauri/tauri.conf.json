@@ -3,11 +3,10 @@
   "build": {
     "beforeBuildCommand": "npm run build",
     "beforeDevCommand": "npm run dev",
-    "devPath": "http://localhost:5173",
-    "distDir": "../static"
+    "distDir": "../build"
   },
   "package": {
-    "productName": "ducknorris",
+    "productName": "armanda",
     "version": "0.1.0"
   },
   "tauri": {
@@ -72,16 +71,6 @@
       "active": false
     },
     "windows": [
-      {
-        "label": "main",
-        "title": "Main",
-        "url": "/main"
-      },
-      {
-        "label": "operator",
-        "title": "Operator",
-        "url": "/"
-      }
     ]
   }
 }
