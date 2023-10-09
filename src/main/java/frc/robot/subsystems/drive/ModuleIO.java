@@ -57,7 +57,7 @@ public abstract class ModuleIO implements Logged {
 
         m_driveFeedForward = new SimpleMotorFeedforward(
             Robot.isReal() ? DRIVE_FF_CONST[0] : 0,
-            DRIVE_FF_CONST[1] * (moduleConstants.name.charAt(0) == 'B' ? 1 : 1), 0.2);
+            DRIVE_FF_CONST[1] * (moduleConstants.name.charAt(0) == 'B' ? 1 : 0.5/0.51), 0.0001);
 
         m_loggingName = moduleConstants.name + "-[" + moduleConstants.driveMotorID + ','
                 + moduleConstants.rotationMotorID + ']';
@@ -126,12 +126,13 @@ public abstract class ModuleIO implements Logged {
         m_desiredState = state;
     }
     private void setState(){
-        //SwerveModuleState state = SwerveModuleState.optimize(m_desiredState,new Rotation2d(getAngle()));
-        SwerveModuleState state = m_desiredState;
+        SwerveModuleState state = SwerveModuleState.optimize(m_desiredState,new Rotation2d(getAngle()));
+        //SwerveModuleState state = m_desiredState;
         double prevVelSetpoint = m_driveSetpoint;
         //if (m_moduleConstants.name.contains("F")) {state.speedMetersPerSecond = -state.speedMetersPerSecond;}
+        state.speedMetersPerSecond *= (m_moduleConstants.name.charAt(0) == 'B' ? 1.25 : 1);
         m_driveSetpoint = state.speedMetersPerSecond;
-        setDrivePid(state.speedMetersPerSecond, m_driveFeedForward.calculate(prevVelSetpoint, state.speedMetersPerSecond, 0.02));
+        setDrivePid(state.speedMetersPerSecond, 0);//, m_driveFeedForward.calculate(prevVelSetpoint, state.speedMetersPerSecond, 0.02));
                 // pidVolts+//m_drivePIDController.calculate(getDriveVelocity(), state.speedMetersPerSecond) +
                 //         m_driveFeedForward.calculate(prevVelSetpoint, state.speedMetersPerSecond, 0.02));
         if (Math.abs(state.speedMetersPerSecond) < 0.01) {
@@ -143,17 +144,16 @@ public abstract class ModuleIO implements Logged {
                 // Get error which is the smallest distance between goal and measurement
         double errorBound = Math.PI;
         double goalMinDistance =
-            MathUtil.inputModulus(m_steerGoal.position - getAngle(), -errorBound, errorBound);
+            MathUtil.inputModulus(m_steerGoal.position - getRelativeAngle(), -errorBound, errorBound);
         double setpointMinDistance =
-            MathUtil.inputModulus(m_steerSetpoint.position - getAngle(), -errorBound, errorBound);
+            MathUtil.inputModulus(m_steerSetpoint.position - getRelativeAngle(), -errorBound, errorBound);
 
         // Recompute the profile goal with the smallest error, thus giving the shortest path. The goal
         // may be outside the input range after this operation, but that's OK because the controller
         // will still go there and report an error of zero. In other words, the setpoint only needs to
         // be offset from the measurement by the input range modulus; they don't need to be equal.
-        m_steerGoal.position = goalMinDistance + getAngle();
-        m_steerSetpoint.position = setpointMinDistance + getAngle();
-
+        m_steerGoal.position = goalMinDistance + getRelativeAngle();
+        m_steerSetpoint.position = setpointMinDistance + getRelativeAngle();
 
         m_steerGoal = new State(m_steerGoal.position, new Rotation2d(m_steerGoal.position).minus(new Rotation2d(prevSteerGoal)).getRadians() / 0.02);
         var profile = new TrapezoidProfile(m_steeringConstraints, m_steerGoal, m_steerSetpoint);
@@ -161,7 +161,7 @@ public abstract class ModuleIO implements Logged {
         m_steerSetpoint = profile.calculate(0.02);
         State m_nextSetpoint = profile.calculate(0.04);
 
-        setRotationPid(m_steerSetpoint.position, m_steerFeedForward.calculate(m_steerSetpoint.velocity));//m_steerFeedForward.calculate(m_steerSetpoint.velocity, m_nextSetpoint.velocity, 0.02));
+        setRotationPid(state.angle.getRadians(),0.2 * Math.signum(state.angle.minus(new Rotation2d(getRelativeAngle())).getRadians()));// m_steerFeedForward.calculate(m_steerSetpoint.velocity));//m_steerFeedForward.calculate(m_steerSetpoint.velocity, m_nextSetpoint.velocity, 0.02));
         }
         // double steerVolts = m_steerPIDController.calculate(getAngle(), m_steerSetpoint.position);
         // setRotationVoltage(
@@ -205,6 +205,11 @@ public abstract class ModuleIO implements Logged {
 
     @NTLog
     public double getDriveCurrent() {
+        return 0;
+    }
+
+    @NTLog
+    public double getSteerCurrent() {
         return 0;
     }
 

@@ -57,10 +57,10 @@ public class Constants {
         static private double HW = WHEEL_BASE_WIDTH_M/2.0;
 
         public enum ModuleConstants {
-            FL("FL", 18, 17, 6, 0, HW, HW),
-            FR("FR", 12, 11, 7, 0, HW, -HW),
-            BL("BL", 16, 15, 8, 0, -HW, HW),
-            BR("BR", 14, 13, 9, 0, -HW, -HW);
+            FL("FL", 18, 17, 6, 0.002726, HW, HW),
+            FR("FR", 12, 11, 7, -0.002726, HW, -HW),
+            BL("BL", 16, 15, 8, 0.002726, -HW, HW),
+            BR("BR", 14, 13, 9, -0.002726, -HW, -HW);
     
             public final String name;
             public final int driveMotorID;
@@ -91,12 +91,12 @@ public class Constants {
 
         //kv: (12 volts * 60 s/min * 1/5.14 WRevs/MRevs * wheel rad * 2pi  / (6000 MRPM *
         /** ks, kv, ka */ 
-        public static final double[] DRIVE_FF_CONST = {0.14315* 0.1, 2 * 0.93/0.78 , 4};
+        public static final double[] DRIVE_FF_CONST = {0.14315* 0.1, 2 * 0.93/0.78 * 0.5/0.43 , 4};
 
         public static final double STEER_P = 2.3584;
         public static final double STEER_D = 0.01;
         // 12 volts / (5676rpm *2pi radPerRev  / 60 spm / 12.8 revsPerWheelRev)
-        public static final double STEER_KV = 12.0/ (5676 * (2*Math.PI)/60/12.8);
+        public static final double STEER_KV = 12.0/ (5676 * (2*Math.PI)/60/(150.0/7.0));
     
         public static final double DRIVE_P = 16;//9;
         public static final double DRIVE_D = 0;

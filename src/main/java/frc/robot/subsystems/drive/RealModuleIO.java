@@ -39,12 +39,14 @@ public class RealModuleIO extends ModuleIO {
         var error = m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
         m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
         System.out.println("drive config " + m_moduleConstants.driveMotorID + error.toString());
+        double radius = moduleConstants.name.charAt(0) == 'B' ? WHEEL_RADIUS_M
+         : WHEEL_RADIUS_M;
         m_driveMotor.getEncoder().setPositionConversionFactor(
-                Math.PI * (WHEEL_RADIUS_M * 2) // meters/ wheel rev
+                Math.PI * (radius * 2) // meters/ wheel rev
                         / WHEEL_ENC_COUNTS_PER_WHEEL_REV // 1/ (enc revs / wheel rev) = wheel rev/enc rev
         );
         m_driveMotor.getEncoder().setVelocityConversionFactor(
-                (WHEEL_RADIUS_M * 2) * Math.PI / 60 / WHEEL_ENC_COUNTS_PER_WHEEL_REV);
+                (radius * 2) * Math.PI / 60 / WHEEL_ENC_COUNTS_PER_WHEEL_REV);
 
         m_driveMotor.setIdleMode(IdleMode.kBrake);
         m_driveMotor.setInverted(true);
@@ -52,7 +54,7 @@ public class RealModuleIO extends ModuleIO {
         
         // Steer motor config
         m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 40);
-        m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
+        //m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
         m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
         m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
         m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
@@ -109,7 +111,7 @@ public class RealModuleIO extends ModuleIO {
     @Override
     public double getRelativeAngle() {
         // TODO Auto-generated method stub
-        return 0;
+        return m_steerMotor.getEncoder().getPosition();
     }
     @Override
     public void resetDistance() {
@@ -118,7 +120,7 @@ public class RealModuleIO extends ModuleIO {
 
     @Override
     public void reinitRotationEncoder() {
-        m_driveMotor.getEncoder().setPosition(getAngle());
+        m_steerMotor.getEncoder().setPosition(getAngle());
     }
     @Override
     public double getDriveVoltage() {
@@ -131,6 +133,11 @@ public class RealModuleIO extends ModuleIO {
     @Override
     public double getDriveCurrent() {
         return m_driveMotor.getOutputCurrent();
+    }
+
+    @Override
+    public double getSteerCurrent() {
+        return m_steerMotor.getOutputCurrent();
     }
 
 }
