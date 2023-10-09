@@ -8,6 +8,7 @@ import edu.wpi.first.networktables.IntegerEntry;
 import edu.wpi.first.networktables.IntegerPublisher;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -103,7 +104,7 @@ public class CommandOperatorKeypad {
             setpointCommand(columnInGrid, row));
             
     }
-    private Trigger key(Button key) {
+    public Trigger key(Button key) {
         return m_hid.button(key.value, CommandScheduler.getInstance().getDefaultButtonLoop()).castTo(Trigger::new);
     }
     public Trigger leftGrid() {

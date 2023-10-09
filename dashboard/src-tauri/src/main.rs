@@ -19,6 +19,7 @@ fn main() {
   // context.config_mut().build.dist_dir = AppUrl::Url(window_url.clone());
 
   tauri::Builder::default()
+    .plugin(tauri_plugin_window_state::Builder::default().build())
     .setup(move |app| {
       let operator = WindowBuilder::new(
         app,

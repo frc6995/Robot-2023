@@ -6,7 +6,8 @@
     import NT from "../util/NT"
     import Chooser from "$lib/components/widgets/Chooser.widget.svelte";
     import BooleanBox from "$lib/components/widgets/BooleanBox.widget.svelte";
-    import { readable } from "svelte/store";
+    import { readable, get } from "svelte/store";
+    import {appWindow} from "@tauri-apps/api/window"
     NT.setIP("10.69.95.2")
     let max = NT.NTInt(150, "/DriverDisplay/maxTimer")
     let time = NT.NTDouble(-1, "/DriverDisplay/matchTime");
@@ -26,6 +27,14 @@
             clearInterval(interval);
         };
     });
+    appWindow.onCloseRequested(async (event)=> {
+        if (get(enabled)) {
+            event.preventDefault();
+        } else {
+            appWindow.close();
+        }
+    })
+
 </script>
 <main style="width:100vw; aspect-ratio: 16 / 9; overflow:hidden; box-sizing:border-box">
 <GridLayout columns={9}>
@@ -41,6 +50,10 @@
 <GridItem x={5} y={4} width={1} height={1}>
     <BooleanBox value={$ntConnected} label="Connection"></BooleanBox>
 </GridItem>
+<GridItem x={5} y={6} width={1} height={1}>
+    <button on:click={()=>appWindow.close()}>Close</button>
+</GridItem>
+
 
 </GridLayout>
 </main>

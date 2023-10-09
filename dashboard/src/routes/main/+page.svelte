@@ -28,7 +28,7 @@
             };
     let setIsRealRobot = (isReal)=>{
         NT.setIP(isReal ? "10.69.95.2": "localhost");
-        cameraIP = `http://${isReal ? "10.69.95.11:1182" : "localhost:1181"}/stream.mjpg`
+        cameraIP = `http://${isReal ? "10.69.95.11:1181" : "localhost:1181"}/stream.mjpg`
     }
     setIsRealRobot(true);
 </script>

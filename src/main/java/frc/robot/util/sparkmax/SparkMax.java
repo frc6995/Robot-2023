@@ -180,13 +180,13 @@ public class SparkMax extends CANSparkMax {
 				break;
 			}
 		}
-		if (successful) {
-			DriverStation.reportWarning(String.format("Spark Max ID {}: Configuration successful!", getDeviceId()), false);
-			if (setAttemptNumber > 0) {
-				DriverStation.reportWarning(
-						String.format("Spark Max ID {}: Configuration took {} tries.", getDeviceId(), setAttemptNumber + 1), false);
-			}
-		}
+		// if (successful) {
+		// 	DriverStation.reportWarning(String.format("Spark Max ID {}: Configuration successful!", getDeviceId()), false);
+		// 	if (setAttemptNumber > 0) {
+		// 		DriverStation.reportWarning(
+		// 				String.format("Spark Max ID {}: Configuration took {} tries.", getDeviceId(), setAttemptNumber + 1), false);
+		// 	}
+		// }
 		return this;
 	}
 
@@ -356,13 +356,13 @@ public class SparkMax extends CANSparkMax {
 	 * safety.
 	 */
 	public static void burnFlashInSync() {
-		DriverStation.reportWarning(
-				String.format("Burning Flash Count: {}", ++m_burnFlashCnt), false);
+		// DriverStation.reportWarning(
+		// 		String.format("Burning Flash Count: {}", ++m_burnFlashCnt), false);
 		// Logger.tag("SparkMax").debug("Burning Flash Count: {}", ++m_burnFlashCnt);
 		Timer.delay(0.25);
 		for (SparkMax max : m_sparkMaxes) {
-			DriverStation.reportWarning(
-					String.format("Burning Flash Count for Can ID {}", max.getDeviceId()), false);
+			// DriverStation.reportWarning(
+			// 		String.format("Burning Flash Count for Can ID {}", max.getDeviceId()), false);
 			// Logger.tag("SparkMax").trace("Burning flash for Can ID {}",
 			// max.getDeviceId());
 			max.burnFlash();

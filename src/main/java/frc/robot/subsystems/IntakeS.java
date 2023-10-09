@@ -6,6 +6,8 @@ package frc.robot.subsystems;
 
 import java.util.function.BooleanSupplier;
 
+import org.photonvision.PhotonCamera;
+
 import com.playingwithfusion.TimeOfFlight;
 import com.playingwithfusion.TimeOfFlight.RangingMode;
 import com.revrobotics.CANSparkMax;
@@ -42,7 +44,10 @@ import static frc.robot.Constants.IntakeConstants.*;
 
 public class IntakeS extends SubsystemBase implements Logged {
   private final SparkMax intakeMotor = new SparkMax(INTAKE_CAN_ID, MotorType.kBrushless);
-
+  /**
+   * Set driver mode on the USB camera streamed through PhotonVision
+   */
+  PhotonCamera handCam = new PhotonCamera("HD_USB_Camera");
   private final TimeOfFlight distanceSensor = new TimeOfFlight(Constants.IntakeConstants.INTAKE_TOF_CAN_ID);
   private Trigger cubeDebouncedBeamBreak = new Trigger(()->getCurrent() > 20);//.debounce(0.06);
   private Trigger coneDebouncedBeamBreak = new Trigger(()->getCurrent() > 20);
@@ -54,7 +59,7 @@ public class IntakeS extends SubsystemBase implements Logged {
 
     intakeMotor.restoreFactoryDefaults();
     intakeMotor.setIdleMode(IdleMode.kBrake);
-    intakeMotor.setSecondaryCurrentLimit(40);
+    intakeMotor.setSecondaryCurrentLimit(700);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
@@ -62,7 +67,7 @@ public class IntakeS extends SubsystemBase implements Logged {
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
-    intakeMotor.setSmartCurrentLimit(40, 40);
+    intakeMotor.setSmartCurrentLimit(60, 60);
 
     distanceSensor.setRangingMode(RangingMode.Short, 999);
     distanceSensor.setRangeOfInterest(9,9,11,11);
@@ -225,5 +230,19 @@ public class IntakeS extends SubsystemBase implements Logged {
     } else {
       return acquiredCone();
     }
+  }
+
+  public void setHandCamFlipped(boolean flipped) {
+    handCam.setPipelineIndex(1);
+  }
+
+  @BothLog
+  public double getCameraPieceAngle() {
+    var result = handCam.getLatestResult();
+    if (result.hasTargets()) {
+      var target = result.getBestTarget();
+      return target.getYaw();
+    }
+    return 0;
   }
 }

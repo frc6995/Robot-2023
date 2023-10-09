@@ -122,7 +122,7 @@ public abstract class ModuleIO implements Logged {
     }
     private void setState(){
         SwerveModuleState state = SwerveModuleState.optimize(m_desiredState,new Rotation2d(getAngle()));
-
+        state.speedMetersPerSecond *= Math.cos(state.angle.minus(new Rotation2d(getAngle())).getRadians());
         double prevVelSetpoint = m_driveSetpoint;
         //if (m_moduleConstants.name.contains("F")) {state.speedMetersPerSecond = -state.speedMetersPerSecond;}
         m_driveSetpoint = state.speedMetersPerSecond;

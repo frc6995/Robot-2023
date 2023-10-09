@@ -25,6 +25,8 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.BooleanEntry;
+import edu.wpi.first.networktables.BooleanPublisher;
+import edu.wpi.first.networktables.BooleanSubscriber;
 import edu.wpi.first.networktables.IntegerEntry;
 import edu.wpi.first.networktables.IntegerSubscriber;
 import edu.wpi.first.networktables.NetworkTableEntry;
@@ -53,6 +55,7 @@ import frc.robot.Constants.ArmConstants.ArmPositions;
 import frc.robot.POIManager.POIS;
 import frc.robot.commands.arm.GoToPositionC;
 import frc.robot.driver.CommandOperatorKeypad;
+import frc.robot.driver.CommandOperatorKeypad.Button;
 import frc.robot.subsystems.ArmS;
 import frc.robot.subsystems.DrivebaseS;
 import frc.robot.subsystems.IntakeS;
@@ -98,8 +101,8 @@ public class RobotContainer implements Logged{
     // private final Field3d m_field3d = new Field3d();
     private final FieldObject2d m_target = m_field.getObject("target");
 
-    private IntegerEntry selectionEntry = NetworkTableInstance.getDefault().getIntegerTopic("/DriverDisplay/selection").getEntry(0);    
-    private BooleanEntry enabledEntry = NetworkTableInstance.getDefault().getBooleanTopic("/DriverDisplay/enabled").getEntry(false);
+    private IntegerSubscriber selectionEntry = NetworkTableInstance.getDefault().getIntegerTopic("/DriverDisplay/selection").subscribe(0);    
+    private BooleanPublisher enabledEntry = NetworkTableInstance.getDefault().getBooleanTopic("/DriverDisplay/enabled").publish();
     private InputAxis m_fwdXAxis = new InputAxis("Forward", m_driverController::getLeftY)
         .withDeadband(0.2)
         .withInvert(true)
@@ -150,11 +153,6 @@ public class RobotContainer implements Logged{
         Timer.delay(0.1);
         m_armS = new ArmS(addPeriodic, m_intakeS::hitBeamBreak);
 
-        /**
-         * Set driver mode on the USB camera streamed through PhotonVision
-         */
-        PhotonCamera usbCam = new PhotonCamera("HD_USB_Camera");
-        usbCam.setDriverMode(true);
 
 
         m_keypad = new CommandOperatorKeypad(2);
@@ -267,10 +265,12 @@ public class RobotContainer implements Logged{
         //     ()->isCubeSelected()));
 
         // Button on keypad for pulsing the intake in.
-        m_keypad.action().onTrue(m_intakeS.intakeC(this::isCubeSelected).withTimeout(0.25));
+        m_keypad.action().onTrue(m_intakeS.intakeC(this::isCubeSelected).withTimeout(0.5));
         m_keypad.enter().toggleOnTrue(
             autoScoreSequenceCG()
         );
+        m_keypad.key(Button.kMidCenter).and(m_keypad.key(Button.kMidLeft)).whileTrue(driveAlignPlat(()-> AllianceWrapper.isRed() ? POIS.GRID_PLAT : POIS.WALL_PLAT));
+        m_keypad.key(Button.kMidCenter).and(m_keypad.key(Button.kMidRight)).whileTrue(driveAlignPlat(()-> AllianceWrapper.isRed() ? POIS.WALL_PLAT : POIS.GRID_PLAT));
     
         // D-pad driving slowly relative to alliance wall.
         m_driverController.povCenter().negate().whileTrue(m_drivebaseS.run(()->{
@@ -320,6 +320,8 @@ public class RobotContainer implements Logged{
         } else {
             enabledEntry.set(true);
         }
+        var armPosition = m_armS.getArmPosition();
+        m_intakeS.setHandCamFlipped(armPosition.pivotRadians + armPosition.wristRadians > Math.PI/2);
         //System.out.println(m_autoSelector.getSelected().getRequirements().toString());
         //lightSpeed = LightStripS.getInstance().getSpeed();
         TimingTracer.update();
@@ -333,6 +335,7 @@ public class RobotContainer implements Logged{
         m_drivebaseS.drawRobotOnField(m_field);
         m_driverField.setRobotPose(m_drivebaseS.getPose());
         m_driverField.getObject("target").setPose(getTargetAlignmentPose());
+        m_field.getObject("selection").setPose(getTargetAlignmentPose());
         m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
         ///]m_field3d.setRobotPose(new Pose3d(m_drivebaseS.getPose().getX(), m_drivebaseS.getPose().getY(), 0, m_drivebaseS.getRotation3d()));
     }
@@ -386,6 +389,25 @@ public class RobotContainer implements Logged{
             )
             .deadlineWith(Commands.run(()->LightStripS.getInstance().requestState(States.Scoring)));
 
+    }
+
+    public Command driveAlignPlat(Supplier<POIS> target) {
+        return m_drivebaseS.run(()->{
+            double downfield = (AllianceWrapper.getAlliance() == Alliance.Red) ? 
+                    Math.PI : 0.0;
+            double rot = m_drivebaseS.m_thetaController.calculate(
+                m_drivebaseS.getPoseHeading().getRadians(), downfield);
+            m_drivebaseS.driveFieldRelative(
+            new ChassisSpeeds(
+                m_fwdXAxis.getAsDouble() * Constants.DriveConstants.MAX_LINEAR_SPEED / 2 * Math.cos(downfield),
+                MathUtil.clamp(
+                m_drivebaseS.m_yController.calculate(
+                    m_drivebaseS.getPose().getY(),
+                    POIManager.ownPOI(target.get()).getY() + 0.25 * m_rotAxis.getAsDouble() * Math.cos(downfield)),
+                -1, 1),
+                rot
+            ));
+        }).alongWith(LightStripS.getInstance().stateC(()->States.Climbing));
     }
 
     //Autonomous Commands:
