@@ -126,6 +126,19 @@ public class RobotContainer implements Logged{
     private Trigger m_alignSafeToPlace;
     private boolean m_setupDone = false;
     
+    @BothLog
+    private double getFwdAxis() {
+        return m_fwdXAxis.getAsDouble();
+    }
+    @BothLog
+    private double getSideAxis() {
+        return m_fwdYAxis.getAsDouble();
+    }
+    @BothLog
+    private double getRotAxis() {
+        return m_rotAxis.getAsDouble();
+    }
+
     public RobotContainer(Consumer<Runnable> addPeriodic) {
         if (RobotBase.isSimulation()) {
             CameraServer.startAutomaticCapture();
@@ -133,7 +146,7 @@ public class RobotContainer implements Logged{
         }
         addPeriodic.accept(Alert::periodic);
         Timer.delay(0.1);
-        m_drivebaseS = new DrivebaseS(addPeriodic);
+        m_drivebaseS = new DrivebaseS(addPeriodic, (name, traj)->{m_field.getObject(name).setTrajectory(traj);});
         m_alignSafeToPlace = new Trigger(()->{
             Transform2d error = new Transform2d(
                 getTargetAlignmentPose(), m_drivebaseS.getPose());
@@ -225,9 +238,6 @@ public class RobotContainer implements Logged{
             m_drivebaseS.manualDriveC(m_fwdXAxis, m_fwdYAxis, m_rotAxis)
         );
         // face downfield while Start is held
-        m_driverController.x().whileTrue(
-            m_drivebaseS.manualHeadingDriveC(m_fwdXAxis, m_fwdYAxis, ()->0)
-        );
         // Align, score, and stow.
         m_driverController.a().toggleOnTrue(
             sequence(
@@ -245,7 +255,7 @@ public class RobotContainer implements Logged{
         );
         // Score and stow.
         m_driverController.b().toggleOnTrue(m_armS.stowIndefiniteC());
-        m_driverController.back().onTrue(m_drivebaseS.xLockC());
+        m_driverController.back().and(DriverStation::isDisabled).onTrue(Commands.runOnce(m_armS::markWristHomed).ignoringDisable(true));
 
 
         m_driverController.rightBumper().toggleOnTrue(armIntakeCG(
@@ -259,20 +269,20 @@ public class RobotContainer implements Logged{
         m_driverController.leftBumper().toggleOnTrue(armIntakeCG(
             ArmPositions.FRONT_PLATFORM_CONE_UPRIGHT, false));
         m_driverController.leftTrigger().onTrue(armIntakeCG(ArmConstants.GROUND_CUBE_INTAKE_POSITION, true));
-        // m_driverController.leftTrigger().whileTrue(new ConditionalCommand(
-        //     m_drivebaseS.chasePoseC(()->POIManager.ownPOI(POIS.CUBE_RAMP)),
-        //     m_drivebaseS.chasePoseC(()->POIManager.ownPOI(POIS.CONE_RAMP)),
-        //     ()->isCubeSelected()));
+
+        m_driverController.x().whileTrue(m_drivebaseS.chasePickupC(()-> POIManager.ownPOI(AllianceWrapper.isRed() ? POIS.GRID_PLAT : POIS.WALL_PLAT)));
+        m_driverController.y().whileTrue(m_drivebaseS.chasePickupC(()-> POIManager.ownPOI(AllianceWrapper.isRed() ? POIS.WALL_PLAT : POIS.GRID_PLAT)));
+        // m_driverController.x().onTrue(armIntakeCG(
+        //     ArmPositions.FRONT_PLATFORM_CONE_UPRIGHT, false));
+        // m_driverController.y().onTrue(armIntakeCG(
+        //     ArmPositions.FRONT_PLATFORM_CONE_UPRIGHT, false));
 
         // Button on keypad for pulsing the intake in.
         m_keypad.action().onTrue(m_intakeS.intakeC(this::isCubeSelected).withTimeout(0.5));
         m_keypad.enter().toggleOnTrue(
             autoScoreSequenceCG()
         );
-        m_keypad.key(Button.kMidCenter).and(m_keypad.key(Button.kMidLeft)).whileTrue(driveAlignPlat(()-> AllianceWrapper.isRed() ? POIS.GRID_PLAT : POIS.WALL_PLAT));
-        m_keypad.key(Button.kMidCenter).and(m_keypad.key(Button.kMidRight)).whileTrue(driveAlignPlat(()-> AllianceWrapper.isRed() ? POIS.WALL_PLAT : POIS.GRID_PLAT));
-    
-        // D-pad driving slowly relative to alliance wall.
+        // D-pad driving slowly relative to intake direction.
         m_driverController.povCenter().negate().whileTrue(m_drivebaseS.run(()->{
                 double pov = Units.degreesToRadians(-m_driverController.getHID().getPOV());
                 if (m_armS.getArmPosition().pivotRadians > Math.PI) {
@@ -407,7 +417,7 @@ public class RobotContainer implements Logged{
                 -1, 1),
                 rot
             ));
-        }).alongWith(LightStripS.getInstance().stateC(()->States.Climbing));
+        });
     }
 
     //Autonomous Commands:

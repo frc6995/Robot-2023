@@ -221,6 +221,10 @@ public class ArmS extends SubsystemBase implements Logged {
         m_wrist.resetController();
     }
 
+    public void markWristHomed() {
+        m_wrist.endHome();
+    }
+
     /**
      * sets wrist angle in radians to target angle parameter (straight out relative to arm is 0)
      * @param targetAngle desired angle in radians relative to arm

@@ -1,8 +1,10 @@
 package frc.robot.subsystems;
 
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.pathplanner.lib.PathConstraints;
@@ -110,9 +112,11 @@ public class DrivebaseS extends SubsystemBase implements Logged {
     private final VisionWrapper m_visionWrapper;
 
     private Pose2d multitagPose = new Pose2d();
+    private final BiConsumer<String, PathPlannerTrajectory> drawTrajectory;
 
-    public DrivebaseS(Consumer<Runnable> addPeriodic) {
+    public DrivebaseS(Consumer<Runnable> addPeriodic, BiConsumer<String, PathPlannerTrajectory> drawTrajectory) {
         io = Robot.isReal() ? new RealSwerveDriveIO(addPeriodic) : new SimSwerveDriveIO(addPeriodic);
+        this.drawTrajectory = drawTrajectory;
         m_poseEstimator = new SwerveDrivePoseEstimator(
                 m_kinematics, getHeading(), getModulePositions(), new Pose2d(),
                 Constants.PoseEstimator.STATE_STANDARD_DEVIATIONS,
@@ -557,6 +561,93 @@ public class DrivebaseS extends SubsystemBase implements Logged {
         return new PathPlannerTrajectory();
     }
 
+    public static PathPlannerTrajectory generateTrajectoryToPickup(Pose2d robotPose, Pose2d target,
+            Translation2d currentSpeedVectorMPS, PathConstraints constraints) {
+        
+        int towardsPlatX = AllianceWrapper.isBlue() ? 1 : -1;
+        Pose2d midWaypoint = new Pose2d(target.getTranslation().plus(new Translation2d(0.3 * -towardsPlatX,0)), target.getRotation());
+        Pose2d backupWaypoint;
+        boolean useBackupWaypoint = Math.abs(robotPose.getX() - target.getX()) < 0.3;
+        // back away from one platform if we're at the other
+        if (useBackupWaypoint) {
+            backupWaypoint = 
+                new Pose2d(target.getX() - 0.3 * towardsPlatX, robotPose.getY(), robotPose.getRotation());
+        } else {
+            backupWaypoint = midWaypoint;
+        }
+        // get the 
+        // Robot velocity calculated from module states.
+        Rotation2d fieldRelativeTravelDirection = NomadMathUtil.getDirection(currentSpeedVectorMPS);
+        double travelSpeed = currentSpeedVectorMPS.getNorm();
+
+        Translation2d robotToTargetTranslation = target.getTranslation().minus(robotPose.getTranslation());
+        Translation2d robotToMidTranslation = midWaypoint.getTranslation().minus(robotPose.getTranslation());
+        Translation2d initialSegmentTranslation = backupWaypoint.getTranslation().minus(robotPose.getTranslation());
+        Translation2d approachToEndTranslation = target.getTranslation().minus(midWaypoint.getTranslation());
+        // Initial velocity override is the component of robot velocity along the
+        // robot-to-target vector.
+        // If the robot velocity is pointing away from the target, start at 0 velocity.
+        Rotation2d travelOffsetFromTarget = NomadMathUtil.getDirection(initialSegmentTranslation)
+                .minus(fieldRelativeTravelDirection);
+        travelSpeed = Math.max(0, travelSpeed * travelOffsetFromTarget.getCos());
+
+        PathPoint initialPoint = new PathPoint(
+            robotPose.getTranslation(),
+            NomadMathUtil.getDirection(initialSegmentTranslation),
+            robotPose.getRotation(),
+            travelSpeed);
+        PathPoint backupPoint = new PathPoint(
+            // Go through the backup waypoint
+            backupWaypoint.getTranslation(),
+            // 
+            NomadMathUtil.getDirection(initialSegmentTranslation),
+            backupWaypoint.getRotation());
+        PathPoint approachPoint = new PathPoint(
+            midWaypoint.getTranslation(),
+
+            NomadMathUtil.getDirection(approachToEndTranslation),
+            target.getRotation());
+        PathPoint endPoint = new PathPoint(
+            target.getTranslation(),
+            NomadMathUtil.getDirection(approachToEndTranslation),
+            target.getRotation());
+        // We only want to regenerate if the target is far enough away from the robot.
+        // PathPlanner has issues with near-zero-length paths and we need a particular
+        // tolerance for success anyway.
+        if (robotToTargetTranslation.getNorm() > 0.3) {
+            if (useBackupWaypoint) {
+                return PathPlanner.generatePath(
+                    constraints,
+                    // Start point. At the position of the robot, initial travel direction toward
+                    // the target,
+                    // robot rotation as the holonomic rotation, and putting in the (possibly 0)
+                    // velocity override.
+                    initialPoint, // position, heading
+                    // position, heading
+                    backupPoint, // position, heading
+                    approachPoint, // position, heading
+                    endPoint // position, heading
+            );
+            } else {
+                return PathPlanner.generatePath(
+                    constraints,
+                    // Start point. At the position of the robot, initial travel direction toward
+                    // the target,
+                    // robot rotation as the holonomic rotation, and putting in the (possibly 0)
+                    // velocity override.
+                    initialPoint, // position, heading
+                    // position, heading
+                    approachPoint, // position, heading
+                    endPoint // position, heading
+            );
+            }
+
+        }
+
+        return new PathPlannerTrajectory();
+    }
+
+
     /**
      * Creates a new pose-chase command.
      * This command generates and follows the target pose supplied by
@@ -575,9 +666,24 @@ public class DrivebaseS extends SubsystemBase implements Logged {
                 m_holonomicDriveController,
                 this::drive,
                 (PathPlannerTrajectory traj) -> {
+                    drawTrajectory.accept("align", traj);
                 }, // empty output for current trajectory.
                 (startPose, endPose) -> DrivebaseS.generateTrajectoryToPose(startPose, endPose,
                         getFieldRelativeLinearSpeedsMPS(), new PathConstraints(2, 2)),
+                this);
+    }
+
+    public Command chasePickupC(Supplier<Pose2d> targetSupplier) {
+        return new PPChasePoseCommand(
+                targetSupplier,
+                this::getPose,
+                m_holonomicDriveController,
+                this::drive,
+                (PathPlannerTrajectory traj) -> {
+                    drawTrajectory.accept("pickup", traj);
+                }, // empty output for current trajectory.
+                (startPose, endPose) -> DrivebaseS.generateTrajectoryToPickup(startPose, endPose,
+                        getFieldRelativeLinearSpeedsMPS(), new PathConstraints(3, 4)),
                 this);
     }
 

@@ -9,11 +9,6 @@
       "visible": true
     }
   },
-  "Keyboard 2 Settings": {
-    "window": {
-      "visible": true
-    }
-  },
   "keyboardJoysticks": [
     {
       "axisConfig": [
@@ -45,10 +40,10 @@
       "axisCount": 6,
       "buttonCount": 9,
       "buttonKeys": [
-        90,
-        88,
-        67,
-        86,
+        264,
+        262,
+        263,
+        265,
         66,
         78,
         77,
@@ -76,21 +71,16 @@
       "povCount": 0
     },
     {
-      "axisConfig": [
-        {
-          "incKey": 262
-        }
-      ],
       "axisCount": 2,
       "buttonCount": 14,
       "buttonKeys": [
         -1,
         -1,
         266,
-        264,
-        263,
         -1,
-        265,
+        -1,
+        -1,
+        -1,
         -1,
         -1,
         -1,

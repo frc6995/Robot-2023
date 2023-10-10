@@ -122,17 +122,12 @@ public abstract class ModuleIO implements Logged {
     }
     private void setState(){
         SwerveModuleState state = SwerveModuleState.optimize(m_desiredState,new Rotation2d(getAngle()));
+        
         state.speedMetersPerSecond *= Math.cos(state.angle.minus(new Rotation2d(getAngle())).getRadians());
         double prevVelSetpoint = m_driveSetpoint;
-        //if (m_moduleConstants.name.contains("F")) {state.speedMetersPerSecond = -state.speedMetersPerSecond;}
         m_driveSetpoint = state.speedMetersPerSecond;
         setDrivePid(state.speedMetersPerSecond, m_driveFeedForward.calculate(prevVelSetpoint, state.speedMetersPerSecond, 0.02));
-                // pidVolts+//m_drivePIDController.calculate(getDriveVelocity(), state.speedMetersPerSecond) +
-                //         m_driveFeedForward.calculate(prevVelSetpoint, state.speedMetersPerSecond, 0.02));
-        if (Math.abs(state.speedMetersPerSecond) < 0.01) {
-            setRotationVoltage(0);
-        } else {
-        
+
         double prevSteerGoal = m_steerGoal.position;
         m_steerGoal = new State(state.angle.getRadians(), 0);
                 // Get error which is the smallest distance between goal and measurement
@@ -157,11 +152,6 @@ public abstract class ModuleIO implements Logged {
         State m_nextSetpoint = profile.calculate(0.04);
 
         setRotationPid(m_steerSetpoint.position, m_steerFeedForward.calculate(m_steerSetpoint.velocity));//m_steerFeedForward.calculate(m_steerSetpoint.velocity, m_nextSetpoint.velocity, 0.02));
-        }
-        // double steerVolts = m_steerPIDController.calculate(getAngle(), m_steerSetpoint.position);
-        // setRotationVoltage(
-        //         steerVolts + m_steerFeedForward.calculate(m_steerSetpoint.velocity, m_nextSetpoint.velocity, 0.02)
-        // );
     }
 
     public void setDrivePid(double velocity, double ffVolts){

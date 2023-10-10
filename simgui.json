@@ -34,10 +34,19 @@
         }
       },
       "/Robot/m_field": {
+        "align": {
+          "arrows": false,
+          "style": "Line"
+        },
         "bottom": 544,
         "height": 8.013679504394531,
         "image": "C:\\Users\\jashu\\git\\Robot-2023\\resources\\2023-field.png",
         "left": 46,
+        "pickup": {
+          "arrowSize": 17,
+          "arrows": false,
+          "style": "Line"
+        },
         "right": 1088,
         "top": 36,
         "width": 16.541748046875,
@@ -163,6 +172,9 @@
             },
             "open": true
           },
+          "open": true
+        },
+        "m_field": {
           "open": true
         },
         "m_intakeS": {
