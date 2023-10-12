@@ -189,13 +189,15 @@ public class GoToPositionC extends CommandBase {
 
   public boolean isFinished() {
 
+    double extensionError = Units.inchesToMeters(0.5);
+    double pivotError = Units.degreesToRadians(3);
+    double wristError = Units.degreesToRadians(5);
     var actualPosition = m_armS.getArmPosition();
-    var atSetpoint = (Math.abs(m_targetPosition.armLength - actualPosition.armLength) < Units
-        .inchesToMeters(0.5)
-        && Math.abs(m_targetPosition.pivotRadians - actualPosition.pivotRadians) < Units.degreesToRadians(3)
+    var atSetpoint = (Math.abs(m_targetPosition.armLength - actualPosition.armLength) < extensionError
+        && Math.abs(m_targetPosition.pivotRadians - actualPosition.pivotRadians) < pivotError
         && Math.abs(
           constrainWrist(actualPosition.pivotRadians, m_targetPosition.wristRadians)
-         - actualPosition.wristRadians) < Units.degreesToRadians(5));
+         - actualPosition.wristRadians) < wristError);
     return atSetpoint;
   }
 

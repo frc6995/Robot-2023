@@ -32,7 +32,7 @@ public class RealModuleIO extends ModuleIO {
         m_steerMotor = new SparkMax(moduleConstants.rotationMotorID, MotorType.kBrushless);
         var magEncoder = m_steerMotor.getAbsoluteEncoder(Type.kDutyCycle);
         // Drive motor config
-        m_driveMotor.setSmartCurrentLimit(70);
+        m_driveMotor.setSmartCurrentLimit(50);
         m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 40);
         m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
         m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
@@ -56,6 +56,7 @@ public class RealModuleIO extends ModuleIO {
         m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
         m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
         m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
+        m_steerMotor.setSmartCurrentLimit(10);
         m_steerMotor.getEncoder().setPositionConversionFactor(2.0 * Math.PI * AZMTH_REVS_PER_ENC_REV);
         magEncoder.setPositionConversionFactor(Math.PI * 2);
         magEncoder.setVelocityConversionFactor(Math.PI * 2 * 60);
@@ -114,7 +115,7 @@ public class RealModuleIO extends ModuleIO {
 
     @Override
     public void reinitRotationEncoder() {
-        m_driveMotor.getEncoder().setPosition(getAngle());
+        m_steerMotor.getEncoder().setPosition(getAngle());
     }
     @Override
     public double getDriveVoltage() {

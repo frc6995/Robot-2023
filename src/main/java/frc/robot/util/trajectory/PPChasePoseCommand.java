@@ -120,11 +120,6 @@ public class PPChasePoseCommand extends CommandBase implements Logged {
             double curTime = m_timer.get();
             desiredState = (PathPlannerState) m_trajectory.sample(curTime);
             targetChassisSpeeds = m_controller.calculate(m_pose.get(), desiredState);
-
-            var alpha = ( 
-            ((PathPlannerState) m_trajectory.sample(curTime + 0.01)).holonomicAngularVelocityRadPerSec
-            - desiredState.holonomicAngularVelocityRadPerSec) / 0.01;
-
             //targetChassisSpeeds.alphaRadiansPerSecondSq = alpha;
         }
         // if the trajectory is empty, or the time is up, just use the holonomic drive controller to hold the pose.
@@ -144,7 +139,6 @@ public class PPChasePoseCommand extends CommandBase implements Logged {
             
     
             m_outputChassisSpeedsRobotRelative.accept(targetChassisSpeeds);
-        LightStripS.getInstance().requestState(States.Climbing);
     }
 
     @Override

@@ -118,7 +118,7 @@ public abstract class ExtendIO implements Logged {
 
     public void resetController() {
         m_extendController.reset();
-        m_setpoint = new State(getLength(), 0 );
+        m_setpoint = new State(getLength(), getVelocity() );
     }
     public void resetGoal() {
         m_goal = new State(getLength(), 0 );

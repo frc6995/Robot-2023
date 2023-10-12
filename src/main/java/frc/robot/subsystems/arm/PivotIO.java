@@ -78,7 +78,7 @@ public abstract class PivotIO implements Logged {
 
     public void resetController() {
         m_pivotController.reset();
-        m_setpoint = new State(getContinuousRangeAngle(), 0);
+        m_setpoint = new State(getContinuousRangeAngle(), getVelocity());
         
     }
     public void resetGoal() {
@@ -241,7 +241,7 @@ public abstract class PivotIO implements Logged {
                         + m_pivotFeedForward.calculate(
                                 VecBuilder.fill(0, m_setpoint.velocity),
                                 VecBuilder.fill(0, nextSetpoint.velocity))
-                                .get(0, 0) * 0.94);
+                                .get(0, 0) * 0.96);
     }
 
     public void setAngle(double targetAngle) {

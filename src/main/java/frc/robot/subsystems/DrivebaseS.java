@@ -86,9 +86,9 @@ public class DrivebaseS extends SubsystemBase implements Logged {
     /**
      * The X controller used for autonomous movement.
      */
-    public final PIDController m_xController = new PIDController(3, 0, 0);
-    public final PIDController m_yController = new PIDController(3, 0, 0);
-    public final PIDController m_thetaController = new PIDController(3, 0, 0);
+    public final PIDController m_xController = new PIDController(8, 0, 0.0);
+    public final PIDController m_yController = new PIDController(8, 0, 0.0);
+    public final PIDController m_thetaController = new PIDController(4, 0, 0);
     // constraints determined from OperatorControlC slew settings.
     // TODO replace this with a TrapezoidProfile delegating to m_thetaController?
     public final ProfiledPIDController m_profiledThetaController = new ProfiledPIDController(3, 0, 0,
@@ -563,15 +563,15 @@ public class DrivebaseS extends SubsystemBase implements Logged {
 
     public static PathPlannerTrajectory generateTrajectoryToPickup(Pose2d robotPose, Pose2d target,
             Translation2d currentSpeedVectorMPS, PathConstraints constraints) {
-        
+        double backupDistance = 0.2;
         int towardsPlatX = AllianceWrapper.isBlue() ? 1 : -1;
-        Pose2d midWaypoint = new Pose2d(target.getTranslation().plus(new Translation2d(0.3 * -towardsPlatX,0)), target.getRotation());
+        Pose2d midWaypoint = new Pose2d(target.getTranslation().plus(new Translation2d(backupDistance * -towardsPlatX,0)), target.getRotation());
         Pose2d backupWaypoint;
-        boolean useBackupWaypoint = Math.abs(robotPose.getX() - target.getX()) < 0.3;
+        boolean useBackupWaypoint = Math.abs(robotPose.getX() - target.getX()) < backupDistance;
         // back away from one platform if we're at the other
         if (useBackupWaypoint) {
             backupWaypoint = 
-                new Pose2d(target.getX() - 0.3 * towardsPlatX, robotPose.getY(), robotPose.getRotation());
+                new Pose2d(target.getX() - backupDistance * towardsPlatX, robotPose.getY(), robotPose.getRotation());
         } else {
             backupWaypoint = midWaypoint;
         }
@@ -601,12 +601,13 @@ public class DrivebaseS extends SubsystemBase implements Logged {
             backupWaypoint.getTranslation(),
             // 
             NomadMathUtil.getDirection(initialSegmentTranslation),
-            backupWaypoint.getRotation());
+            backupWaypoint.getRotation()
+            );
         PathPoint approachPoint = new PathPoint(
             midWaypoint.getTranslation(),
 
             NomadMathUtil.getDirection(approachToEndTranslation),
-            target.getRotation());
+            target.getRotation(), 0.5);
         PathPoint endPoint = new PathPoint(
             target.getTranslation(),
             NomadMathUtil.getDirection(approachToEndTranslation),
@@ -614,7 +615,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
         // We only want to regenerate if the target is far enough away from the robot.
         // PathPlanner has issues with near-zero-length paths and we need a particular
         // tolerance for success anyway.
-        if (robotToTargetTranslation.getNorm() > 0.3) {
+        if (robotToTargetTranslation.getNorm() > backupDistance) {
             if (useBackupWaypoint) {
                 return PathPlanner.generatePath(
                     constraints,
@@ -670,7 +671,8 @@ public class DrivebaseS extends SubsystemBase implements Logged {
                 }, // empty output for current trajectory.
                 (startPose, endPose) -> DrivebaseS.generateTrajectoryToPose(startPose, endPose,
                         getFieldRelativeLinearSpeedsMPS(), new PathConstraints(2, 2)),
-                this);
+                this)
+            .alongWith(LightStripS.getInstance().stateC(()->States.Climbing));
     }
 
     public Command chasePickupC(Supplier<Pose2d> targetSupplier) {
@@ -683,7 +685,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
                     drawTrajectory.accept("pickup", traj);
                 }, // empty output for current trajectory.
                 (startPose, endPose) -> DrivebaseS.generateTrajectoryToPickup(startPose, endPose,
-                        getFieldRelativeLinearSpeedsMPS(), new PathConstraints(3, 4)),
+                        getFieldRelativeLinearSpeedsMPS(), new PathConstraints(3, 1.5)),
                 this);
     }
 

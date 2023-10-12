@@ -44,7 +44,7 @@ public class Constants {
         static public final double MAX_TRANSLATE_ACCEL_MPS2 = MAX_FWD_REV_SPEED_MPS/0.125; //0-full time of 0.25 second
         static public final double MAX_ROTATE_ACCEL_RAD_PER_SEC_2 = MAX_ROTATE_SPEED_RAD_PER_SEC/0.25; //0-full time of 0.25 second
         static public final double MAX_LINEAR_SPEED = Units.feetToMeters(11);
-        static public final double MAX_TURN_SPEED = Units.degreesToRadians(360);
+        static public final double MAX_TURN_SPEED = Units.degreesToRadians(300);
     // HELPER ORGANIZATION CONSTANTS
         static public final int FL = 0; // Front Left Module Index
         static public final int FR = 1; // Front Right Module Index
@@ -379,7 +379,7 @@ public class Constants {
                 3.07, MIN_ARM_LENGTH, 1.08);
 
             public static final ArmPosition FRONT_UP_FLOOR = new ArmPosition(
-                0, STOW.armLength, -0.8);
+                -0.02, STOW.armLength, -0.8);
         }
 
         public static final ArmPosition SCORE_HIGH_CONE_POSITION = new ArmPosition(
@@ -394,6 +394,14 @@ public class Constants {
             0.775,
             0.900,
             -1.155);
+        public static final ArmPosition SCORE_MID_CONE_RETRACTED_POSITION = new ArmPosition(
+            SCORE_MID_CONE_POSITION.pivotRadians,
+            0.58,
+            SCORE_MID_CONE_POSITION.wristRadians);
+        public static final ArmPosition SCORE_HIGH_CONE_RETRACTED_POSITION = new ArmPosition(
+            SCORE_HIGH_CONE_POSITION.pivotRadians,
+            0.58,
+            SCORE_HIGH_CONE_POSITION.wristRadians);
         public static final ArmPosition SCORE_MID_CUBE_POSITION = new ArmPosition(
             0.72,
             0.58,

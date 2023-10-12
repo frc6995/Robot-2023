@@ -96,7 +96,7 @@ public abstract class WristIO implements Logged {
     public void resetController() {
         m_wristController.reset();
         double angle = getAngle();
-        m_setpoint = new State(angle, 0);
+        m_setpoint = new State(angle, getVelocity());
     }
 
     public void resetGoal() {

@@ -96,7 +96,7 @@ public class ArmS extends SubsystemBase implements Logged {
             m_extender = new OffboardExtendIO(addPeriodic);
             Timer.delay(0.1);
             m_pivot = new RealPivotIO(addPeriodic, hasCone);
-            Timer.delay(0.1);
+            Timer.delay(0.2);
             m_wrist = new JITBWristIO(addPeriodic, hasCone);
         }
         else {

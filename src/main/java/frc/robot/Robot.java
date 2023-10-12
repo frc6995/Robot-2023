@@ -30,7 +30,7 @@ public class Robot extends TimedRobot {
 
         LiveWindow.disableAllTelemetry();
         robotContainer = new RobotContainer((fn)->this.addPeriodic(fn, kDefaultPeriod));
-
+        
         addPeriodic(()->{
             AllianceWrapper.setAlliance(DriverStation.getAlliance());
         }, 0.5);
@@ -43,6 +43,7 @@ public class Robot extends TimedRobot {
         AutoLog.updateDataLog();
         if (!DriverStation.isFMSAttached()) {
             AutoLog.updateNT();
+            NetworkTableInstance.getDefault().flush();
         }
         CommandScheduler.getInstance().run();
         robotContainer.periodic();

@@ -124,6 +124,7 @@ public class RobotContainer implements Logged{
      * Trigger that determines whether the drivebase is close enough to its target pose to score a cube.
      */
     private Trigger m_alignSafeToPlace;
+    private Trigger m_alignSafeToPremove;
     private boolean m_setupDone = false;
     
     @BothLog
@@ -160,6 +161,21 @@ public class RobotContainer implements Logged{
                 Math.abs(error.getRotation().getRadians()) < Units.degreesToRadians(2) &&
                 Math.abs(error.getX()) < 0.02 &&
                 Math.abs(error.getY()) < Units.inchesToMeters(1);
+            }
+        });
+        m_alignSafeToPremove = new Trigger(()->{
+            Transform2d error = new Transform2d(
+                getTargetAlignmentPose(), m_drivebaseS.getPose());
+            if (isCubeSelected()) {
+                return
+                Math.abs(error.getRotation().getRadians()) < Units.degreesToRadians(10) &&
+                Math.abs(error.getX()) < 0.5 &&
+                Math.abs(error.getY()) < 0.5;
+            } else {
+                return
+                Math.abs(error.getRotation().getRadians()) < Units.degreesToRadians(10) &&
+                Math.abs(error.getX()) < 0.5 &&
+                Math.abs(error.getY()) < 0.5;
             }
         });
     
@@ -210,6 +226,24 @@ public class RobotContainer implements Logged{
             }
         }
     }
+    private ArmPosition getPrescoreArmPosition() {
+        double node = selectionEntry.get(0);
+        if (node <= 8) {
+            return ArmConstants.SCORE_HYBRID_POSITION;
+        } else if (node <= 17) { // mid
+            if (node % 3 == 1) {//cube
+                return ArmConstants.SCORE_MID_CUBE_POSITION;
+            } else {
+                return ArmConstants.SCORE_MID_CONE_RETRACTED_POSITION;
+            }
+        } else { // high
+            if (node % 3 == 1) {//cube
+                return ArmConstants.SCORE_MID_CUBE_POSITION;
+            } else {
+                return ArmConstants.SCORE_HIGH_CONE_RETRACTED_POSITION;
+            }
+        }
+    }
     private boolean isCubeSelected() {
         double node = selectionEntry.get(0);
         return (node <= 8) || (node > 8 && node % 3 == 1);
@@ -243,11 +277,14 @@ public class RobotContainer implements Logged{
             sequence(
                 deadline(
                     sequence(
-                        waitUntil(m_alignSafeToPlace),
+                        sequence(
+                            waitUntil(m_alignSafeToPremove),
+                            m_armS.goToPositionC(this::getPrescoreArmPosition),
+                            waitUntil(m_alignSafeToPlace)
+                        ).until(m_alignSafeToPlace),
                         m_armS.goToPositionC(this::getTargetArmPosition)
                     ),
                     alignToSelectedScoring().asProxy()
-
                 ),
                 m_intakeS.outtakeC(this::isCubeSelected).withTimeout(0.4),
                 m_armS.stowC() 
@@ -267,7 +304,7 @@ public class RobotContainer implements Logged{
             false));
             
         m_driverController.leftBumper().toggleOnTrue(armIntakeCG(
-            ArmPositions.FRONT_PLATFORM_CONE_UPRIGHT, false));
+            ArmPositions.FRONT_PLATFORM_CONE_UPRIGHT, new ArmPosition(ArmPositions.FRONT_PLATFORM_CONE_UPRIGHT.pivotRadians, ArmPositions.FRONT_PLATFORM_CONE_UPRIGHT.armLength, Units.degreesToRadians(-40)), false));
         m_driverController.leftTrigger().onTrue(armIntakeCG(ArmConstants.GROUND_CUBE_INTAKE_POSITION, true));
 
         m_driverController.x().whileTrue(m_drivebaseS.chasePickupC(()-> POIManager.ownPOI(AllianceWrapper.isRed() ? POIS.GRID_PLAT : POIS.WALL_PLAT)));
@@ -282,6 +319,7 @@ public class RobotContainer implements Logged{
         m_keypad.enter().toggleOnTrue(
             autoScoreSequenceCG()
         );
+
         // D-pad driving slowly relative to intake direction.
         m_driverController.povCenter().negate().whileTrue(m_drivebaseS.run(()->{
                 double pov = Units.degreesToRadians(-m_driverController.getHID().getPOV());
@@ -303,6 +341,8 @@ public class RobotContainer implements Logged{
         m_autoSelector.setDefaultOption("Do Nothing", Commands.none());
         m_autoSelector.addOption("3pc HP", highConeHighCubeHPSide().andThen(midCubeHPAddon()));
         m_autoSelector.addOption("3pc Bump", highConeHighCubeBumpSide().andThen(midCubeBumpAddon()));
+        m_autoSelector.addOption("2.5pc Bump Climb", highConeHighCubeBumpSide().andThen(cubePickupClimbBumpAddon()));
+
         m_autoSelector.addOption("BumpSide 1 Cone Bal", eighteenPointAuto(3));
         m_autoSelector.addOption("HP Side 1 Cone Bal", eighteenPointAuto(5));
     }
@@ -368,7 +408,7 @@ public class RobotContainer implements Logged{
         Commands.sequence(
             // Start intaking, and stop when a piece is detected.\
             Commands.deadline(
-                m_intakeS.intakeUntilBeamBreakC(isCube).andThen(m_intakeS.intakeC(()->isCube).withTimeout(0.2)).asProxy(),
+                Commands.waitSeconds(0.3).andThen(m_intakeS.intakeUntilBeamBreakC(isCube)).andThen(m_intakeS.intakeC(()->isCube).withTimeout(0.2)).asProxy(),
                 // move to arm position while intaking.
                 m_armS.goToPositionIndefiniteC(position)
 
@@ -616,6 +656,22 @@ public class RobotContainer implements Logged{
             // extend, score
             m_intakeS.run(()->m_intakeS.outtakeCube(12)).withTimeout(0.4)
          );
+    }
+
+    public Command cubePickupClimbBumpAddon() {
+        var pathGroup = PathPlanner.loadPathGroup("High Cone High Cube Bump",
+        new PathConstraints(2, 2),
+        new PathConstraints(4, 2.5));
+        return deadline(
+            m_drivebaseS.pathPlannerCommand(pathGroup.get(4)),
+            m_intakeS.intakeC(()->true).until(m_intakeS::acquiredCube),
+            m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION)
+        ).andThen(
+            parallel(
+                m_drivebaseS.chargeStationAlignC(),
+                m_armS.goToPositionC(ArmPositions.CUBE_STOW)
+            )
+        );
     }
 
     // public Command overBackAuto(int blueColumn) {
