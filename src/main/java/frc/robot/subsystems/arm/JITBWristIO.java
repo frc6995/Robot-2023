@@ -44,7 +44,7 @@ public class JITBWristIO extends WristIO {
         m_wristMotor.getEncoder().setPositionConversionFactor(2 * Math.PI * WRIST_ROTATIONS_PER_MOTOR_ROTATION);
         m_wristMotor.getEncoder().setVelocityConversionFactor(2 * Math.PI * WRIST_ROTATIONS_PER_MOTOR_ROTATION/ (60));
         m_encoder = new SparkMaxEncoderWrapper(m_wristMotor);
-        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 25);
+        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 45);
         m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 20);
         m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 20);
         m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);

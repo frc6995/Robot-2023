@@ -39,7 +39,7 @@
 <main style="width:100vw; aspect-ratio: 16 / 9; overflow:hidden; box-sizing:border-box">
 <GridLayout columns={9}>
 <GridItem x={1} y={1} width={9} height={3}>
-    <ScoringGrid selection={$selection} selectCallback={selection} conesScored={[]} cubesScored={[]}></ScoringGrid>
+    <ScoringGrid selection={$selection} selectCallback={()=>{}} conesScored={[]} cubesScored={[]}></ScoringGrid>
 </GridItem>
 <GridItem x={6} y={4} width={4} height={2}>
     <TimerWidget value={$time} name={""} max={$max}></TimerWidget>

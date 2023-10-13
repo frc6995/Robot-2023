@@ -56,7 +56,7 @@ public class LightStripS {
    */
   public static enum States {
     ArmAdjust(setColor(0, 0, 255)),
-    SetupDone(setColor(0, 255, 0)), // set in robotPeriodic
+    SetupDone(setColor(0, 128, 0)), // set in robotPeriodic
     Disabled(setColor(255, 0, 0)), // set in robotPeriodic
     Error(pulse(0.25, setColor(255, 0, 0))),
     Climbing((ledBuffer, persistentState) -> {

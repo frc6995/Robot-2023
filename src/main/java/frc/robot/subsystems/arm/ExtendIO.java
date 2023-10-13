@@ -93,8 +93,9 @@ public abstract class ExtendIO implements Logged {
     }
     private void runPID() {
         var profile = new TrapezoidProfile(m_constraints, m_goal, m_setpoint);
-        m_setpoint = profile.calculate(TimingTracer.getLoopTime());
-        State nextSetpoint = profile.calculate(getPeriod() * 2.0);
+        m_setpoint = profile.calculate(0.02);
+        State nextSetpoint = profile.calculate(0.04);
+        
         setPIDFF(m_setpoint.position, 
             // m_extendController.calculate(
             //     VecBuilder.fill(getLength(), 0),
@@ -108,8 +109,8 @@ public abstract class ExtendIO implements Logged {
     }
 
     protected void setPIDFF(double length, double ffVolts) {
-        setVolts(
-            m_extendController.calculate(getLength(), length) + ffVolts);
+        // setVolts(
+        //     m_extendController.calculate(getLength(), length) + ffVolts);
     }
 
     public double getPeriod() {

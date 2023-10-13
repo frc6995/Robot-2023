@@ -28,6 +28,11 @@
       "/SmartDashboard/SendableChooser[0]": "String Chooser"
     },
     "windows": {
+      "/DriverDisplay/field": {
+        "window": {
+          "visible": true
+        }
+      },
       "/Robot/m_armS/MECH_VISUALIZER": {
         "window": {
           "visible": true

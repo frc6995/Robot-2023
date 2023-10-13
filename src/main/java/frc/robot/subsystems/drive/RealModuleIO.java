@@ -1,6 +1,7 @@
 package frc.robot.subsystems.drive;
 
 import com.revrobotics.AbsoluteEncoder;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
@@ -26,6 +27,7 @@ public class RealModuleIO extends ModuleIO {
     protected double m_steerAngle = 0;
     protected double m_steerVolts = 0;
     protected double m_driveVolts = 0;
+    protected RelativeEncoder m_driveEncoder;
     public RealModuleIO( Consumer<Runnable> addPeriodic, ModuleConstants moduleConstants) {
         super(addPeriodic, moduleConstants);
         m_driveMotor = new SparkMax(moduleConstants.driveMotorID, MotorType.kBrushless);
@@ -39,11 +41,12 @@ public class RealModuleIO extends ModuleIO {
         var error = m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
         m_driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
         System.out.println("drive config " + m_moduleConstants.driveMotorID + error.toString());
-        m_driveMotor.getEncoder().setPositionConversionFactor(
+        m_driveEncoder = m_driveMotor.getEncoder();
+        m_driveEncoder.setPositionConversionFactor(
                 Math.PI * (WHEEL_RADIUS_M * 2) // meters/ wheel rev
                         / WHEEL_ENC_COUNTS_PER_WHEEL_REV // 1/ (enc revs / wheel rev) = wheel rev/enc rev
         );
-        m_driveMotor.getEncoder().setVelocityConversionFactor(
+        m_driveEncoder.setVelocityConversionFactor(
                 (WHEEL_RADIUS_M * 2) * Math.PI / 60 / WHEEL_ENC_COUNTS_PER_WHEEL_REV);
 
         m_driveMotor.setIdleMode(IdleMode.kBrake);
@@ -56,7 +59,7 @@ public class RealModuleIO extends ModuleIO {
         m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
         m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 20);
         m_steerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
-        m_steerMotor.setSmartCurrentLimit(10);
+        m_steerMotor.setSmartCurrentLimit(40);
         m_steerMotor.getEncoder().setPositionConversionFactor(2.0 * Math.PI * AZMTH_REVS_PER_ENC_REV);
         magEncoder.setPositionConversionFactor(Math.PI * 2);
         magEncoder.setVelocityConversionFactor(Math.PI * 2 * 60);
@@ -69,8 +72,8 @@ public class RealModuleIO extends ModuleIO {
     public void updateEncoders() {
         m_driveVolts = m_driveMotor.getAppliedOutput() * 12;
         m_steerVolts = m_steerMotor.getAppliedOutput() * 12;
-        m_driveDistance = m_driveMotor.getEncoder().getPosition();
-        m_driveVelocity = m_driveMotor.getEncoder().getVelocity();
+        m_driveDistance = m_driveEncoder.getPosition();
+        m_driveVelocity = m_driveEncoder.getVelocity();
         m_steerAngle = MathUtil.angleModulus(m_magEncoder.getPosition());
     }
     @Override
@@ -106,7 +109,7 @@ public class RealModuleIO extends ModuleIO {
     @Override
     public double getRelativeAngle() {
         // TODO Auto-generated method stub
-        return 0;
+        return 0;//m_steerMotor.getEncoder().getPosition();
     }
     @Override
     public void resetDistance() {
@@ -127,6 +130,10 @@ public class RealModuleIO extends ModuleIO {
     }
     @Override
     public double getDriveCurrent() {
+        return m_driveMotor.getOutputCurrent();
+    }
+    @Override
+    public double getSteerCurrent() {
         return m_driveMotor.getOutputCurrent();
     }
 

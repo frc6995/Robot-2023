@@ -76,9 +76,5 @@ public class SimSwerveDriveIO extends SwerveDriveIO {
     public Pose2d getSimPose() {
         return m_quadSwerveSim.getCurPose();
     }
-    @BothLog
-    public double number() {
-        return 0;
-    }
 
 }

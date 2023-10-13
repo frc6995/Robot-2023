@@ -18,6 +18,8 @@
             clearInterval(interval);
         };
     });
+    let controller1 = NT.NTBoolean(true, "/DriverDisplay/controller1");
+    let controller2 = NT.NTBoolean(true, "/DriverDisplay/controller2");
 
     let robotPose = NT.NTDoubleArray([0,0,0], "/DriverDisplay/field/Robot")
     let targetPose = NT.NTDoubleArray([0,0,0], "/DriverDisplay/field/target")
@@ -28,7 +30,7 @@
             };
     let setIsRealRobot = (isReal)=>{
         NT.setIP(isReal ? "10.69.95.2": "localhost");
-        cameraIP = `http://${isReal ? "10.69.95.11:1181" : "localhost:1181"}/stream.mjpg`
+        cameraIP = `http://${isReal ? "10.69.95.11:1185" : "localhost:1181"}/stream.mjpg`
     }
     setIsRealRobot(true);
 </script>
@@ -63,8 +65,14 @@
 
     </frc-field>
 </GridItem>
-<GridItem x={7} y={0} width={1} height={1}>
+<GridItem x={7} y={1} width={1} height={1}>
     <BooleanBox value={$ntConnected} label="Connection"></BooleanBox>
+</GridItem>
+<GridItem x={7} y={2} width={1} height={1}>
+    <BooleanBox value={$controller1} label="Xbox"></BooleanBox>
+</GridItem>
+<GridItem x={7} y={3} width={1} height={1}>
+    <BooleanBox value={$controller2} label="Keypad"></BooleanBox>
 </GridItem>
 
 </div></main>

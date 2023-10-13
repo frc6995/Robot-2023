@@ -43,7 +43,7 @@ public class Constants {
         static public final double MAX_ROTATE_SPEED_RAD_PER_SEC = Units.degreesToRadians(720.0);
         static public final double MAX_TRANSLATE_ACCEL_MPS2 = MAX_FWD_REV_SPEED_MPS/0.125; //0-full time of 0.25 second
         static public final double MAX_ROTATE_ACCEL_RAD_PER_SEC_2 = MAX_ROTATE_SPEED_RAD_PER_SEC/0.25; //0-full time of 0.25 second
-        static public final double MAX_LINEAR_SPEED = Units.feetToMeters(11);
+        static public final double MAX_LINEAR_SPEED = Units.feetToMeters(16);
         static public final double MAX_TURN_SPEED = Units.degreesToRadians(300);
     // HELPER ORGANIZATION CONSTANTS
         static public final int FL = 0; // Front Left Module Index
@@ -57,10 +57,10 @@ public class Constants {
         static private double HW = WHEEL_BASE_WIDTH_M/2.0;
 
         public enum ModuleConstants {
-            FL("FL", 18, 17, 6, 5.651346 + 0.005 + 0.01, HW, HW),
-            FR("FR", 12, 11, 7, 3.762759 - 0.003 + 0.002 + 0.01, HW, -HW),
-            BL("BL", 16, 15, 8, 1.823007 + 0.01 + 0.001 - 0.03, -HW, HW),
-            BR("BR", 14, 13, 9, 5.614791 - 0.008 - 0.04 - 0.03 + 0.11, -HW, -HW);
+            FL("FL", 18, 17, 6, 5.651346 + 0.005 + 0.01 - 0.03 + 0.025, HW, HW),
+            FR("FR", 12, 11, 7, 3.762759 - 0.003 + 0.002 + 0.01 + 0.025 - 0.002, HW, -HW),
+            BL("BL", 16, 15, 8, 1.823007 + 0.01 + 0.001 - 0.03 - 0.011 -0.003, -HW, HW),
+            BR("BR", 14, 13, 9, 5.614791 - 0.008 - 0.04 - 0.03 + 0.11-0.005 - 0.011, -HW, -HW);
     
             public final String name;
             public final int driveMotorID;
@@ -361,11 +361,8 @@ public class Constants {
                 MIN_ARM_LENGTH,
                 WRIST_MIN_ANGLE
             );
-            public static final ArmPosition PRESTOW = STOW;
-            public static final ArmPosition FRONT_PLATFORM_TIPPED = new ArmPosition(
-                2.368, MIN_ARM_LENGTH + Units.inchesToMeters(3),  0.31);
             public static final ArmPosition FRONT_PLATFORM_CONE_UPRIGHT = new ArmPosition(
-                1.227, 0.97 , -2.02
+                1.227, 0.985 , -2.02
             );
             public static final ArmPosition BACK_TIPPED_FLOOR = new ArmPosition(
                 3.63,
@@ -375,17 +372,16 @@ public class Constants {
                 STOW.pivotRadians,
                 STOW.armLength,
                 0.083);
-            public static final ArmPosition BACK_UP_FLOOR = new ArmPosition(
-                3.07, MIN_ARM_LENGTH, 1.08);
+
 
             public static final ArmPosition FRONT_UP_FLOOR = new ArmPosition(
                 -0.02, STOW.armLength, -0.8);
         }
 
         public static final ArmPosition SCORE_HIGH_CONE_POSITION = new ArmPosition(
-            0.718,
-            1.417 - Units. inchesToMeters(2) ,
-            -1.03);
+            0.72,
+            1.447 ,
+            -1.14);
         public static final ArmPosition SCORE_HIGH_CUBE_POSITION = new ArmPosition(
             0.65,
             1.07,
@@ -406,59 +402,16 @@ public class Constants {
             0.72,
             0.58,
             -1.79);
-        public static final ArmPosition RETRACTED_SCORE_CONE_POSITION = new ArmPosition(
-            0.658,
-            0.628,
-            0);
         public static final ArmPosition STOW_POSITION = ArmPositions.STOW;
         public static final ArmPosition GROUND_CUBE_INTAKE_POSITION = new ArmPosition(
             3.61,
             STOW_POSITION.armLength,
             -0.663);
-        public static final ArmPosition GROUND_CONE_INTAKE_POSITION = new ArmPosition(
-            -0.42,
-            0.611,
-            WRIST_MAX_ANGLE - Units.degreesToRadians(8));
-        public static final ArmPosition RAMP_CONE_INTAKE_POSITION = new ArmPosition(
-            2.682,
-            0.509,
-            Units.degreesToRadians(71.127)
-        );
-
-        public static final ArmPosition RAMP_CUBE_INTAKE_POSITION = new ArmPosition(
-            2.768,
-            0.516,
-            Units.degreesToRadians(37.755)
-        );
-        public static final ArmPosition RAMP_CUBE_INTAKE_POSITION_FRONT = new ArmPosition(
+        public static final ArmPosition CLIMBING_POSITION = new ArmPosition(
             0.3 - Units.degreesToRadians(3),
             MIN_ARM_LENGTH + Units.inchesToMeters(0.125),
             WRIST_MAX_ANGLE - Units.degreesToRadians(1)
         );
-
-        public static final ArmPosition PLATFORM_CONE_INTAKE_POSITION = ArmPositions.FRONT_PLATFORM_TIPPED;
-        
-        public static final ArmPosition PLATFORM_CUBE_INTAKE_POSITION = new ArmPosition(
-            1.130,
-            0.764,
-            MathUtil.angleModulus(Units.degreesToRadians(339.446))
-        );
-        public static final ArmPosition OVERTOP_CONE_INTAKE_POSITION = new ArmPosition(
-            3.51,
-            0.628,
-            1.400
-        );
-        public static final ArmPosition OVERTOP_CUBE_INTAKE_POSITION = new ArmPosition(
-            3.3,
-            0.628,
-            1.5
-        );
-        // public static final ArmPosition HYBRID_NODE_OUTTAKE_POSITION = new ArmPosition(
-        //     Units.degreesToRadians(66),
-        //     MIN_ARM_LENGTH + Units.inchesToMeters(0.125),
-        //     Units.degreesToRadians(-15),
-        //     Units.inchesToMeters(9.4));
-
         public static final ArmPosition SCORE_HYBRID_POSITION = ArmPositions.CUBE_STOW;
 
         

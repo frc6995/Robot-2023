@@ -25,6 +25,7 @@ public class CommandOperatorKeypad {
     private GenericHID m_hid;
 
     private IntegerPublisher selectionEntry = NetworkTableInstance.getDefault().getIntegerTopic("/DriverDisplay/selection").publish();    
+    private int selection = 0;
     public enum Button {
         kLeftGrid(1),
         kCenterGrid(2),
@@ -122,6 +123,11 @@ public class CommandOperatorKeypad {
     private Command setpointCommand(int selectionNumber) {
         return new InstantCommand(()->{
             selectionEntry.set(selectionNumber);
+            selection = selectionNumber;
         }).ignoringDisable(true);
+    }
+
+    public int get() {
+        return selection;
     }
 }

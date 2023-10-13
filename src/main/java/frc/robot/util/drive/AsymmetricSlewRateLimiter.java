@@ -73,19 +73,19 @@ public class AsymmetricSlewRateLimiter {
     double elapsedTime = currentTime - m_prevTime;
     double distanceToCover = input - m_prevVal;
     // if decreasing while still positive, or increasing while still negative
-    if (Math.signum(m_prevVal) == -Math.signum(distanceToCover) || true) {
+    if (Math.signum(m_prevVal) == -Math.signum(distanceToCover)) {
         m_prevVal +=
         MathUtil.clamp(
             input - m_prevVal,
-            -m_negativeMagnitudeRateLimit * elapsedTime,
-            m_positiveMagnitudeRateLimit * elapsedTime);
+            -Math.abs(m_negativeMagnitudeRateLimit) * elapsedTime,
+            Math.abs(m_negativeMagnitudeRateLimit) * elapsedTime);
     }
     else {
         m_prevVal +=
         MathUtil.clamp(
             input - m_prevVal,
-            -m_positiveMagnitudeRateLimit * elapsedTime,
-            m_positiveMagnitudeRateLimit * elapsedTime);
+            -Math.abs(m_positiveMagnitudeRateLimit) * elapsedTime,
+            Math.abs(m_positiveMagnitudeRateLimit) * elapsedTime);
     }
 
     m_prevTime = currentTime;

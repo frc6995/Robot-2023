@@ -75,7 +75,6 @@ import io.github.oblarg.oblog.annotations.Log;
 
 public class ArmS extends SubsystemBase implements Logged {
     
-    @BothLog
     public final Field2d VISUALIZER = new Field2d();
 
     private ExtendIO m_extender;
@@ -124,14 +123,7 @@ public class ArmS extends SubsystemBase implements Logged {
             SCORE_HIGH_CONE_POSITION.asPose(),
             SCORE_MID_CONE_POSITION.asPose(),
             STOW_POSITION.asPose(),
-            GROUND_CUBE_INTAKE_POSITION.asPose(),
-            GROUND_CONE_INTAKE_POSITION.asPose(),
-            RAMP_CONE_INTAKE_POSITION.asPose(),
-            RAMP_CUBE_INTAKE_POSITION.asPose(),
-            PLATFORM_CONE_INTAKE_POSITION.asPose(),
-            OVERTOP_CONE_INTAKE_POSITION.asPose()
-
-
+            GROUND_CUBE_INTAKE_POSITION.asPose()
         );
         //setDefaultCommand(followJointSpaceTargetC());
     }

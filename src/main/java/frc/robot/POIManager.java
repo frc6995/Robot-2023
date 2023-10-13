@@ -19,8 +19,8 @@ public class POIManager {
     public enum POIS {
         CUBE_RAMP (POIManager.mirrorPose(new Pose2d(2.056, 7.484, Rotation2d.fromDegrees(90)))),
         CONE_RAMP (new Pose2d(14.511, 7.296, Rotation2d.fromDegrees(90))),
-        GRID_PLAT (new Pose2d(15.750, 6.05, new Rotation2d())),
-        WALL_PLAT (new Pose2d(15.750, 7.419, new Rotation2d())),
+        GRID_PLAT (new Pose2d(15.81, 6.05, new Rotation2d())),
+        WALL_PLAT (new Pose2d(15.81, 7.419, new Rotation2d())),
         CHARGE_STATION(new Pose2d(3.9, 2.74, Rotation2d.fromDegrees(180)),
             POIManager.mirrorPose(new Pose2d(3.9, 2.74, Rotation2d.fromDegrees(180)))),
         CHARGE_STATION_OVER(new Pose2d(5.81, 2.74, Rotation2d.fromDegrees(180)));

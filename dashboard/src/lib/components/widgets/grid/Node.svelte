@@ -11,8 +11,8 @@
     }
     function mapNumber(id) {
         let column = 8-(id % 9);
-        let row = Math.floor(id/9) + 1;
-        return row + column*3;
+        let row = Math.floor(id/9);
+        return row * 9 + column + 1;
     }
     $: num = mapNumber(id)
 </script>

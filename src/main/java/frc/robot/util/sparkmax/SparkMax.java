@@ -88,23 +88,22 @@ public class SparkMax extends CANSparkMax {
 
 		// Always start fresh and apply settings in code for each device
 		// Add delay to avoid any possible timing issues.
-		restoreFactoryDefaults();
 		Timer.delay(0.050);
 
 		// If a parameter set fails, this will add more time to alleviate any bus
 		// traffic
 		// default is 20ms
-		setCANTimeout(50);
+		setCANTimeout(0);
 		m_mutatorChain = new ArrayList<>();
-		withSettings(
-			SparkMaxInitializers.statusFramePeriod(PeriodicFrame.kStatus0, FrameRate.Fast.period),
-			SparkMaxInitializers.statusFramePeriod(PeriodicFrame.kStatus1, FrameRate.Off.period),
-			SparkMaxInitializers.statusFramePeriod(PeriodicFrame.kStatus2, FrameRate.Off.period),
-			SparkMaxInitializers.statusFramePeriod(PeriodicFrame.kStatus3, FrameRate.Off.period),
-			SparkMaxInitializers.statusFramePeriod(PeriodicFrame.kStatus4, FrameRate.Off.period),
-			SparkMaxInitializers.statusFramePeriod(PeriodicFrame.kStatus5, FrameRate.Off.period),
-			SparkMaxInitializers.statusFramePeriod(PeriodicFrame.kStatus6, FrameRate.Off.period)
-		);
+		// withSettings(
+		// 	// SparkMaxInitializers.statusFramePeriod(PeriodicFrame.kStatus0, FrameRate.Fast.period),
+		// 	// SparkMaxInitializers.statusFramePeriod(PeriodicFrame.kStatus1, FrameRate.Off.period),
+		// 	// SparkMaxInitializers.statusFramePeriod(PeriodicFrame.kStatus2, FrameRate.Off.period),
+		// 	// SparkMaxInitializers.statusFramePeriod(PeriodicFrame.kStatus3, FrameRate.Off.period),
+		// 	// SparkMaxInitializers.statusFramePeriod(PeriodicFrame.kStatus4, FrameRate.Off.period),
+		// 	// SparkMaxInitializers.statusFramePeriod(PeriodicFrame.kStatus5, FrameRate.Off.period),
+		// 	// SparkMaxInitializers.statusFramePeriod(PeriodicFrame.kStatus6, FrameRate.Off.period)
+		// );
 
 		
 		m_sparkMaxes.add(this);
@@ -311,10 +310,10 @@ public class SparkMax extends CANSparkMax {
 		if (!withFollower) {
 			status0 = slowFrame;
 		}
-		sparkMax.setPeriodicFramePeriod(PeriodicFrame.kStatus0, status0);
-		sparkMax.setPeriodicFramePeriod(PeriodicFrame.kStatus1, status1);
-		sparkMax.setPeriodicFramePeriod(PeriodicFrame.kStatus2, status2);
-		sparkMax.setPeriodicFramePeriod(PeriodicFrame.kStatus3, status3);
+		// sparkMax.setPeriodicFramePeriod(PeriodicFrame.kStatus0, status0);
+		// sparkMax.setPeriodicFramePeriod(PeriodicFrame.kStatus1, status1);
+		// sparkMax.setPeriodicFramePeriod(PeriodicFrame.kStatus2, status2);
+		// sparkMax.setPeriodicFramePeriod(PeriodicFrame.kStatus3, status3);
 	}
 
 	/**

@@ -21,10 +21,9 @@ public class RealPivotIO extends PivotIO {
     private final SparkMaxAbsoluteEncoderWrapper m_encoder;
     
     private double m_position = 0;
+    private double m_velocity = 0;
     public RealPivotIO(Consumer<Runnable> addPeriodic, BooleanSupplier hasCone) {
         super(addPeriodic, hasCone);
-        m_pivotMotor.restoreFactoryDefaults();
-        m_pivotFollowerMotor.restoreFactoryDefaults();
         m_pivotMotor.getAbsoluteEncoder(Type.kDutyCycle).setPositionConversionFactor( 2 * Math.PI);
         m_pivotMotor.getAbsoluteEncoder(Type.kDutyCycle).setVelocityConversionFactor( 2 * Math.PI / 60.0);
         m_encoder = new SparkMaxAbsoluteEncoderWrapper(m_pivotMotor, PIVOT_ENCODER_OFFSET);
@@ -53,6 +52,7 @@ public class RealPivotIO extends PivotIO {
 
     private void updateEncoder() {
         m_position = continuousRangeAngleModulus(m_encoder.getPosition());
+        m_velocity = m_encoder.getVelocity();
     }
     @Override
     protected void setVolts(double volts) {
@@ -80,7 +80,7 @@ public class RealPivotIO extends PivotIO {
     @Override
     protected double getVelocity() {
         // TODO Auto-generated method stub
-        return m_encoder.getVelocity();
+        return m_velocity;
     }
     
 }

@@ -13,7 +13,7 @@ import com.pathplanner.lib.PathPlanner;
 import autolog.AutoLog;
 import autolog.Logged;
 import autolog.AutoLog.BothLog;
-import autolog.AutoLog.NTLog;
+import autolog.AutoLog.BothLog;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.LinearFilter;
@@ -32,6 +32,7 @@ import edu.wpi.first.networktables.IntegerSubscriber;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.util.WPIUtilJNI;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
@@ -91,9 +92,9 @@ public class RobotContainer implements Logged{
 
     @BothLog
     private final Field2d m_field = new Field2d();
-    @NTLog(path="/DriverDisplay/field")
+    @BothLog(path="/DriverDisplay/field")
     private final Field2d m_driverField = new Field2d();
-    @NTLog(path="/DriverDisplay/alliance")
+    @BothLog(path="/DriverDisplay/alliance")
     public boolean isBlueAlliance() {
         return AllianceWrapper.isBlue();
     }
@@ -101,8 +102,10 @@ public class RobotContainer implements Logged{
     // private final Field3d m_field3d = new Field3d();
     private final FieldObject2d m_target = m_field.getObject("target");
 
-    private IntegerSubscriber selectionEntry = NetworkTableInstance.getDefault().getIntegerTopic("/DriverDisplay/selection").subscribe(0);    
     private BooleanPublisher enabledEntry = NetworkTableInstance.getDefault().getBooleanTopic("/DriverDisplay/enabled").publish();
+    private BooleanPublisher controller1Entry = NetworkTableInstance.getDefault().getBooleanTopic("/DriverDisplay/controller1").publish();
+    private BooleanPublisher controller2Entry = NetworkTableInstance.getDefault().getBooleanTopic("/DriverDisplay/controller2").publish();
+
     private InputAxis m_fwdXAxis = new InputAxis("Forward", m_driverController::getLeftY)
         .withDeadband(0.2)
         .withInvert(true)
@@ -116,7 +119,7 @@ public class RobotContainer implements Logged{
     private InputAxis m_rotAxis = new InputAxis("Rotate", m_driverController::getRightX)
         .withDeadband(0.2)
         .withInvert(true)
-        .withSlewRate(3);
+        .withSlewRate(1, -6);
     SendableChooser<Command> m_autoSelector = new SendableChooser<Command>();
 
     
@@ -148,6 +151,7 @@ public class RobotContainer implements Logged{
         addPeriodic.accept(Alert::periodic);
         Timer.delay(0.1);
         m_drivebaseS = new DrivebaseS(addPeriodic, (name, traj)->{m_field.getObject(name).setTrajectory(traj);});
+        m_keypad = new CommandOperatorKeypad(2);
         m_alignSafeToPlace = new Trigger(()->{
             Transform2d error = new Transform2d(
                 getTargetAlignmentPose(), m_drivebaseS.getPose());
@@ -160,7 +164,7 @@ public class RobotContainer implements Logged{
                 return
                 Math.abs(error.getRotation().getRadians()) < Units.degreesToRadians(2) &&
                 Math.abs(error.getX()) < 0.02 &&
-                Math.abs(error.getY()) < Units.inchesToMeters(1);
+                Math.abs(error.getY()) < Units.inchesToMeters(0.5);
             }
         });
         m_alignSafeToPremove = new Trigger(()->{
@@ -184,7 +188,7 @@ public class RobotContainer implements Logged{
 
 
 
-        m_keypad = new CommandOperatorKeypad(2);
+
 
         configureButtonBindings();
         addAutoRoutines();
@@ -192,7 +196,9 @@ public class RobotContainer implements Logged{
         m_field.getObject("bluePoses").setPoses(POIManager.BLUE_COMMUNITY);
         m_field.getObject("redPoses").setPoses(POIManager.RED_COMMUNITY);
         SmartDashboard.putData(m_autoSelector);
-        AutoLog.setupLogging(this,"Robot", RobotBase.isReal());
+        AutoLog.setupLogging(this,"Robot", true);
+        AutoLog.updateNT();
+        DataLogManager.logNetworkTables(false);
         Timer.delay(0.3);
         SparkMax.burnFlashInSync();
         Timer.delay(0.2);
@@ -205,11 +211,11 @@ public class RobotContainer implements Logged{
 
     private Pose2d getTargetAlignmentPose() {
         return POIManager.ownCommunity().get(
-            (int) selectionEntry.get(0) % 9
+            (int) m_keypad.get() % 9
         ).transformBy(isCubeSelected() ? new Transform2d() : m_intakeS.getConeCenterOffset());
     }
     private ArmPosition getTargetArmPosition() {
-        double node = selectionEntry.get(0);
+        double node = m_keypad.get();
         if (node <= 8) {
             return ArmConstants.SCORE_HYBRID_POSITION;
         } else if (node <= 17) { // mid
@@ -227,29 +233,29 @@ public class RobotContainer implements Logged{
         }
     }
     private ArmPosition getPrescoreArmPosition() {
-        double node = selectionEntry.get(0);
+        double node = m_keypad.get();
         if (node <= 8) {
             return ArmConstants.SCORE_HYBRID_POSITION;
         } else if (node <= 17) { // mid
             if (node % 3 == 1) {//cube
                 return ArmConstants.SCORE_MID_CUBE_POSITION;
             } else {
-                return ArmConstants.SCORE_MID_CONE_RETRACTED_POSITION;
+                return ArmConstants.SCORE_MID_CONE_POSITION;
             }
         } else { // high
             if (node % 3 == 1) {//cube
                 return ArmConstants.SCORE_MID_CUBE_POSITION;
             } else {
-                return ArmConstants.SCORE_HIGH_CONE_RETRACTED_POSITION;
+                return ArmConstants.SCORE_HIGH_CONE_POSITION;
             }
         }
     }
     private boolean isCubeSelected() {
-        double node = selectionEntry.get(0);
+        double node = m_keypad.get();
         return (node <= 8) || (node > 8 && node % 3 == 1);
     }
     private boolean isHybridSelected() {
-        double node = selectionEntry.get(0);
+        double node = m_keypad.get();
         return (node <= 8);
     }
     /**
@@ -278,14 +284,14 @@ public class RobotContainer implements Logged{
                 deadline(
                     sequence(
                         sequence(
-                            waitUntil(m_alignSafeToPremove),
-                            m_armS.goToPositionC(this::getPrescoreArmPosition),
+                             waitUntil(m_alignSafeToPremove),
+                            m_armS.goToPositionC(this::getTargetArmPosition),
                             waitUntil(m_alignSafeToPlace)
-                        ).until(m_alignSafeToPlace),
-                        m_armS.goToPositionC(this::getTargetArmPosition)
+                        )//.until(m_alignSafeToPlace)//,
+                        //m_armS.goToPositionC(this::getTargetArmPosition)
                     ),
                     alignToSelectedScoring().asProxy()
-                ),
+                ).until(m_keypad.leftGrid().and(m_keypad.centerGrid()).and(m_keypad.rightGrid())),
                 m_intakeS.outtakeC(this::isCubeSelected).withTimeout(0.4),
                 m_armS.stowC() 
             )
@@ -293,7 +299,6 @@ public class RobotContainer implements Logged{
         // Score and stow.
         m_driverController.b().toggleOnTrue(m_armS.stowIndefiniteC());
         m_driverController.back().and(DriverStation::isDisabled).onTrue(Commands.runOnce(m_armS::markWristHomed).ignoringDisable(true));
-
 
         m_driverController.rightBumper().toggleOnTrue(armIntakeCG(
             ArmPositions.FRONT_UP_FLOOR, false));
@@ -370,8 +375,10 @@ public class RobotContainer implements Logged{
         } else {
             enabledEntry.set(true);
         }
-        var armPosition = m_armS.getArmPosition();
-        m_intakeS.setHandCamFlipped(armPosition.pivotRadians + armPosition.wristRadians > Math.PI/2);
+        controller1Entry.set(DriverStation.isJoystickConnected(0));
+        controller2Entry.set(DriverStation.isJoystickConnected(2));
+        //var armPosition = m_armS.getArmPosition();
+        //m_intakeS.setHandCamFlipped(armPosition.pivotRadians + armPosition.wristRadians > Math.PI/2);
         //System.out.println(m_autoSelector.getSelected().getRequirements().toString());
         //lightSpeed = LightStripS.getInstance().getSpeed();
         TimingTracer.update();
@@ -433,7 +440,7 @@ public class RobotContainer implements Logged{
     }
     public Command autoScoreSequenceCG() {
         return sequence(
-                m_armS.goToPositionC(this::getTargetArmPosition),
+                m_armS.goToPositionC(this::getTargetArmPosition).until(m_keypad.leftGrid().and(m_keypad.centerGrid()).and(m_keypad.rightGrid())),
                         m_intakeS.outtakeC(this::isCubeSelected, this::isHybridSelected).withTimeout(0.4),
                         m_armS.stowC()
             )
@@ -480,7 +487,7 @@ public class RobotContainer implements Logged{
                 alignToSelectedScoring()
             ),
 
-            m_armS.goToPositionC(ArmConstants.RAMP_CUBE_INTAKE_POSITION_FRONT),
+            m_armS.goToPositionC(ArmConstants.CLIMBING_POSITION),
             m_drivebaseS.chargeStationAlignC(),
             m_drivebaseS.xLockC()
             //m_drivebaseS.chargeStationBatteryFirstC()
@@ -524,7 +531,7 @@ public class RobotContainer implements Logged{
             // Step 1: Align and score
             deadline(
                 sequence(
-                    m_armS.goToPositionC(ArmConstants.SCORE_MID_CONE_POSITION),
+                    m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION),
                     m_intakeS.outtakeC(()->false).withTimeout(0.4)
                 )//,
                 // sequence(
@@ -563,7 +570,7 @@ public class RobotContainer implements Logged{
             // head back out
             deadline(
                 m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.stopOnceC()),
-                m_intakeS.intakeC(()->true).until(m_intakeS::hitBeamBreak),
+                Commands.waitSeconds(0.5).andThen(m_intakeS.intakeC(()->true).until(m_intakeS::hitBeamBreak)),
                 m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION)
                 // drive from first cone score to cube
                
@@ -581,7 +588,7 @@ public class RobotContainer implements Logged{
             ),
             //m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CUBE_POSITION),
             // extend, score
-            m_intakeS.run(()->m_intakeS.outtakeCube(12)).withTimeout(0.4)
+            m_intakeS.run(()->m_intakeS.outtakeCube(6)).withTimeout(0.4)
         );
     }
 
@@ -596,7 +603,7 @@ public class RobotContainer implements Logged{
             // Step 1: Align and score
             deadline(
                 sequence(
-                    m_armS.goToPositionC(ArmConstants.SCORE_MID_CONE_POSITION),
+                    m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION),
                     m_intakeS.outtakeC(()->false).withTimeout(0.4)
                 )//,
                 // sequence(
@@ -608,7 +615,7 @@ public class RobotContainer implements Logged{
             m_keypad.blueSetpointCommand(1, 1),
             deadline(
                 m_drivebaseS.pathPlannerCommand(pathGroup.get(0)),
-                m_intakeS.intakeC(()->true).until(m_intakeS::hitBeamBreak),
+                Commands.waitSeconds(0.5).andThen(m_intakeS.intakeC(()->true).until(m_intakeS::hitBeamBreak)),
                 m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION)
                 // drive from first cone score to cube
                 
@@ -636,7 +643,7 @@ public class RobotContainer implements Logged{
             // head back out
             deadline(
                 m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.stopOnceC()),
-                m_intakeS.intakeC(()->true).until(m_intakeS::hitBeamBreak),
+                Commands.waitSeconds(0.5).andThen(m_intakeS.intakeC(()->true).until(m_intakeS::hitBeamBreak)),
                 m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION)
                 // drive from first cone score to cube
                
@@ -654,7 +661,7 @@ public class RobotContainer implements Logged{
             ),
             //m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CUBE_POSITION),
             // extend, score
-            m_intakeS.run(()->m_intakeS.outtakeCube(12)).withTimeout(0.4)
+            m_intakeS.run(()->m_intakeS.outtakeCube(6)).withTimeout(0.4)
          );
     }
 

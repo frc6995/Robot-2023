@@ -20,7 +20,7 @@ import com.revrobotics.SparkMaxLimitSwitch.Type;
 
 import autolog.Logged;
 import autolog.AutoLog.BothLog;
-import autolog.AutoLog.NTLog;
+import autolog.AutoLog.BothLog;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -60,7 +60,7 @@ public class IntakeS extends SubsystemBase implements Logged {
     intakeMotor.restoreFactoryDefaults();
     intakeMotor.setIdleMode(IdleMode.kBrake);
     intakeMotor.setSecondaryCurrentLimit(700);
-    intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 20);
+    intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 45);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
@@ -116,7 +116,6 @@ public class IntakeS extends SubsystemBase implements Logged {
   public double getCurrent() {
     return current;
   }
-  @NTLog
   public double getUnfilteredCurrent() {
     return intakeMotor.getOutputCurrent();
   }
@@ -144,6 +143,9 @@ public class IntakeS extends SubsystemBase implements Logged {
     intakeMotor.setVoltage(-volts);
   }
   public void outtakeCube() {
+    intakeMotor.setVoltage(-0.4 * Constants.IntakeConstants.INTAKE_VOLTAGE);
+  }
+  public void outtakeCubeSlow() {
     intakeMotor.setVoltage(-0.4 * Constants.IntakeConstants.INTAKE_VOLTAGE);
   }
   public void outtakeCone() {
@@ -234,15 +236,5 @@ public class IntakeS extends SubsystemBase implements Logged {
 
   public void setHandCamFlipped(boolean flipped) {
     handCam.setPipelineIndex(1);
-  }
-
-  @BothLog
-  public double getCameraPieceAngle() {
-    var result = handCam.getLatestResult();
-    if (result.hasTargets()) {
-      var target = result.getBestTarget();
-      return target.getYaw();
-    }
-    return 0;
   }
 }

@@ -21,7 +21,7 @@ import static frc.robot.Constants.DriveConstants.*;
 import java.util.function.Consumer;
 
 import autolog.AutoLog.BothLog;
-import autolog.AutoLog.NTLog;
+import autolog.AutoLog.BothLog;
 
 public abstract class ModuleIO implements Logged {
 
@@ -113,6 +113,10 @@ public abstract class ModuleIO implements Logged {
         return m_steerGoal.position;
     }
     @BothLog
+    public double getSteerCurrent() {
+        return 0;
+    }
+    @BothLog
     public double getDriveSetpoint() {
         return m_driveSetpoint;
     }
@@ -126,7 +130,8 @@ public abstract class ModuleIO implements Logged {
         state.speedMetersPerSecond *= Math.cos(state.angle.minus(new Rotation2d(getAngle())).getRadians());
         double prevVelSetpoint = m_driveSetpoint;
         m_driveSetpoint = state.speedMetersPerSecond;
-        setDrivePid(state.speedMetersPerSecond, m_driveFeedForward.calculate(prevVelSetpoint, state.speedMetersPerSecond, 0.02));
+        double accel = (state.speedMetersPerSecond - prevVelSetpoint) / 0.02;
+        setDrivePid(state.speedMetersPerSecond, m_driveFeedForward.calculate(prevVelSetpoint, accel));
 
         double prevSteerGoal = m_steerGoal.position;
         m_steerGoal = new State(state.angle.getRadians(), 0);
@@ -188,7 +193,7 @@ public abstract class ModuleIO implements Logged {
         m_steerSetpoint = new State(getAngle(), 0);
     }
 
-    @NTLog
+    @BothLog
     public double getDriveCurrent() {
         return 0;
     }

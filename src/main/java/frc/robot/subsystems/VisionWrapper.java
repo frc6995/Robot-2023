@@ -177,6 +177,7 @@ public class VisionWrapper {
 
   public void findVisionMeasurements() {
     for (CameraEstimator cameraEstimator : cameraEstimators) {
+      cameraEstimator.camera().setDriverMode(false);
       PhotonPipelineResult frame = cameraEstimator.camera().getLatestResult();
 
       // determine if result should be ignored

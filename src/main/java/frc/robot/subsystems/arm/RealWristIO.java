@@ -19,8 +19,11 @@ public class RealWristIO extends WristIO {
 
     private final SparkMax m_wristMotor = new SparkMax(WRIST_MOTOR_ID, MotorType.kBrushless);
     private final AbsoluteEncoder m_encoder = m_wristMotor.getAbsoluteEncoder(Type.kDutyCycle);
+    private double velocity = 0;
+    private double position = 0;
     public RealWristIO(Consumer<Runnable> addPeriodic, BooleanSupplier hasCone) {
         super(addPeriodic, hasCone);
+        addPeriodic.accept(this::updateEncoder);
         m_encoder.setPositionConversionFactor(2 * Math.PI);
         m_encoder.setVelocityConversionFactor(2 * Math.PI/ 60);
         m_encoder.setInverted(true);
@@ -28,18 +31,23 @@ public class RealWristIO extends WristIO {
         m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 20);
         m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
         m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
-        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 25);
+        m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 40);
         m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
         m_wristMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
         m_wristMotor.setInverted(true);
         resetController();
         resetGoal();
     }
+
+    private void updateEncoder() {
+        velocity = m_encoder.getVelocity();
+        position = m_encoder.getPosition();
+    }
     
     @Override
     public double getAngle() {
         // TODO Auto-generated method stub
-        return MathUtil.angleModulus(m_encoder.getPosition());
+        return MathUtil.angleModulus(position);
     }
 
     @Override
@@ -54,7 +62,7 @@ public class RealWristIO extends WristIO {
     @Override
     public double getVelocity() {
         // TODO Auto-generated method stub
-        return m_encoder.getVelocity();
+        return velocity;
     }
 
     // @Override

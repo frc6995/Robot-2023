@@ -53,7 +53,7 @@
 *.war
 *.nar
 *.ear
-*.zip
+#*.zip
 *.tar.gz
 *.rar
 
@@ -162,3 +162,4 @@ bin/
 *-window.json
 simgui-ds.json
 simgui.json
+*.wpilog

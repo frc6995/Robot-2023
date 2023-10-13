@@ -38,9 +38,10 @@ public class RealExtendIO extends ExtendIO {
      */
     public RealExtendIO(Consumer<Runnable> addPeriodic) {
         super(addPeriodic);
-        m_extendMotor.getEncoder().setPositionConversionFactor(EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION * EXTEND_METERS_PER_DRUM_ROTATION);
-        m_extendMotor.getEncoder().setVelocityConversionFactor(EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION * EXTEND_METERS_PER_DRUM_ROTATION / 60);
-        m_extendMotor.getEncoder().setAverageDepth(4);
+        var relativeEncoder = m_extendMotor.getEncoder();
+        relativeEncoder.setPositionConversionFactor(EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION * EXTEND_METERS_PER_DRUM_ROTATION);
+        relativeEncoder.setVelocityConversionFactor(EXTEND_DRUM_ROTATIONS_PER_MOTOR_ROTATION * EXTEND_METERS_PER_DRUM_ROTATION / 60);
+        relativeEncoder.setAverageDepth(4);
         m_encoder = new SparkMaxEncoderWrapper(m_extendMotor);
         m_extendMotor.setSoftLimit(SoftLimitDirection.kForward, (float) MAX_ARM_LENGTH);
         m_extendMotor.setSoftLimit(SoftLimitDirection.kReverse, (float) MIN_ARM_LENGTH);
@@ -48,9 +49,10 @@ public class RealExtendIO extends ExtendIO {
         m_extendMotor.enableSoftLimit(SoftLimitDirection.kReverse, true);
         m_homingSwitch.enableLimitSwitch(true);
         m_extendMotor.setIdleMode(IdleMode.kCoast);
-        m_extendMotor.setSmartCurrentLimit(80);
+        m_extendMotor.setSmartCurrentLimit(70);
+        m_extendMotor.setSecondaryCurrentLimit(80);
         m_encoder.setPosition(MIN_ARM_LENGTH);
-        m_extendMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 25);
+        m_extendMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 45);
         m_extendMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 20);
         m_extendMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 20);
         m_extendMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
