@@ -40,11 +40,6 @@ public class Robot extends TimedRobot {
 
     @Override
     public void robotPeriodic() {
-        if (true) {
-            AutoLog.updateNT();
-            AutoLog.updateDataLog();
-            //NetworkTableInstance.getDefault().flush();
-        }
         CommandScheduler.getInstance().run();
         robotContainer.periodic();
         matchTimeEntry.setNumber(DriverStation.getMatchTime());

@@ -92,9 +92,9 @@ public class RobotContainer implements Logged{
 
     @BothLog
     private final Field2d m_field = new Field2d();
-    @BothLog(path="/DriverDisplay/field")
+    @BothLog(path="/DriverDisplay/field", level = 1)
     private final Field2d m_driverField = new Field2d();
-    @BothLog(path="/DriverDisplay/alliance")
+    @BothLog(path="/DriverDisplay/alliance", level=1)
     public boolean isBlueAlliance() {
         return AllianceWrapper.isBlue();
     }
@@ -197,7 +197,6 @@ public class RobotContainer implements Logged{
         m_field.getObject("redPoses").setPoses(POIManager.RED_COMMUNITY);
         SmartDashboard.putData(m_autoSelector);
         AutoLog.setupLogging(this,"Robot", true);
-        AutoLog.updateNT();
         DataLogManager.logNetworkTables(false);
         Timer.delay(0.3);
         SparkMax.burnFlashInSync();
@@ -394,6 +393,7 @@ public class RobotContainer implements Logged{
         m_driverField.getObject("target").setPose(getTargetAlignmentPose());
         m_field.getObject("selection").setPose(getTargetAlignmentPose());
         m_field.getObject("driveTarget").setPose(m_drivebaseS.getTargetPose());
+        AutoLog.update();
         ///]m_field3d.setRobotPose(new Pose3d(m_drivebaseS.getPose().getX(), m_drivebaseS.getPose().getY(), 0, m_drivebaseS.getRotation3d()));
     }
 
