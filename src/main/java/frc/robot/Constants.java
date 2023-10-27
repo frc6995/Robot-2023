@@ -364,6 +364,10 @@ public class Constants {
             public static final ArmPosition FRONT_PLATFORM_CONE_UPRIGHT = new ArmPosition(
                 1.227, 0.985 , -2.02
             );
+            public static final ArmPosition FRONT_PLATFORM_CONE_UPRIGHT_PRESTOW = new ArmPosition(
+                ArmPositions.FRONT_PLATFORM_CONE_UPRIGHT.pivotRadians,
+                ArmPositions.FRONT_PLATFORM_CONE_UPRIGHT.armLength,
+                Units.degreesToRadians(-40));
             public static final ArmPosition BACK_TIPPED_FLOOR = new ArmPosition(
                 3.63,
                 0.541,
