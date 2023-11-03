@@ -352,7 +352,7 @@ public class Constants {
 
         public static class ArmPositions {
             public static final ArmPosition STOW = new ArmPosition(
-                Units.degreesToRadians(60),
+                Units.degreesToRadians(65),
                 MIN_ARM_LENGTH,
                 WRIST_MAX_ANGLE
             );
@@ -362,7 +362,7 @@ public class Constants {
                 WRIST_MIN_ANGLE
             );
             public static final ArmPosition FRONT_PLATFORM_CONE_UPRIGHT = new ArmPosition(
-                1.227, 0.985 , -2.02
+                1.227, 0.982 , -2.02
             );
             public static final ArmPosition FRONT_PLATFORM_CONE_UPRIGHT_PRESTOW = new ArmPosition(
                 ArmPositions.FRONT_PLATFORM_CONE_UPRIGHT.pivotRadians,

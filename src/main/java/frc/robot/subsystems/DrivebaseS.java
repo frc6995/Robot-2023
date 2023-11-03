@@ -608,11 +608,11 @@ public class DrivebaseS extends SubsystemBase implements Logged {
             midWaypoint.getTranslation(),
 
             NomadMathUtil.getDirection(approachToEndTranslation),
-            target.getRotation(), 0.5);
+            target.getRotation());
         PathPoint endPoint = new PathPoint(
             target.getTranslation(),
             NomadMathUtil.getDirection(approachToEndTranslation),
-            target.getRotation());
+            target.getRotation(), 0.5);
         // We only want to regenerate if the target is far enough away from the robot.
         // PathPlanner has issues with near-zero-length paths and we need a particular
         // tolerance for success anyway.

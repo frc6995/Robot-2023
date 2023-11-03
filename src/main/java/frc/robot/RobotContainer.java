@@ -65,7 +65,7 @@ public class RobotContainer implements Logged {
 
     @BothLog
     private final Field2d m_field = new Field2d();
-    
+
     @BothLog(path = "/DriverDisplay/field", level = 1)
     private final Field2d m_driverField = new Field2d();
 
@@ -84,12 +84,12 @@ public class RobotContainer implements Logged {
             .getBooleanTopic("/DriverDisplay/controller2").publish();
 
     private InputAxis m_fwdXAxis = new InputAxis("Forward", m_driverController::getLeftY)
-            .withDeadband(0.2)
+            .withDeadband(0.1)
             .withInvert(true)
             .withSlewRate(3)
             .withSquaring(true);
     private InputAxis m_fwdYAxis = new InputAxis("Strafe", m_driverController::getLeftX)
-            .withDeadband(0.2)
+            .withDeadband(0.1)
             .withInvert(true)
             .withSlewRate(3)
             .withSquaring(true);
@@ -178,6 +178,14 @@ public class RobotContainer implements Logged {
         m_driverController.leftTrigger().onTrue(m_autos.armIntakeCG(ArmConstants.GROUND_CUBE_INTAKE_POSITION, true));
 
         m_driverController.x().whileTrue(m_drivebaseS.leftPlatformAlign());
+        m_driverController.x().onTrue(m_autos.armIntakeCG(
+            ArmPositions.FRONT_PLATFORM_CONE_UPRIGHT,
+            ArmPositions.FRONT_PLATFORM_CONE_UPRIGHT_PRESTOW,
+            false));
+        m_driverController.y().onTrue(m_autos.armIntakeCG(
+            ArmPositions.FRONT_PLATFORM_CONE_UPRIGHT,
+            ArmPositions.FRONT_PLATFORM_CONE_UPRIGHT_PRESTOW,
+            false));
         m_driverController.y().whileTrue(m_drivebaseS.rightPlatformAlign());
 
         // Button on keypad for pulsing the intake in.
@@ -194,6 +202,7 @@ public class RobotContainer implements Logged {
         m_autoSelector.addOption("3pc Bump", m_autos.highConeHighCubeBumpSide().andThen(m_autos.midCubeBumpAddon()));
         m_autoSelector.addOption("2.5pc Bump Climb",
                 m_autos.highConeHighCubeBumpSide().andThen(m_autos.cubePickupClimbBumpAddon()));
+        m_autoSelector.addOption("2cone.5cube Bump Climb", m_autos.highConeHighConeCubePickupClimb());
 
         m_autoSelector.addOption("BumpSide 1 Cone Bal", m_autos.highConeBalance(3));
         m_autoSelector.addOption("HP Side 1 Cone Bal", m_autos.highConeBalance(5));
@@ -223,7 +232,7 @@ public class RobotContainer implements Logged {
         controller2Entry.set(DriverStation.isJoystickConnected(2));
         TimingTracer.update();
         loopTime = loopTimeAverage.calculate(TimingTracer.getLoopTime());
-        SmartDashboard.putNumber("loopTime", loopTime);
+        //SmartDashboard.putNumber("loopTime", loopTime);
 
         LightStripS.getInstance()
                 .requestState(m_autos.isCubeSelected() ? States.RequestingCube : States.RequestingCone);

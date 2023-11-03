@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.ArmConstants;
@@ -189,7 +190,12 @@ public class Autos {
                         )//.until(m_alignSafeToPlace)//,
                         //m_armS.goToPositionC(this::getTargetArmPosition)
                     ),
-                    alignToSelectedScoring().asProxy()
+                    alignToSelectedScoring().asProxy(),
+                    m_intakeS.run(()->{
+                        if (this.isCubeSelected() && !this.isHybridSelected()) {
+                        m_intakeS.intakeCube(0.5);
+                        }
+                    })
                 ).until(m_keypad.leftGrid().and(m_keypad.centerGrid()).and(m_keypad.rightGrid())),
                 m_intakeS.outtakeC(this::isCubeSelected).withTimeout(0.4),
                 m_armS.stowC() 
@@ -405,10 +411,70 @@ public class Autos {
             m_intakeS.intakeC(()->true).until(m_intakeS::acquiredCube),
             m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION)
         ).andThen(
-            parallel(
-                m_drivebaseS.chargeStationAlignC(),
-                m_armS.goToPositionC(ArmPositions.CUBE_STOW)
-            )
+                sequence(
+                    parallel(
+                        m_drivebaseS.chargeStationAlignC(),
+                        m_armS.goToPositionC(ArmPositions.CUBE_STOW)
+                    )
+                )
         );
     }
+
+    public Command highConeHighConeCubePickupClimb() {
+        var pathGroup = PathPlanner.loadPathGroup("High Cone High Cone Bump",
+        new PathConstraints(2, 2),
+        new PathConstraints(4, 2.5));
+        return sequence(
+            m_drivebaseS.resetPoseToBeginningC(pathGroup.get(0)),
+            // Target the HP-side high cone
+            m_keypad.blueSetpointCommand(0, 2),
+            // Step 1: Align and score
+            deadline(
+                sequence(
+                    m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION),
+                    m_intakeS.outtakeC(()->false).withTimeout(0.4)
+                )//,
+                // sequence(
+                //     alignToSelectedScoring().until(m_alignSafeToPlace)
+                //     .andThen(m_drivebaseS.stopC())
+                // )
+            ),
+            // Step 2: Fetch cone
+            m_keypad.blueSetpointCommand(2, 1),
+            deadline(
+                m_drivebaseS.pathPlannerCommand(pathGroup.get(0)),
+                waitSeconds(0.5).andThen(m_intakeS.intakeC(()->false).until(m_intakeS::hitBeamBreak)),
+                m_armS.goToPositionC(ArmConstants.ArmPositions.BACK_TIPPED_FLOOR)
+                // drive from first cone score to cube
+                
+            ).withTimeout(4),
+            // Drive back while stowing cube
+            // when we're close enough to score, move on
+            deadline(
+                sequence(
+                    m_drivebaseS.pathPlannerCommand(pathGroup.get(1)),
+                    alignToSelectedScoring()
+                ).until(m_alignSafeToPlace),
+                m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION),
+                m_intakeS.run(()->m_intakeS.intakeCone(0.5))
+            ),
+            m_intakeS.outtakeC(()->false).withTimeout(0.4),
+            // go out, pickup cube, climb
+            deadline(
+                m_drivebaseS.pathPlannerCommand(pathGroup.get(4)),
+                m_intakeS.intakeC(()->true).until(m_intakeS::acquiredCube),
+                m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION)
+            ).andThen(
+                    sequence(
+                        parallel(
+                            m_drivebaseS.chargeStationAlignC(),
+                            m_armS.goToPositionC(ArmPositions.CUBE_STOW)
+                        )
+                    )
+            )
+         );
+    
+    }
+
+    
 }
