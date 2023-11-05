@@ -288,5 +288,9 @@ public abstract class PivotIO implements Logged {
     public String configureLogName() {
         return "Pivot";
     }
+
+    @BothLog public double getCurrent() {
+        return 0.0;
+    }
     public abstract void setIdleMode(IdleMode mode);
 }

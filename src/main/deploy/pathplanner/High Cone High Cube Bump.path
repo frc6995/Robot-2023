@@ -232,9 +232,9 @@
         "y": 2.412881630328168
       },
       "nextControl": null,
-      "holonomicAngle": -133.02506598911805,
+      "holonomicAngle": -157.89055165624822,
       "isReversal": false,
-      "velOverride": 3.0,
+      "velOverride": null,
       "isLocked": false,
       "isStopPoint": false,
       "stopEvent": {
@@ -245,5 +245,8 @@
       }
     }
   ],
+  "maxVelocity": null,
+  "maxAcceleration": 2.5,
+  "isReversed": null,
   "markers": []
 }

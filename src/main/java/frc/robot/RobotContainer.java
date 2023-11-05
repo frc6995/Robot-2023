@@ -96,7 +96,7 @@ public class RobotContainer implements Logged {
     private InputAxis m_rotAxis = new InputAxis("Rotate", m_driverController::getRightX)
             .withDeadband(0.2)
             .withInvert(true)
-            .withSlewRate(1, -6);
+            .withSlewRate(1.33, -6);
     SendableChooser<Command> m_autoSelector = new SendableChooser<Command>();
 
     private boolean m_setupDone = false;
@@ -139,6 +139,7 @@ public class RobotContainer implements Logged {
         m_field.getObject("redPoses").setPoses(POIManager.RED_COMMUNITY);
         SmartDashboard.putData(m_autoSelector);
         AutoLog.setupLogging(this, "Robot", true);
+        DriverStation.startDataLog(DataLogManager.getLog());
         DataLogManager.logNetworkTables(false);
         Timer.delay(0.3);
         SparkMax.burnFlashInSync();
@@ -206,6 +207,7 @@ public class RobotContainer implements Logged {
 
         m_autoSelector.addOption("BumpSide 1 Cone Bal", m_autos.highConeBalance(3));
         m_autoSelector.addOption("HP Side 1 Cone Bal", m_autos.highConeBalance(5));
+        m_autoSelector.addOption("High Link Bump", m_autos.highConeHighCubeBumpSide().andThen(m_autos.highConeBumpAddon()));
     }
 
     public Command getAutonomousCommand() {

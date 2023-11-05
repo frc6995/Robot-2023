@@ -53,8 +53,8 @@ public class Autos {
             if (isCubeSelected()) {
                 return
                 Math.abs(error.getRotation().getRadians()) < Units.degreesToRadians(3) &&
-                Math.abs(error.getX()) < 0.3 &&
-                Math.abs(error.getY()) < 0.2;
+                Math.abs(error.getX()) < 0.1 &&
+                Math.abs(error.getY()) < 0.1;
             } else {
                 return
                 Math.abs(error.getRotation().getRadians()) < Units.degreesToRadians(2) &&
@@ -153,7 +153,7 @@ public class Autos {
             ),
             parallel(
                 // Wait a bit, then pulse the intake to ensure piece collection.
-                waitSeconds(0.75).andThen(m_intakeS.intakeC(()->isCube).withTimeout(0.75)).asProxy(),
+                waitSeconds(isCube ? 0: 0.75).andThen(m_intakeS.intakeC(()->isCube).withTimeout(isCube ? 1.5 : 0.75)).asProxy(),
                 // stow the arm
                 m_armS.goToPositionC(()->prestow).andThen( m_armS.goToPositionC(()->isCube? ArmPositions.CUBE_STOW : ArmPositions.STOW)),
                 run(()->LightStripS.getInstance().requestState(isCube ? States.IntakedCube : States.IntakedCone)).asProxy().withTimeout(0.75)
@@ -399,6 +399,41 @@ public class Autos {
             //m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CUBE_POSITION),
             // extend, score
             m_intakeS.run(()->m_intakeS.outtakeCube(6)).withTimeout(0.4)
+         );
+    }
+
+    public Command highConeBumpAddon() {
+        var pathGroup = PathPlanner.loadPathGroup("High Cone High Cube Bump",
+        new PathConstraints(2, 2),
+        new PathConstraints(4, 2.5));
+
+        var secondConePathGroup = PathPlanner.loadPathGroup("2nd Tipped Cone Bump",
+        new PathConstraints(4, 2.5));
+        return sequence(
+        m_keypad.blueSetpointCommand(2, 2),
+            // head back out
+            deadline(
+                m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.stopOnceC()),
+                waitSeconds(0.5).andThen(m_intakeS.intakeC(()->false).until(m_intakeS::hitBeamBreak)),
+                m_armS.goToPositionC(ArmConstants.ArmPositions.BACK_TIPPED_FLOOR)
+                // drive from first cone score to cube
+               
+            ).withTimeout(4),
+
+            // Drive back while stowing cube
+            // when we're close enough to score, move on
+            deadline(
+                sequence(
+                    m_drivebaseS.pathPlannerCommand(secondConePathGroup.get(0)),
+                    alignToSelectedScoring().until(m_alignSafeToPlace)
+                ),
+                m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CONE_POSITION),
+                m_intakeS.run(()->m_intakeS.intakeCone(2))
+            ),
+
+            //m_armS.goToPositionC(ArmConstants.SCORE_HIGH_CUBE_POSITION),
+            // extend, score
+            m_intakeS.run(()->m_intakeS.outtakeCone(6)).withTimeout(0.4)
          );
     }
 

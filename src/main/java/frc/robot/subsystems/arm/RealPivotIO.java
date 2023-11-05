@@ -29,7 +29,8 @@ public class RealPivotIO extends PivotIO {
         m_encoder = new SparkMaxAbsoluteEncoderWrapper(m_pivotMotor, PIVOT_ENCODER_OFFSET);
         m_pivotMotor.setInverted(true);
         m_pivotFollowerMotor.follow(m_pivotMotor, true);
-        m_pivotMotor.setSmartCurrentLimit(15);
+        m_pivotMotor.setSmartCurrentLimit(40);
+        m_pivotFollowerMotor.setSmartCurrentLimit(40);
         m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 40);
         m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
         m_pivotMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
@@ -81,6 +82,11 @@ public class RealPivotIO extends PivotIO {
     protected double getVelocity() {
         // TODO Auto-generated method stub
         return m_velocity;
+    }
+
+    @Override
+    public double getCurrent() {
+        return m_pivotMotor.getOutputCurrent();
     }
     
 }
