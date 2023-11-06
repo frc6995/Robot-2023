@@ -280,7 +280,7 @@ public class Autos {
             m_keypad.blueSetpointCommand(7, 2),
             deadline(
                 m_drivebaseS.pathPlannerCommand(pathGroup.get(0)),
-                m_intakeS.intakeC(()->true).until(m_intakeS::hitBeamBreak),
+                waitSeconds(0.5).andThen(m_intakeS.intakeC(()->true)),
                 m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION)
                 // drive from first cone score to cube
                 
@@ -307,7 +307,7 @@ public class Autos {
             // head back out
             deadline(
                 m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.stopOnceC()),
-                waitSeconds(0.5).andThen(m_intakeS.intakeC(()->true).until(m_intakeS::hitBeamBreak)),
+                waitSeconds(0.5).andThen(m_intakeS.intakeC(()->true)),
                 m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION)
                 // drive from first cone score to cube
                
@@ -352,7 +352,7 @@ public class Autos {
             m_keypad.blueSetpointCommand(1, 1),
             deadline(
                 m_drivebaseS.pathPlannerCommand(pathGroup.get(0)),
-                waitSeconds(0.5).andThen(m_intakeS.intakeC(()->true).until(m_intakeS::hitBeamBreak)),
+                waitSeconds(0.5).andThen(m_intakeS.intakeC(()->true)),
                 m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION)
                 // drive from first cone score to cube
                 
@@ -380,7 +380,7 @@ public class Autos {
             // head back out
             deadline(
                 m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.stopOnceC()),
-                waitSeconds(0.5).andThen(m_intakeS.intakeC(()->true).until(m_intakeS::hitBeamBreak)),
+                waitSeconds(0.5).andThen(m_intakeS.intakeC(()->true)),
                 m_armS.goToPositionC(ArmConstants.GROUND_CUBE_INTAKE_POSITION)
                 // drive from first cone score to cube
                
@@ -414,7 +414,7 @@ public class Autos {
             // head back out
             deadline(
                 m_drivebaseS.pathPlannerCommand(pathGroup.get(2)).andThen(m_drivebaseS.stopOnceC()),
-                waitSeconds(0.5).andThen(m_intakeS.intakeC(()->false).until(m_intakeS::hitBeamBreak)),
+                waitSeconds(0.5).andThen(m_intakeS.intakeC(()->false).until(m_intakeS::acquiredCone)),
                 m_armS.goToPositionC(ArmConstants.ArmPositions.BACK_TIPPED_FLOOR)
                 // drive from first cone score to cube
                
@@ -478,7 +478,7 @@ public class Autos {
             m_keypad.blueSetpointCommand(2, 1),
             deadline(
                 m_drivebaseS.pathPlannerCommand(pathGroup.get(0)),
-                waitSeconds(0.5).andThen(m_intakeS.intakeC(()->false).until(m_intakeS::hitBeamBreak)),
+                waitSeconds(0.5).andThen(m_intakeS.intakeC(()->false).until(m_intakeS::acquiredCone)),
                 m_armS.goToPositionC(ArmConstants.ArmPositions.BACK_TIPPED_FLOOR)
                 // drive from first cone score to cube
                 
