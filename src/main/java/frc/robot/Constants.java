@@ -34,7 +34,7 @@ public class Constants {
 
     public static final class DriveConstants {
         static public final double WHEEL_BASE_WIDTH_M = Units.inchesToMeters(18.5);
-        static public final double WHEEL_RADIUS_M = Units.inchesToMeters(3.9/2.0);//0.0508; //Units.inchesToMeters(4.0/2.0); //four inch (diameter) wheels
+        static public final double WHEEL_RADIUS_M = Units.inchesToMeters(4.0/2.0);//0.0508; //Units.inchesToMeters(4.0/2.0); //four inch (diameter) wheels
         static public final double ROBOT_MASS_kg = Units.lbsToKilograms(138);
         static public final double ROBOT_MOI_KGM2 = 1.0/12.0 * ROBOT_MASS_kg * Math.pow((WHEEL_BASE_WIDTH_M*1.1),2) * 2; //Model moment of intertia as a square slab slightly bigger than wheelbase with axis through center
         // Drivetrain Performance Mechanical limits
@@ -57,10 +57,10 @@ public class Constants {
         static private double HW = WHEEL_BASE_WIDTH_M/2.0;
 
         public enum ModuleConstants {
-            FL("FL", 18, 17, 6, 5.651346 + 0.005 + 0.01 - 0.03 + 0.025, HW, HW),
-            FR("FR", 12, 11, 7, 3.762759 - 0.003 + 0.002 + 0.01 + 0.025 - 0.002, HW, -HW),
-            BL("BL", 16, 15, 8, 1.823007 + 0.01 + 0.001 - 0.03 - 0.011 -0.003, -HW, HW),
-            BR("BR", 14, 13, 9, 5.614791 - 0.008 - 0.04 - 0.03 + 0.11-0.005 - 0.011, -HW, -HW);
+            FL("FL", 18, 17, 6, 5.651346 + 0.005 + 0.01 - 0.03 + 0.025 -0.013012, HW, HW),
+            FR("FR", 12, 11, 7, 3.762759 - 0.003 + 0.002 + 0.01 + 0.025 - 0.002 + 0.003020, HW, -HW),
+            BL("BL", 16, 15, 8, 1.823007 + 0.01 + 0.001 - 0.03 - 0.011 -0.003, + 0.002141 -HW, HW),
+            BR("BR", 14, 13, 9, 5.614791 - 0.008 - 0.04 - 0.03 + 0.11-0.005 - 0.011 + 0.002034, -HW, -HW);
     
             public final String name;
             public final int driveMotorID;
@@ -352,7 +352,7 @@ public class Constants {
 
         public static class ArmPositions {
             public static final ArmPosition STOW = new ArmPosition(
-                Units.degreesToRadians(60),
+                Units.degreesToRadians(65),
                 MIN_ARM_LENGTH,
                 WRIST_MAX_ANGLE
             );
@@ -362,8 +362,12 @@ public class Constants {
                 WRIST_MIN_ANGLE
             );
             public static final ArmPosition FRONT_PLATFORM_CONE_UPRIGHT = new ArmPosition(
-                1.227, 0.985 , -2.02
+                1.227, 0.982 , -2.02
             );
+            public static final ArmPosition FRONT_PLATFORM_CONE_UPRIGHT_PRESTOW = new ArmPosition(
+                ArmPositions.FRONT_PLATFORM_CONE_UPRIGHT.pivotRadians,
+                ArmPositions.FRONT_PLATFORM_CONE_UPRIGHT.armLength,
+                Units.degreesToRadians(-40));
             public static final ArmPosition BACK_TIPPED_FLOOR = new ArmPosition(
                 3.63,
                 0.541,

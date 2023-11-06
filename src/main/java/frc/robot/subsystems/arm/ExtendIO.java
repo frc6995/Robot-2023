@@ -96,11 +96,7 @@ public abstract class ExtendIO implements Logged {
         m_setpoint = profile.calculate(0.02);
         State nextSetpoint = profile.calculate(0.04);
         
-        setPIDFF(m_setpoint.position, 
-            // m_extendController.calculate(
-            //     VecBuilder.fill(getLength(), 0),
-            //     VecBuilder.fill(m_setpoint.position, 0)
-            // ).get(0, 0) +
+        setPIDFF(m_setpoint.position,
              (m_extendFeedforward.calculate(m_setpoint.velocity, nextSetpoint.velocity, 0.02)
 
             ) +
@@ -109,8 +105,8 @@ public abstract class ExtendIO implements Logged {
     }
 
     protected void setPIDFF(double length, double ffVolts) {
-        // setVolts(
-        //     m_extendController.calculate(getLength(), length) + ffVolts);
+        setVolts(
+            m_extendController.calculate(getLength(), length) + ffVolts);
     }
 
     public double getPeriod() {

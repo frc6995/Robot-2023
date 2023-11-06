@@ -53,6 +53,7 @@ import frc.robot.subsystems.drive.RealSwerveDriveIO;
 import frc.robot.subsystems.drive.SimSwerveDriveIO;
 import frc.robot.subsystems.drive.SwerveDriveIO;
 import frc.robot.Constants;
+import frc.robot.POIManager;
 import frc.robot.Robot;
 import frc.robot.Constants.PoseEstimator;
 
@@ -700,7 +701,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
                 () -> new Pose2d(
                         POIS.CHARGE_STATION.ownPose().getX(),
                         getPose().getY(),
-                        POIS.CHARGE_STATION.ownPose().getRotation()),
+                        getPose().getRotation()),
                 this::getPose,
                 m_holonomicDriveController,
                 this::drive,
@@ -797,7 +798,7 @@ public class DrivebaseS extends SubsystemBase implements Logged {
             m_profiledThetaController.reset(getPoseHeading().getRadians(), 0);
         }).andThen(run(
             ()->{
-                                /**
+                /**
                  * Units are given in meters per second radians per second
                  * Since joysticks give output from -1 to 1, we multiply the outputs by the max speed
                  * Otherwise, our max speed would be 1 meter per second and 1 radian per second
@@ -819,5 +820,12 @@ public class DrivebaseS extends SubsystemBase implements Logged {
                 driveAllianceRelative(new ChassisSpeeds(fwdX, fwdY, rot));
             })
         );
+    }
+
+    public Command leftPlatformAlign() {
+        return chasePickupC(()-> POIManager.ownPOI(AllianceWrapper.isRed() ? POIS.GRID_PLAT : POIS.WALL_PLAT));
+    }
+    public Command rightPlatformAlign() {
+        return chasePickupC(()-> POIManager.ownPOI(AllianceWrapper.isRed() ? POIS.WALL_PLAT : POIS.GRID_PLAT));
     }
 }

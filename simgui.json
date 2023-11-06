@@ -163,6 +163,9 @@
           "m_pivot": {
             "open": true
           },
+          "m_wrist": {
+            "open": true
+          },
           "open": true
         },
         "m_drivebaseS": {
