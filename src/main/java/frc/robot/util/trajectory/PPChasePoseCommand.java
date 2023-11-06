@@ -17,9 +17,9 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.DrivebaseS;
-import frc.robot.subsystems.LightS;
-import frc.robot.subsystems.LightS.States;
-import io.github.oblarg.oblog.Loggable;
+import frc.robot.subsystems.LightStripS;
+import frc.robot.subsystems.LightStripS.States;
+import autolog.Logged;
 
 /**
  * A command that uses two PID controllers ({@link PIDController}) and a
@@ -43,7 +43,7 @@ import io.github.oblarg.oblog.Loggable;
  * This class is provided by the NewCommands VendorDep
  */
 @SuppressWarnings("MemberName")
-public class PPChasePoseCommand extends CommandBase implements Loggable {
+public class PPChasePoseCommand extends CommandBase implements Logged {
     private final Timer m_timer = new Timer();
     private Supplier<Pose2d> m_targetPose;
     private PathPlannerTrajectory m_trajectory;
@@ -83,9 +83,10 @@ public class PPChasePoseCommand extends CommandBase implements Loggable {
         m_trajectoryGenerator = trajectoryGenerator;
         m_outputChassisSpeedsRobotRelative = outputChassisSpeedsFieldRelative;
         m_drive = drive;
-        m_finishTrigger = new Trigger(()->m_pose.get().getTranslation().getDistance(m_targetPose.get().getTranslation()) < Units.inchesToMeters(1)
-    && Math.abs(m_pose.get().getRotation().getDegrees() - m_targetPose.get().getRotation().getDegrees()) < 0.75)
-    .debounce(0.05);
+        m_finishTrigger = new Trigger(()->false);
+        // new Trigger(()->m_pose.get().getTranslation().getDistance(m_targetPose.get().getTranslation()) < Units.inchesToMeters(1)
+        //     && Math.abs(m_pose.get().getRotation().getDegrees() - m_targetPose.get().getRotation().getDegrees()) < 1)
+        //     .debounce(0.05);
         addRequirements(m_drive);
         }
 
@@ -119,11 +120,6 @@ public class PPChasePoseCommand extends CommandBase implements Loggable {
             double curTime = m_timer.get();
             desiredState = (PathPlannerState) m_trajectory.sample(curTime);
             targetChassisSpeeds = m_controller.calculate(m_pose.get(), desiredState);
-
-            var alpha = ( 
-            ((PathPlannerState) m_trajectory.sample(curTime + 0.01)).holonomicAngularVelocityRadPerSec
-            - desiredState.holonomicAngularVelocityRadPerSec) / 0.01;
-
             //targetChassisSpeeds.alphaRadiansPerSecondSq = alpha;
         }
         // if the trajectory is empty, or the time is up, just use the holonomic drive controller to hold the pose.
@@ -143,7 +139,6 @@ public class PPChasePoseCommand extends CommandBase implements Loggable {
             
     
             m_outputChassisSpeedsRobotRelative.accept(targetChassisSpeeds);
-        LightS.getInstance().requestState(States.Climbing);
     }
 
     @Override

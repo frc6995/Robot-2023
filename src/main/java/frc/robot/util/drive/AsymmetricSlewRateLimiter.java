@@ -59,7 +59,7 @@ public class AsymmetricSlewRateLimiter {
    * @param rateLimit The rate-of-change limit, in units per second.
    */
   public AsymmetricSlewRateLimiter(double rateLimit) {
-    this(rateLimit, -rateLimit, 0);
+    this(rateLimit, rateLimit, 0);
   }
 
   /**
@@ -77,15 +77,15 @@ public class AsymmetricSlewRateLimiter {
         m_prevVal +=
         MathUtil.clamp(
             input - m_prevVal,
-            -m_negativeMagnitudeRateLimit * elapsedTime,
-            m_negativeMagnitudeRateLimit * elapsedTime);
+            -Math.abs(m_negativeMagnitudeRateLimit) * elapsedTime,
+            Math.abs(m_negativeMagnitudeRateLimit) * elapsedTime);
     }
     else {
         m_prevVal +=
         MathUtil.clamp(
             input - m_prevVal,
-            -m_positiveMagnitudeRateLimit * elapsedTime,
-            m_positiveMagnitudeRateLimit * elapsedTime);
+            -Math.abs(m_positiveMagnitudeRateLimit) * elapsedTime,
+            Math.abs(m_positiveMagnitudeRateLimit) * elapsedTime);
     }
 
     m_prevTime = currentTime;

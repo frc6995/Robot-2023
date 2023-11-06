@@ -4,8 +4,11 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.networktables.IntegerEntry;
+import edu.wpi.first.networktables.IntegerPublisher;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -20,11 +23,9 @@ import frc.robot.util.AllianceWrapper;
 
 public class CommandOperatorKeypad {
     private GenericHID m_hid;
-    private Consumer<Pose2d> setDriveSetpoint;
-    private Consumer<ArmPosition> setArmSetpoint;
-    private Consumer<Boolean> setSelectedCube;
 
-    private NetworkTableEntry selectionEntry = NetworkTableInstance.getDefault().getEntry("/DriverDisplay/selection");
+    private IntegerPublisher selectionEntry = NetworkTableInstance.getDefault().getIntegerTopic("/DriverDisplay/selection").publish();    
+    private int selection = 0;
     public enum Button {
         kLeftGrid(1),
         kCenterGrid(2),
@@ -48,10 +49,7 @@ public class CommandOperatorKeypad {
         }
 
       }
-    public CommandOperatorKeypad(int port, Consumer<Pose2d> setDriveSetpoint, Consumer<ArmPosition> setArmSetpoint, Consumer<Boolean> setSelectedCube) {
-        this.setDriveSetpoint = setDriveSetpoint;
-        this.setArmSetpoint = setArmSetpoint;
-        this.setSelectedCube = setSelectedCube;
+    public CommandOperatorKeypad(int port) {
         m_hid = new GenericHID(port);
         setupTrigger(leftGrid(), Button.kLowLeft, 8, 0);
         setupTrigger(leftGrid(), Button.kLowCenter, 7, 0);
@@ -82,12 +80,10 @@ public class CommandOperatorKeypad {
         setupTrigger(rightGrid(), Button.kHighLeft, 2, 2);
         setupTrigger(rightGrid(), Button.kHighCenter, 1, 2);
         setupTrigger(rightGrid(), Button.kHighRight, 0, 2);
-        selectionEntry.setNumber(0);
-
-
+        selectionEntry.set(0);
     }
 
-    public Trigger stow() {
+    public Trigger action() {
         return key(Button.kStowButton);
     }
     public Trigger enter() {
@@ -100,27 +96,7 @@ public class CommandOperatorKeypad {
     }
 
     public Command setpointCommand(int columnInGrid, int row) {
-        return setpointCommand(()->POIManager.ownCommunity().get(columnInGrid),
-        ()->{
-            if (row == 2 && columnInGrid %3 == 1) {
-                return Constants.ArmConstants.SCORE_HIGH_CUBE_POSITION;
-            }
-            else if (row == 2 && columnInGrid %3 != 1) {
-                return Constants.ArmConstants.SCORE_HIGH_CONE_POSITION;
-            }
-            else if (row == 1 && columnInGrid %3 == 1) {
-                return Constants.ArmConstants.SCORE_MID_CUBE_POSITION;
-            }
-            else if (row == 1 && columnInGrid %3 != 1) {
-                return Constants.ArmConstants.SCORE_MID_CONE_POSITION;
-            }
-            else {
-                return Constants.ArmConstants.SCORE_HYBRID_POSITION;
-            }
-        },
-        ()->{
-            return (row == 0 || columnInGrid % 3 == 1);
-        },
+        return setpointCommand(
             ((row) * 9) + columnInGrid
         );
     }
@@ -129,7 +105,7 @@ public class CommandOperatorKeypad {
             setpointCommand(columnInGrid, row));
             
     }
-    private Trigger key(Button key) {
+    public Trigger key(Button key) {
         return m_hid.button(key.value, CommandScheduler.getInstance().getDefaultButtonLoop()).castTo(Trigger::new);
     }
     public Trigger leftGrid() {
@@ -144,12 +120,14 @@ public class CommandOperatorKeypad {
         return key(Button.kRightGrid);
     }
 
-    private Command setpointCommand(Supplier<Pose2d> driveSetpoint, Supplier<ArmPosition> armSetpoint, Supplier<Boolean> selectedCube, int selectionNumber) {
+    private Command setpointCommand(int selectionNumber) {
         return new InstantCommand(()->{
-            setDriveSetpoint.accept(driveSetpoint.get());
-            setArmSetpoint.accept(armSetpoint.get());
-            setSelectedCube.accept(selectedCube.get());
-            selectionEntry.setInteger(selectionNumber);
+            selectionEntry.set(selectionNumber);
+            selection = selectionNumber;
         }).ignoringDisable(true);
+    }
+
+    public int get() {
+        return selection;
     }
 }

@@ -6,6 +6,8 @@ package frc.robot.subsystems;
 
 import java.util.function.BooleanSupplier;
 
+import org.photonvision.PhotonCamera;
+
 import com.playingwithfusion.TimeOfFlight;
 import com.playingwithfusion.TimeOfFlight.RangingMode;
 import com.revrobotics.CANSparkMax;
@@ -16,72 +18,66 @@ import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.SparkMaxLimitSwitch;
 import com.revrobotics.SparkMaxLimitSwitch.Type;
 
+import autolog.Logged;
+import autolog.AutoLog.BothLog;
+import autolog.AutoLog.BothLog;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+
 import static edu.wpi.first.wpilibj2.command.Commands.sequence;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
-import frc.robot.Constants.IntakeConstants;
-import io.github.oblarg.oblog.Loggable;
-import io.github.oblarg.oblog.annotations.Log;
+import frc.robot.util.sparkmax.SparkMax;
 
-public class IntakeS extends SubsystemBase implements Loggable {
-  private final CANSparkMax intakeMotor = new CANSparkMax(Constants.IntakeConstants.INTAKE_CAN_ID, MotorType.kBrushless);
-  private final CANSparkMax intakeFollowerMotor = new CANSparkMax(Constants.IntakeConstants.INTAKE_FOLLOWER_CAN_ID, MotorType.kBrushless);
-  private final SparkMaxLimitSwitch m_beamBreak = intakeFollowerMotor.getReverseLimitSwitch(Type.kNormallyClosed);
-  @Log
-  private boolean isExtended = false;
-  private final DoubleSolenoid doubleSolenoid = new DoubleSolenoid(PneumaticsModuleType.REVPH, 
-    Constants.IntakeConstants.INTAKE_EXTEND, Constants.IntakeConstants.INTAKE_RETRACT);
+import static frc.robot.Constants.IntakeConstants.*;
 
+public class IntakeS extends SubsystemBase implements Logged {
+  private final SparkMax intakeMotor = new SparkMax(INTAKE_CAN_ID, MotorType.kBrushless);
+  /**
+   * Set driver mode on the USB camera streamed through PhotonVision
+   */
+  PhotonCamera handCam = new PhotonCamera("HD_USB_Camera");
   private final TimeOfFlight distanceSensor = new TimeOfFlight(Constants.IntakeConstants.INTAKE_TOF_CAN_ID);
-  private Trigger cubeDebouncedBeamBreak = new Trigger(this::hitBeamBreak);//.debounce(0.06);
-  private Trigger coneDebouncedBeamBreak = new Trigger(this::hitBeamBreak);//.debounce(0.0);
+  private Trigger cubeDebouncedBeamBreak = new Trigger(()->getCurrent() > 20);//.debounce(0.06);
+  private Trigger coneDebouncedBeamBreak = new Trigger(()->getCurrent() > 20);
+  private LinearFilter currentAverage = LinearFilter.movingAverage(10);
+  private double current = 0;
+
     /** Creates a new IntakeS. */
   public IntakeS() {
 
     intakeMotor.restoreFactoryDefaults();
-    intakeFollowerMotor.restoreFactoryDefaults();
     intakeMotor.setIdleMode(IdleMode.kBrake);
-    intakeFollowerMotor.setIdleMode(IdleMode.kBrake);
-    intakeMotor.setSecondaryCurrentLimit(15);
-    intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 25);
+    intakeMotor.setSecondaryCurrentLimit(700);
+    intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 45);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
     intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
-    intakeFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 45);
-    intakeFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 65535);
-    intakeFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 65535);
-    intakeFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus3, 65535);
-    intakeFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus4, 65535);
-    intakeFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus5, 65535);
-    intakeFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus6, 65535);
-    m_beamBreak.enableLimitSwitch(false);
-    
-    intakeMotor.setSmartCurrentLimit(10, 10);
-    intakeFollowerMotor.follow(intakeMotor, false);
-    intakeMotor.burnFlash();
-    intakeFollowerMotor.burnFlash();
+    intakeMotor.setSmartCurrentLimit(60, 60);
 
     distanceSensor.setRangingMode(RangingMode.Short, 999);
     distanceSensor.setRangeOfInterest(9,9,11,11);
-    setDefaultCommand(run(()->this.intake(0)));
+    setDefaultCommand(run(()->intakeMotor.setVoltage(0)));
   }
 
   public Transform2d getConeCenterOffset() {
     
     double distanceToCone = getConeCenterOffsetDistance();
-    if (Math.abs(distanceToCone) > 0.1) {
+    if (!hitBeamBreak()) {
       return new Transform2d();
     }
     
@@ -90,117 +86,94 @@ public class IntakeS extends SubsystemBase implements Loggable {
     return new Transform2d(new Translation2d(0, offsetMeters), new Rotation2d());
   }
 
-  @Log
+  @BothLog
   public double getConeCenterOffsetDistance() {
-     return (IntakeConstants.INTAKE_CENTERED_CONE_DISTANCE - distanceSensor.getRange()) / 1000.0;
+    if (RobotBase.isSimulation()) {
+      return 0;
+    }
+     return -(INTAKE_CENTERED_CONE_DISTANCE - distanceSensor.getRange()) / 1000.0;
   }
-  @Log
+
+  public boolean hitBeamBreak() {
+    return getConeCenterOffsetDistance() > -0.2 && getConeCenterOffsetDistance() < 0.15;
+  }
+  //@Log
   public double getIntakeVolts() {
     return intakeMotor.getAppliedOutput() * 12;
   }
 
-  @Log
-  public double getIntakeFollowerVolts() {
-    return intakeFollowerMotor.getAppliedOutput() * 12;
-  }
-
-  @Log
+  //@Log
   public double getDistanceSensor() {
     return distanceSensor.getRange();
   }
 
-  @Log
+  //@Log
   public double getRangeSigma() {
     return distanceSensor.getRangeSigma();
+  }
+
+  @BothLog
+  public double getCurrent() {
+    return current;
+  }
+  public double getUnfilteredCurrent() {
+    return intakeMotor.getOutputCurrent();
   }
 
   // @Log
   // public boolean hitCurrentLimit() {
   //   return intakeMotor.getFault(FaultID.kOvercurrent);
   // }
-
-  @Log
-  public boolean hitBeamBreak() {
-    return m_beamBreak.isPressed() || (Math.abs(getConeCenterOffsetDistance()) < 0.1);
+  public void intakeCube() {
+    intakeMotor.setVoltage(Constants.IntakeConstants.INTAKE_VOLTAGE);
+  }
+  public void intakeCube(double volts) {
+    intakeMotor.setVoltage(volts);
+  }
+  public void outtakeCone(double volts) {
+    intakeCube(volts);
+  }
+  public void outtakeCube(double volts) {
+    intakeCone(volts);
+  }
+  public void intakeCone() {
+    intakeMotor.setVoltage(-Constants.IntakeConstants.INTAKE_VOLTAGE);
+  }
+  public void intakeCone(double volts) {
+    intakeMotor.setVoltage(-volts);
+  }
+  public void outtakeCube() {
+    intakeMotor.setVoltage(-0.4 * Constants.IntakeConstants.INTAKE_VOLTAGE);
+  }
+  public void outtakeCubeSlow() {
+    intakeMotor.setVoltage(-0.4 * Constants.IntakeConstants.INTAKE_VOLTAGE);
+  }
+  public void outtakeCone() {
+    intakeMotor.setVoltage(0.6 * Constants.IntakeConstants.INTAKE_VOLTAGE);
   }
 
-  public double getHandLength() {
-    if (isExtended) {
-      return Units.inchesToMeters(16);
+  public void intake(boolean isCube) {
+    if (isCube) {
+      intakeCube();
+    } else {
+      intakeCone();
     }
-    else {
-      return Units.inchesToMeters(9.4);
+  }
+
+  public void outtake(boolean isCube) {
+    if (isCube) {
+      outtakeCube();
+    } else {
+      outtakeCone();
     }
   }
 
-  /**
-   * Sets voltage of intake motor to the voltage parameter 
-   * @param voltage the voltage supplied to intake motor
-   */
-
-  public void intake(double voltage) {
-    intakeMotor.setVoltage(voltage);
-  }
-
-
-  /**
-   * Spins intake motor forward at specified voltage
-   */
-
-  public void intake() {
-    intake(Constants.IntakeConstants.INTAKE_VOLTAGE * (isExtended() ? 1.5 : 3));
-  }
-
-  public Command autoStagedIntakeC() {
-    return runEnd(()->intake(Constants.IntakeConstants.INTAKE_VOLTAGE * 3 * 1/3.4), this::stop);
-  }
-
-  /**
-   * Spins intake motor in reverse at specified voltage
-   */
-
-  public void outtake() {
-    intake(-Constants.IntakeConstants.INTAKE_VOLTAGE * (isExtended() ? 2 : 1));
-  }
-
-  /**
-   * Extends the intake
-   */
-
-  public void extend() {
-    doubleSolenoid.set(Value.kForward);
-    isExtended = true;
-  }
-
-  /**
-   * Retracts the intake
-   */
-
-  public void retract() {
-    doubleSolenoid.set(Value.kReverse);
-    isExtended = false;
-  }
-
-  public void setGamePiece(boolean isCube) {
-    doubleSolenoid.set(isCube? Value.kForward : Value.kReverse);
-    isExtended = isCube;
-  }
-
-
-  /**
-   * Toggles the intake between extend and retract
-   */
-
-  public void toggle() {
-    if (doubleSolenoid.get() == Value.kOff) {
-      extend();
-      isExtended = true;
+  public void outtakeSlow(boolean isCube) {
+    if (isCube) {
+      intakeMotor.setVoltage(-0.2 * Constants.IntakeConstants.INTAKE_VOLTAGE);
+    } else {
+      outtakeCone();
     }
-    else {
-      doubleSolenoid.toggle();
-      isExtended = !isExtended;
-    }
-
   }
 
   /**
@@ -213,100 +186,55 @@ public class IntakeS extends SubsystemBase implements Loggable {
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
+    current = currentAverage.calculate(intakeMotor.getOutputCurrent());
   }
 
-  public boolean isExtended() {
-    return isExtended;
+  public Command intakeC(BooleanSupplier isCube) {
+    return runEnd(()->this.intake(isCube.getAsBoolean()), this::stop);//.until(new Trigger(this::hitProxSensor));
   }
-
-  /**
-   * Runs the intake motor forward and then stops it
-   * @return returns the runEnd Command
-   */
-
-   public Command setGamePieceC(BooleanSupplier isCube) {
-    return runOnce(()->setGamePiece(isCube.getAsBoolean()));
-   }
-   public Command intakeC() {
-    return runEnd(this::intake, this::stop);//.until(new Trigger(this::hitProxSensor));
-  }
+  
+  
 
   /**
    * Runs the intake motor in reverse and then stops it
    * @return returns the runEnd Command
    */
 
-  public Command outtakeC() {
-    return runEnd(this::outtake, this::stop);
+  public Command outtakeC(BooleanSupplier isCube) {
+    return runEnd(()->this.outtake(isCube.getAsBoolean()), this::stop);
   }
 
-  /**
-   * Extends the intake
-   * @return returns the runOnce command
-   */
-
-  public Command extendC() {
-    return runOnce(this::extend);
+  public Command outtakeC(BooleanSupplier isCube, BooleanSupplier slowCube) {
+    return Commands.either(
+      runEnd(()->this.outtakeSlow(isCube.getAsBoolean()), this::stop),
+      runEnd(()->this.outtake(isCube.getAsBoolean()), this::stop),
+      slowCube)
+      ;
   }
 
-  /**
-   * Retracts the intake
-   * @return returns the runOnce command
-   */
-
-  public Command retractC() {
-    return runOnce(this::retract);
+  public Command intakeUntilBeamBreakC(boolean isCube) {
+    return Commands.sequence(
+      run(()->this.intake(isCube)).withTimeout(0.5),
+      run(()->this.intake(isCube)).until(()->{
+        return isCube ? 
+        cubeDebouncedBeamBreak.getAsBoolean() : coneDebouncedBeamBreak.getAsBoolean();}),
+      intakeC(()->isCube).withTimeout(isCube ? 0.1 : 0.0));
+    }
+  public boolean acquiredCube() {
+    return cubeDebouncedBeamBreak.getAsBoolean();
+  }
+  public boolean acquiredCone() {
+    return coneDebouncedBeamBreak.getAsBoolean();
+  }
+  public boolean acquiredPiece(boolean isCube) {
+    if (isCube) {
+      return acquiredCube();
+    } else {
+      return acquiredCone();
+    }
   }
 
-  /**
-   * extends the intake and runs the intake motor forward
-   * @return returns the sequence Command
-   */
-
-  public Command extendAndIntakeC() {
-    return sequence(extendC(), intakeC()).finallyDo((interrupted)-> stop());
+  public void setHandCamFlipped(boolean flipped) {
+    handCam.setPipelineIndex(1);
   }
-
-  /**
-   * retracts the intake and runs the intake motor forward
-   * @return returns the sequence Command
-   */
-
-  public Command retractAndIntakeC() {
-    return sequence(retractC(), intakeC()).finallyDo((interrupted)-> stop());
-  }
-
-  /**
-   * extends the intake and runs the intake motor in reverse
-   * @return returns the sequence Command
-   */
-
-  public Command extendAndOuttakeC() {
-    return sequence(extendC(), outtakeC()).finallyDo((interrupted)-> stop());
-  }
-
-  /**
-   * retracts the intake and runs the intake motor in reverse
-   * @return returns the sequence Command
-   */
-
-   public Command retractAndOuttakeC() {
-    return sequence(retractC(), outtakeC()).finallyDo((interrupted)-> stop());
-  }
-
-  public Command intakeUntilBeamBreakC() {
-    return intakeUntilBeamBreakC(intakeC());
-  }
-
-  public Command intakeUntilBeamBreakC(Command intakeCommand) {
-    return intakeCommand.until(()->{
-      return isExtended ? 
-      cubeDebouncedBeamBreak.getAsBoolean() : coneDebouncedBeamBreak.getAsBoolean();})
-      .andThen(intakeC().withTimeout(isExtended ? 0.1 : 0.1));
-    
-  }
-
-
-
 }

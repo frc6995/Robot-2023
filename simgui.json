@@ -1,21 +1,79 @@
 {
+  "HALProvider": {
+    "Addressable LEDs": {
+      "0": {
+        "columns": 4,
+        "order": 1
+      },
+      "window": {
+        "visible": true
+      }
+    },
+    "Other Devices": {
+      "window": {
+        "visible": false
+      }
+    }
+  },
   "NTProvider": {
     "types": {
+      "/DriverDisplay/field": "Field2d",
       "/FMSInfo": "FMSInfo",
+      "/Robot/m_armS/MECH_VISUALIZER": "Mechanism2d",
+      "/Robot/m_armS/VISUALIZER": "Field2d",
+      "/Robot/m_field": "Field2d",
       "/Shuffleboard/ArmS/MECH_VISUALIZER": "Mechanism2d",
       "/Shuffleboard/ArmS/VISUALIZER": "Field2d",
       "/Shuffleboard/RobotContainer/m_field": "Field2d",
       "/SmartDashboard/SendableChooser[0]": "String Chooser"
     },
     "windows": {
-      "/Shuffleboard/ArmS/MECH_VISUALIZER": {
+      "/DriverDisplay/field": {
         "window": {
           "visible": true
+        }
+      },
+      "/Robot/m_armS/MECH_VISUALIZER": {
+        "window": {
+          "visible": true
+        }
+      },
+      "/Robot/m_field": {
+        "Robot": {
+          "length": 0.7799999713897705,
+          "width": 0.7799999713897705
+        },
+        "align": {
+          "arrows": false,
+          "style": "Line"
+        },
+        "bottom": 544,
+        "height": 8.013679504394531,
+        "image": "C:\\Users\\jashu\\git\\Robot-2023\\resources\\2023-field.png",
+        "left": 46,
+        "pickup": {
+          "arrowSize": 17,
+          "arrows": false,
+          "style": "Line"
+        },
+        "right": 1088,
+        "top": 36,
+        "width": 16.541748046875,
+        "window": {
+          "visible": true
+        },
+        "zmodules": {
+          "arrowSize": 27,
+          "style": "Hidden"
         }
       },
       "/Shuffleboard/RobotContainer/m_field": {
         "Robot": {
           "style": "Box/Image"
+        },
+        "_modules": {
+          "length": 0.4000000059604645,
+          "width": 0.4000000059604645
         },
         "bluePoses": {
           "length": 0.7900000214576721,
@@ -23,7 +81,15 @@
         },
         "bottom": 544,
         "driveTarget": {
-          "style": "Box/Image"
+          "color": [
+            161.39236450195313,
+            0.0,
+            255.0,
+            255.0
+          ],
+          "length": 0.8999999761581421,
+          "style": "Box/Image",
+          "width": 0.8999999761581421
         },
         "height": 8.013679504394531,
         "image": ".\\resources\\2023-field.png",
@@ -34,6 +100,9 @@
           "style": "Hidden",
           "width": 0.4000000059604645
         },
+        "odometry": {
+          "width": 0.800000011920929
+        },
         "redPoses": {
           "style": "Hidden"
         },
@@ -42,6 +111,11 @@
         "width": 16.541748046875,
         "window": {
           "visible": true
+        },
+        "zmodules": {
+          "length": 0.4000000059604645,
+          "style": "Hidden",
+          "width": 0.4000000059604645
         }
       },
       "/SmartDashboard/SendableChooser[0]": {
@@ -56,6 +130,9 @@
       "open": false
     },
     "retained": {
+      "DriverDisplay": {
+        "open": true
+      },
       "SmartDashboard": {
         "SendableChooser[0]": {
           "open": true
@@ -64,21 +141,113 @@
       }
     },
     "transitory": {
+      "CameraPublisher": {
+        "USB Camera 0": {
+          "PropertyInfo": {
+            "open": true
+          },
+          "open": true
+        }
+      },
       "DriverDisplay": {
+        "field": {
+          "open": true
+        },
         "open": true
       },
-      "Shuffleboard": {
-        "ArmS": {
-          "VISUALIZER": {
+      "Robot": {
+        "m_armS": {
+          "Extend": {
+            "open": true
+          },
+          "m_pivot": {
+            "open": true
+          },
+          "m_wrist": {
             "open": true
           },
           "open": true
         },
-        "DrivebaseS": {
-          "SwerveModule-BR-[14,13]": {
+        "m_drivebaseS": {
+          "io": {
+            "m_modules": {
+              "BL-[16,15]": {
+                "open": true
+              },
+              "BR-[14,13]": {
+                "open": true
+              },
+              "FL-[18,17]": {
+                "open": true
+              },
+              "open": true
+            },
             "open": true
           },
           "open": true
+        },
+        "m_field": {
+          "open": true
+        },
+        "m_intakeS": {
+          "open": true
+        },
+        "open": true
+      },
+      "Shuffleboard": {
+        "ArmS": {
+          "Extend": {
+            "open": true
+          },
+          "MECH_VISUALIZER": {
+            "root": {
+              "base": {
+                "arm": {
+                  "open": true
+                },
+                "open": true
+              },
+              "open": true
+            }
+          },
+          "Pivot": {
+            "open": true
+          },
+          "SimPivotIO": {
+            "open": true
+          },
+          "Wrist": {
+            "open": true
+          }
+        },
+        "DrivebaseS": {
+          "SimSwerveDriveIO": {
+            "SwerveModule-BL-[16,15]": {
+              "open": true
+            },
+            "SwerveModule-BR-[14,13]": {
+              "open": true
+            },
+            "SwerveModule-FL-[18,17]": {
+              "open": true
+            },
+            "SwerveModule-FR-[12,11]": {
+              "open": true
+            },
+            "open": true
+          },
+          "SwerveModule-BR-[14,13]": {
+            "open": true
+          },
+          "io": {
+            "BL-[16,15]": {
+              "open": true
+            },
+            "FL-[18,17]": {
+              "open": true
+            },
+            "open": true
+          }
         },
         "IntakeS": {
           "open": true
@@ -86,15 +255,44 @@
         "RobotContainer": {
           "open": true
         },
-        "open": true
+        "Rotate": {
+          "open": true
+        }
       },
       "SmartDashboard": {
         "SendableChooser[0]": {
           "open": true
         },
         "open": true
+      },
+      "photonvision": {
+        "open": true
       }
     }
+  },
+  "NetworkTables Info": {
+    "Clients": {
+      "open": true
+    },
+    "Connections": {
+      "open": true
+    },
+    "Server": {
+      "open": true
+    },
+    "ntcore-ts-1696099063261@2": {
+      "Publishers": {
+        "open": true
+      },
+      "open": true
+    },
+    "ntcore-ts-1696099088232@1": {
+      "Publishers": {
+        "open": true
+      },
+      "open": true
+    },
+    "visible": true
   },
   "Plot": {
     "Plot <0>": {
@@ -105,7 +303,7 @@
               "autoFit": true
             }
           ],
-          "height": 813,
+          "height": 846,
           "series": [
             {
               "color": [
@@ -114,7 +312,7 @@
                 0.6901960968971252,
                 1.0
               ],
-              "id": "NT:/Shuffleboard/ArmS/getPivotVolts"
+              "id": "NT:/Shuffleboard/DrivebaseS/SimSwerveDriveIO/SwerveModule-BL-[16,15]/getSteerVoltage"
             },
             {
               "color": [
@@ -123,7 +321,7 @@
                 0.32156863808631897,
                 1.0
               ],
-              "id": "NT:/Shuffleboard/ArmS/getExtendVolts"
+              "id": "NT:/Shuffleboard/DrivebaseS/SimSwerveDriveIO/SwerveModule-BL-[16,15]/getAngle"
             },
             {
               "color": [
@@ -132,7 +330,7 @@
                 0.4078431725502014,
                 1.0
               ],
-              "id": "NT:/Shuffleboard/ArmS/getLengthMeters"
+              "id": "NT:/Shuffleboard/DrivebaseS/SimSwerveDriveIO/SwerveModule-BL-[16,15]/getSteerGoal"
             },
             {
               "color": [
@@ -141,11 +339,14 @@
                 0.32156863808631897,
                 1.0
               ],
-              "id": "NT:/Shuffleboard/IntakeS/getIntakeVolts"
+              "id": "NT:/Shuffleboard/DrivebaseS/SimSwerveDriveIO/SwerveModule-BL-[16,15]/getSteerSetpoint"
             }
           ]
         }
-      ]
+      ],
+      "window": {
+        "visible": false
+      }
     },
     "Plot <1>": {
       "plots": [
@@ -155,38 +356,53 @@
               "autoFit": true
             }
           ],
-          "height": 332,
+          "height": 844,
           "series": [
             {
               "color": [
-                0.2980392277240753,
-                0.44705885648727417,
-                0.6901960968971252,
+                0.7686275243759155,
+                0.30588236451148987,
+                0.32156863808631897,
                 1.0
               ],
-              "id": "NT:/Shuffleboard/RobotContainer/loopTime"
+              "id": "NT:Robot/m_drivebaseS/io/m_modules/BL-[16,15]/getDriveSetpoint"
+            },
+            {
+              "color": [
+                0.5058823823928833,
+                0.44705885648727417,
+                0.7019608020782471,
+                1.0
+              ],
+              "id": "NT:Robot/m_drivebaseS/io/m_modules/BL-[16,15]/getDriveVelocity"
+            },
+            {
+              "color": [
+                0.3333333432674408,
+                0.658823549747467,
+                0.4078431725502014,
+                1.0
+              ],
+              "id": "NT:/SmartDashboard/loopTime"
             }
           ]
         }
       ]
     },
-    "Plot <2>": {
+    "Plot <3>": {
       "plots": [
         {
-          "height": 332,
-          "series": [
+          "axis": [
             {
-              "color": [
-                0.2980392277240753,
-                0.44705885648727417,
-                0.6901960968971252,
-                1.0
-              ],
-              "id": "NT:/Shuffleboard/DrivebaseS/SwerveModule-BR-[14,13]/getVelocitySetpoint"
+              "autoFit": true
             }
-          ]
+          ],
+          "height": 201
         }
-      ]
+      ],
+      "window": {
+        "visible": false
+      }
     }
   }
 }

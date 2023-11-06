@@ -56,6 +56,7 @@ public class SparkMaxEncoderWrapper {
     public synchronized void setPosition(double position) {
         // we still want the encoder to report in motor shaft rotations, so divide by conversion factor.
         sparkMaxEncoder.setPosition(position);
+        lastPosition = position;
         setSimPosition(position);
     }
 

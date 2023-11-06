@@ -53,6 +53,22 @@ public class SwerveModuleSim {
         this.azmthVoltage = azmthVoltage;
     }
 
+    public void setWheelVoltage(double wheelVoltage){
+        this.wheelVoltage = wheelVoltage;
+    }
+
+    public double getWheelVoltage() {
+        return this.wheelVoltage;
+    }
+
+    public void setAzmthVoltage(double azmthVoltage){
+        this.azmthVoltage = azmthVoltage;
+    }
+
+    public double getAzmthVoltage() {
+        return this.azmthVoltage;
+    }
+
     public double getAzimuthEncoderPositionRev(){
         return azmthMotor.getMechanismPosition_Rev() * azimuthEncGearRatio;
     }
@@ -71,6 +87,12 @@ public class SwerveModuleSim {
         curAzmthAngle = Rotation2d.fromDegrees(0);
     }
 
+    public void resetAzmth(double angleRad) {
+        azmthMotor.setPosition_Rev(angleRad / 2.0 / Math.PI);
+    }
+    public void resetWheel(double positionRad) {
+        wheelMotor.setPosition_Rev(positionRad / 2.0 / Math.PI);
+    }
     void update(double dtSeconds){
 
         Vector2d azimuthUnitVec = new Vector2d(1,0);

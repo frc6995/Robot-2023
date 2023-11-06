@@ -10,8 +10,8 @@ import frc.robot.Robot;
 public class SparkMaxAbsoluteEncoderWrapper {
     private final CANSparkMax sparkMax;
     private final AbsoluteEncoder sparkMaxEncoder;
-    private double lastPosition = 0.0;
-    private double simPosition = 0.0;
+    private double lastPosition = 1.0;
+    private double simPosition = 1.50;
     private double simVelocity = 0.0;
   
     /**

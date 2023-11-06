@@ -1,0 +1,245 @@
+{
+  "version": "2.2.2",
+  "layout": [
+    {
+      "type": 1,
+      "legends": {
+        "left": {
+          "lockedRange": null,
+          "unitConversion": {
+            "type": null,
+            "factor": 1
+          },
+          "fields": [
+            {
+              "key": "NT:/Shuffleboard/ArmS/getContinuousRangeAngle",
+              "color": "#e5b31b",
+              "show": true
+            }
+          ]
+        },
+        "discrete": {
+          "fields": [
+            {
+              "key": "DS:enabled",
+              "color": "#2b66a2",
+              "show": true
+            }
+          ]
+        },
+        "right": {
+          "lockedRange": null,
+          "unitConversion": {
+            "type": null,
+            "factor": 1
+          },
+          "fields": [
+            {
+              "key": "NT:/Shuffleboard/ArmS/getPivotVolts",
+              "color": "#af2437",
+              "show": true
+            }
+          ]
+        }
+      },
+      "title": "Line Graph"
+    },
+    {
+      "type": 1,
+      "legends": {
+        "left": {
+          "lockedRange": null,
+          "unitConversion": {
+            "type": null,
+            "factor": 1
+          },
+          "fields": [
+            {
+              "key": "NT:/DriverDisplay/matchTime",
+              "color": "#e5b31b",
+              "show": true
+            }
+          ]
+        },
+        "discrete": {
+          "fields": [
+            {
+              "key": "DS:enabled",
+              "color": "#2b66a2",
+              "show": true
+            }
+          ]
+        },
+        "right": {
+          "lockedRange": null,
+          "unitConversion": {
+            "type": null,
+            "factor": 1
+          },
+          "fields": []
+        }
+      },
+      "title": "Line Graph"
+    },
+    {
+      "type": 2,
+      "fields": [
+        "NT:/photonvision/OV9281-2/cameraIntrinsics/2",
+        "NT:/photonvision/OV9281-2/cameraIntrinsics/5"
+      ],
+      "title": "Table"
+    },
+    {
+      "type": 4,
+      "fields": [
+        null,
+        null,
+        null
+      ],
+      "selectionType": "full",
+      "selectionRangeMin": 0,
+      "selectionRangeMax": 10,
+      "measurementType": "independent",
+      "measurementSampling": "fixed",
+      "measurementSamplingPeriod": 20,
+      "histogramMin": 0,
+      "histogramMax": 10,
+      "histogramStep": 1,
+      "title": "Statistics"
+    },
+    {
+      "type": 3,
+      "field": null,
+      "title": "Console"
+    },
+    {
+      "type": 2,
+      "fields": [],
+      "title": "Table"
+    },
+    {
+      "type": 5,
+      "fields": [],
+      "listFields": [
+        [
+          {
+            "type": "Robot",
+            "key": "NT:/Shuffleboard/RobotContainer/m_field/Robot",
+            "fieldTypeIndex": 0
+          },
+          {
+            "type": "Arrow (Center)",
+            "key": "NT:/Shuffleboard/RobotContainer/m_field/multitag",
+            "fieldTypeIndex": 0
+          },
+          {
+            "type": "Ghost",
+            "key": "NT:/Shuffleboard/RobotContainer/m_field/driveTarget",
+            "fieldTypeIndex": 0
+          },
+          {
+            "type": "Arrow (Center)",
+            "key": "NT:/Shuffleboard/RobotContainer/m_field/modules",
+            "fieldTypeIndex": 0
+          }
+        ]
+      ],
+      "options": {
+        "game": "2023",
+        "unitDistance": "meters",
+        "unitRotation": "degrees",
+        "origin": "right",
+        "size": 0.75,
+        "allianceBumpers": "auto",
+        "allianceOrigin": "blue",
+        "orientation": "blue left, red right"
+      },
+      "title": "Odometry"
+    },
+    {
+      "type": 6,
+      "fields": [],
+      "listFields": [
+        [
+          {
+            "type": "Robot",
+            "key": "NT:/Shuffleboard/RobotContainer/m_field3d/Robot",
+            "fieldTypeIndex": 0
+          }
+        ],
+        [
+          {
+            "type": "Robot",
+            "key": "NT:/Shuffleboard/RobotContainer/m_field/Robot",
+            "fieldTypeIndex": 0
+          },
+          {
+            "type": "Ghost",
+            "key": "NT:/Shuffleboard/RobotContainer/m_field/driveTarget",
+            "fieldTypeIndex": 0
+          },
+          {
+            "type": "Mechanism (Robot)",
+            "key": "NT:/Shuffleboard/ArmS/MECH_VISUALIZER",
+            "fieldTypeIndex": 1
+          }
+        ]
+      ],
+      "options": {
+        "field": "2023",
+        "alliance": "blue",
+        "robot": "KitBot",
+        "unitDistance": "meters",
+        "unitRotation": "degrees"
+      },
+      "title": "3D Field"
+    },
+    {
+      "type": 1,
+      "legends": {
+        "left": {
+          "lockedRange": null,
+          "unitConversion": {
+            "type": null,
+            "factor": 1
+          },
+          "fields": [
+            {
+              "key": "NT:/Shuffleboard/DrivebaseS/SwerveModule-FL-[18,17]/getEncoderDiscrepancy",
+              "color": "#2b66a2",
+              "show": true
+            },
+            {
+              "key": "NT:/Shuffleboard/DrivebaseS/SwerveModule-FL-[18,17]/getCanEncoderAngleDouble",
+              "color": "#aacaee",
+              "show": true
+            },
+            {
+              "key": "NT:/Shuffleboard/DrivebaseS/SwerveModule-FL-[18,17]/getMagEncoderAngleDouble",
+              "color": "#c0b487",
+              "show": true
+            }
+          ]
+        },
+        "discrete": {
+          "fields": [
+            {
+              "key": "DS:enabled",
+              "color": "#80588e",
+              "show": true
+            }
+          ]
+        },
+        "right": {
+          "lockedRange": null,
+          "unitConversion": {
+            "type": null,
+            "factor": 1
+          },
+          "fields": []
+        }
+      },
+      "title": "Encoder Discrepancy"
+    }
+  ]
+}

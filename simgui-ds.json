@@ -1,10 +1,10 @@
 {
-  "Keyboard 0 Settings": {
+  "Joysticks": {
     "window": {
-      "visible": true
+      "visible": false
     }
   },
-  "Keyboard 2 Settings": {
+  "Keyboard 0 Settings": {
     "window": {
       "visible": true
     }
@@ -40,10 +40,10 @@
       "axisCount": 6,
       "buttonCount": 9,
       "buttonKeys": [
-        90,
-        88,
-        67,
-        86,
+        264,
+        262,
+        263,
+        265,
         66,
         78,
         77,
@@ -71,21 +71,16 @@
       "povCount": 0
     },
     {
-      "axisConfig": [
-        {
-          "incKey": 262
-        }
-      ],
       "axisCount": 2,
       "buttonCount": 14,
       "buttonKeys": [
         -1,
         -1,
         266,
-        264,
-        263,
         -1,
-        265,
+        -1,
+        -1,
+        -1,
         -1,
         -1,
         -1,
@@ -106,11 +101,12 @@
     {
       "guid": "Keyboard0"
     },
-    {
-      "guid": "Keyboard1"
-    },
+    {},
     {
       "guid": "Keyboard2"
+    },
+    {
+      "guid": "Keyboard1"
     }
   ]
 }

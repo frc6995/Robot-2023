@@ -310,6 +310,20 @@ public class VariableLengthArmSim extends LinearSystemSim<N2, N1, N1> {
     return updatedXhat;
   }
 
+  // units: N/(A*Ohm*kg * m)
+  private double getB11() {
+    return m_gearing * m_gearbox.KtNMPerAmp / (m_gearbox.rOhms * m_moi);
+  }
+  public double getkG(double angle) {
+    return m_armMass
+    * m_r
+    * -9.8
+    * Math.sin(angle - m_gravityAngle)
+    * (m_gearbox.rOhms)
+    / (m_gearing * m_gearbox.KtNMPerAmp);
+     
+  }
+
   public void setMOI(double moi) {
     // recalculating only the relevant entries in the plant
     m_moi = moi;
@@ -318,7 +332,7 @@ public class VariableLengthArmSim extends LinearSystemSim<N2, N1, N1> {
       * m_gearbox.KtNMPerAmp
       / (m_gearbox.KvRadPerSecPerVolt * m_gearbox.rOhms * m_moi));
     m_plant.getB().set(1, 0, 
-      m_gearing * m_gearbox.KtNMPerAmp / (m_gearbox.rOhms * m_moi));
+    m_gearing * m_gearbox.KtNMPerAmp / (m_gearbox.rOhms * m_moi));
   }
 
   public void setGravityAngle(double angleRadians) {
